@@ -2756,7 +2756,7 @@ Within the valley's depths dwell creatures that belong to no simple category: fa
     region: "Velious",
     continent: "Velious",
     adjacentZones: ["Temple of Veeshan", "Dragon Necropolis", "Cobalt Scar"],
-    tags: ["Outdoor", "Frozen", "Dragon", "Raid"],
+    tags: ["Outdoor", "Frozen", "Dragon"],
     excerpt: "A desolate dragon-haunted wasteland carved by Veeshan's own claws, where virtually every creature that moves is a wyrm or dragonkin of terrifying power.",
     background: `The Western Wastes occupy the second great gorge carved by Veeshan's passage across Norrath during the Dawn of Days, and unlike the Cobalt Scar to the northeast, this wound in the world has never been softened by water or settled by lesser races. Here the dragons reign absolutely. The landscape is a frozen hellscape of shattered stone and howling wind, broken by draconic shapes moving across ridgelines and through valleys with an ease that speaks to how thoroughly they have claimed this territory. Wyverns, wurms, and full dragons of multiple lineages share the Wastes with a hierarchy of power that outsiders can only guess at.
 
@@ -2975,7 +2975,7 @@ The inhabitants are shaped by their aquatic environment. Mermaids and sirens of 
     region: "Velious",
     continent: "Velious",
     adjacentZones: ["Eastern Wastes"],
-    tags: ["Dungeon", "Raid", "Dragon", "Frozen"],
+    tags: ["Dungeon", "Dragon", "Frozen"],
     excerpt: "The legendary prison of Kerafyrm the Sleeper, a prismatic dragon of terrifying power sealed away by the First Brood for crimes against dragonkind, where four immortal Warders stand eternal vigil over a threat that should never be awakened.",
     background: `The Sleeper's Tomb is not simply a dungeon — it is a seal. Somewhere in its crystalline depths, surrounded by layers of guardian and trap and ancient magic, the dragon Kerafyrm sleeps in enforced imprisonment. Kerafyrm was born of a union that violated every law of dragonkind, the offspring of two dragons of different color bloodlines, a prismatic creature whose very existence sparked war among the First Brood. When the fighting ended, the surviving dragons agreed on one thing: Kerafyrm could not be permitted to remain free. Four of the mightiest warder-dragons in existence were assigned to ensure this, bound to the Tomb in perpetuity, unable to die of natural causes, guarding for eternity.
 
@@ -3004,7 +3004,7 @@ The spirit known as Jaled'Dar moves through the Tomb with a different agenda ent
     region: "Velious",
     continent: "Velious",
     adjacentZones: ["Western Wastes"],
-    tags: ["Dungeon", "Raid", "Dragon", "Frozen"],
+    tags: ["Dungeon", "Dragon", "Frozen"],
     excerpt: "The most sacred site in all of Velious — a temple carved into Veeshan's own claw-mark where the mightiest dragons of the First Brood perpetually honor their goddess, representing the ultimate test for any adventuring force.",
     background: `The Temple of Veeshan stands in the second gorge marked by the Crystal Dragon Queen's passage across Norrath, and it has stood there since the first dragons arrived to make the world their own. This is not merely a powerful dungeon — it is the most holy place in draconic theology, a site where the mightiest wyrms of the First Brood conduct rites and maintain vigils in honor of the mother who created them. The dragons here are not territorial predators or guardians of treasure in the conventional sense. They are celebrants in an eternal ceremony, and the Temple is their cathedral.
 
@@ -3092,7 +3092,7 @@ The kobolds of the Icepaw tribe have become the Labyrinth's primary inhabitants 
     region: "The Planes",
     continent: "The Planes",
     adjacentZones: [],
-    tags: ["Plane", "Raid", "Dungeon"],
+    tags: ["Plane", "Dungeon"],
     excerpt: "The nightmare realm of Cazic Thule, god of fear, a hellscape of bloodred sky and shrieking horror where death-touching golems and mass-dispelling abominations serve as the divine instruments of pure terror.",
     background: `The Plane of Fear is not a place that exists in any geography that mortals can comprehend — it is a divine domain that was always there, waiting, on the other side of the worst moments of consciousness. Cazic Thule, the Faceless, has ruled this realm since the gods first claimed their territories, and everything within it is an expression of his essential nature: the fundamental, animal fear that drives all living things to run. The sky bleeds a continuous crimson that has never known sunlight. The terrain is rough and offers no comfort, no shelter, no sense of safety. Every feature of the landscape seems designed to disorient and distress.
 
@@ -3123,7 +3123,7 @@ Access comes through a one-way portal in the Feerrott's spectre caves, and the j
     region: "The Planes",
     continent: "The Planes",
     adjacentZones: [],
-    tags: ["Plane", "Raid", "Dungeon"],
+    tags: ["Plane", "Dungeon"],
     excerpt: "The divine domain of Innoruuk, Prince of Hate, a realm of pure malevolence where even his own followers are met with vicious resistance and death touch awaits any who reach the dark god's throne.",
     background: `The Plane of Hate was opened to mortals after the Battle of Kithicor Forest, where the armies of Lanys T'Vyl and Firiona Vie clashed in a conflict that cursed the forest forever and broke the barriers between Norrath and Innoruuk's domain. It was not a door that the god of hate welcomed being opened — but then, nothing about Innoruuk's nature welcomes anything. His plane is a realm of pure, undiluted hatred, where every inhabitant is an expression of spite and malice given form. The landscape reflects its master: dark, oppressive, saturated with a hostility that is not territorial but philosophical.
 
@@ -3150,7 +3150,7 @@ Spite golems, scorn banshees, forsaken revenants, and abhorrent gargoyles serve 
     region: "The Planes",
     continent: "The Planes",
     adjacentZones: [],
-    tags: ["Plane", "Raid", "Outdoor"],
+    tags: ["Plane", "Outdoor"],
     excerpt: "Veeshan's floating domain of chaotic sky islands, where genies, sphinxes, harpies, and fairie dragons guard a system of divine keys that must be collected to progress upward through an ever-more-dangerous series of aerial platforms.",
     background: `The Plane of Sky is the dominion of Veeshan, mother of all dragons, and it resembles its mistress in the sense that it operates on a scale and logic that mortals can only partially perceive. A series of floating islands hang suspended in an endless sky, each one a distinct ecosystem populated by creatures that bear no relationship to the fauna of Norrath below. Genies drift between islands on currents of magical wind. Harpies nest in impossible aeries on cliff faces that drop away into infinity. Sphinxes pose riddles with lethal consequences for wrong answers. Fairie dragons dart through the gaps between platforms with playful malice. And bees — enormous, organized, aggressive — patrol certain islands with military discipline that suggests a hive mind of unsettling sophistication.
 
@@ -3176,7 +3176,7 @@ The zone operates through a key system that is both its governing mechanic and i
     region: "The Planes",
     continent: "The Planes",
     adjacentZones: ["Wakening Land"],
-    tags: ["Plane", "Raid", "Outdoor", "Forest"],
+    tags: ["Plane", "Outdoor", "Forest"],
     excerpt: "The divine woodland sanctuary of Tunare, goddess of nature, where treants, unicorns, and wolves serve as guardians of a living plane — and where evil-aligned visitors are hunted without mercy by the Protectors of Growth.",
     background: `The Plane of Growth is a living expression of Tunare's dominion over the natural world — a woodland realm that exists outside Norrath's normal geography, connected to the frozen continent of Velious through the miraculous forest of the Wakening Land. Where the Wakening Land is remarkable for surviving in Velious at all, the Plane of Growth exists in a state of perfect, divine fecundity, a forest that has never known autumn or disease, populated by creatures that serve the goddess's will without thought or hesitation. Trees here are not merely large — they are ancient beyond reckoning, grown to sizes that make them landscapes unto themselves.
 
@@ -3204,7 +3204,7 @@ The zone is divided between the accessible outer areas and the more heavily defe
     region: "The Planes",
     continent: "The Planes",
     adjacentZones: ["Temple of Veeshan"],
-    tags: ["Plane", "Raid"],
+    tags: ["Plane"],
     excerpt: "The chaotic domain of Bristlebane Fizzlethrope, god of mischief, where invisible walls, one-sided doors, pit traps, and teleporting hallways conspire to make even navigation a puzzle with potentially lethal consequences.",
     background: `The Plane of Mischief is a joke told by a god who has never understood why others don't find the punchline as amusing as he does. Bristlebane Fizzlethrope, the King of Thieves, has crafted his divine domain as an expression of everything he finds delightful: confusion, reversal, the spectacular failure of reasonable expectations. The zone's architecture is a masterwork of impossibility — invisible walls block paths that appear open, doors operate in only one direction, hallways fold back on themselves, and teleporters deposit the unwary in sections of the plane they had no intention of visiting. The approximately 134 inhabitants include halflings, talking animals, enchanting sphinx questgivers, and puppet-versions of EverQuest's other deities lurking in backstage areas, drained of their divine power but not of their capacity for violence.
 
