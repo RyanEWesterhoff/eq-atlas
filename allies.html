@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notable Figures — EverQuest Atlas Campaign</title>
+  <link rel="stylesheet" href="css/style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js" data-protect="true"></script>
+  <style>
+    /* ── Figure Card Layout ─────────────────────────────────── */
+    .figure-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .figure-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      display: flex;
+      gap: 0;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .figure-card.ally { border-left: 3px solid #4a8a4a; }
+    .figure-card.enemy { border-left: 3px solid #8a3a3a; }
+    .figure-card:hover { border-color: var(--border-gold); box-shadow: 0 4px 20px rgba(201,168,76,0.15); }
+
+    /* Portrait */
+    .figure-portrait-wrap {
+      width: 96px;
+      min-width: 96px;
+      background: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .figure-portrait-wrap img {
+      width: 96px;
+      height: 120px;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      filter: brightness(0.95) contrast(1.05);
+    }
+
+    /* Placeholder avatar for characters without images */
+    .figure-avatar {
+      width: 96px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      opacity: 0.45;
+    }
+
+    /* Text body */
+    .figure-body {
+      padding: 12px 14px;
+      flex: 1;
+      min-width: 0;
+    }
+    .figure-name {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-gold);
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+    .figure-title {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .figure-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .figure-desc {
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.55;
+    }
+
+    /* ── Section header variants ───────────────────────────── */
+    .section-header.ally-header { border-left: 3px solid #4a8a4a; }
+    .section-header.ally-header span { color: #6aaa6a; }
+    .section-header.enemy-header { border-left: 3px solid #8a3a3a; }
+    .section-header.enemy-header span { color: #c05050; }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">The Atlas</a>
+      <div class="header-divider"></div>
+      <div class="header-quote">"History is written by the powerful — and remembered by those who survive them." — Al'Kabor</div>
+    </div>
+  </header>
+
+  <nav class="top-nav">
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="zones.html">Lands</a></li>
+      <li class="gm-nav-only"><a href="bestiary.html">Bestiary</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="deities.html">Deities</a></li>
+      <li><a href="allies.html" class="active">Figures</a></li>
+      <li><a href="sessions.html">Campaign</a></li><li><a href="#" onclick="logout();return false;" style="color:var(--text-dim);border-bottom-color:transparent">Sign Out</a></li>
+    </ul>
+  </nav>
+
+  <div class="content-area">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Figures</h3>
+        <ul>
+          <li><a href="#allies"><span class="nav-icon">🤝</span> Allied Leaders</a></li>
+          <li><a href="#enemies"><span class="nav-icon">⚔️</span> Enemies & Threats</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <h3>Allies</h3>
+        <ul>
+          <li><a href="#tearis-thex">King Tearis Thex</a></li>
+          <li><a href="#firiona-vie">Firiona Vie</a></li>
+          <li><a href="#antonius-bayle">Antonius Bayle IV</a></li>
+          <li><a href="#elarad">El'Arad</a></li>
+          <li><a href="#mayor-gubbin">Mayor Gubbin</a></li>
+          <li><a href="#kazon-stormhammer">King Kazon Stormhammer</a></li>
+          <li><a href="#king-akanon">King Ak'Anon</a></li>
+          <li><a href="#halas-council">Halas Council</a></li>
+          <li><a href="#alkabor">Al'Kabor</a></li>
+          <li><a href="#tsaph-katta">Tsaph Katta</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <h3>Enemies</h3>
+        <ul>
+          <li><a href="#mayong">Mayong Mistmoore</a></li>
+          <li><a href="#seru">Lord Inquisitor Seru</a></li>
+          <li><a href="#jurglash">Jurglash</a></li>
+          <li><a href="#naythox-thex">Naythox Thex</a></li>
+          <li><a href="#emperor-vekin">Emperor Vekin</a></li>
+          <li><a href="#sir-lucan">Sir Lucan D'Lere</a></li>
+          <li><a href="#virate-manaar">Overlord Virate Manaar</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="sep">›</span>
+        Notable Figures
+      </div>
+
+      <h1 class="page-title">
+        <span class="title-icon">⚔️</span>
+        Notable Figures
+      </h1>
+
+      <p style="color:var(--text-secondary);margin-bottom:28px;font-size:15px;">
+        The rulers, heroes, and villains whose decisions shape the fate of Norrath. These are the figures the party
+        is most likely to encounter, ally with, or stand against across the course of the campaign.
+      </p>
+
+      <!-- ═══ ALLIES ═══════════════════════════════════════════════════════ -->
+      <div class="content-section" id="allies" style="margin-bottom:28px;">
+        <div class="section-header ally-header"><span>🤝</span><h2>Allied Leaders</h2></div>
+        <div class="section-body">
+          <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
+            Rulers, champions, and figures who stand alongside the forces of Good — potential patrons, quest-givers,
+            or powerful allies the party may seek aid from during the campaign.
+          </p>
+
+          <div class="figure-grid">
+
+            <!-- King Tearis Thex -->
+            <div class="figure-card ally" id="tearis-thex">
+              <div class="figure-portrait-wrap">
+                <img src="https://wiki.project1999.com/images/thumb/King_Tearis_Thex_Comic.jpg/300px-King_Tearis_Thex_Comic.jpg" alt="King Tearis Thex" loading="lazy">
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">King Tearis Thex</div>
+                <div class="figure-title">King of the Koada'Dal; Ruler of Felwithe</div>
+                <div class="figure-meta">High Elf &bull; Felwithe, Greater Faydark</div>
+                <div class="figure-desc">A centuries-old sovereign who has ruled Felwithe with unwavering conviction and moral clarity. Father of Firiona Vie, he is known for his uncompromising judgment — "I never forget and I rarely forgive." He commands the Arcane Keep personally and appears only at moments of great consequence.</div>
+              </div>
+            </div>
+
+            <!-- Firiona Vie -->
+            <div class="figure-card ally" id="firiona-vie">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">🧝</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Firiona Vie</div>
+                <div class="figure-title">Champion of Tunare; Princess of Felwithe</div>
+                <div class="figure-meta">High Elf &bull; Felwithe / Firiona Vie Outpost, Kunark</div>
+                <div class="figure-desc">Daughter of King Tearis Thex and a paladin blessed personally by the goddess Tunare, Firiona Vie is the most celebrated hero of Norrath's modern age. She led the campaign against the Ring of Scale in Kunark, clashed with Lanys T'Vyl across multiple fronts, and serves as a living symbol of Good's resistance to the encroaching dark.</div>
+              </div>
+            </div>
+
+            <!-- Antonius Bayle IV -->
+            <div class="figure-card ally" id="antonius-bayle">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">👑</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Antonius Bayle IV</div>
+                <div class="figure-title">High Keeper of the Sword; Ruler of Qeynos</div>
+                <div class="figure-meta">Human &bull; Qeynos, Antonica</div>
+                <div class="figure-desc">A devout Paladin of Karana who assumed rule of Qeynos at age twenty-four and earned the fierce loyalty of his citizens through just and firm governance. His brother Kane works perpetually against him from within the shadows. Bayle represents the most powerful force for order and Good on the continent of Antonica.</div>
+              </div>
+            </div>
+
+            <!-- El'Arad -->
+            <div class="figure-card ally" id="elarad">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">🔮</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">El'Arad</div>
+                <div class="figure-title">Lord Primarch of Erudin; High Arcane Authority</div>
+                <div class="figure-meta">Erudite &bull; Erudin, Odus</div>
+                <div class="figure-desc">The preeminent political and magical authority of Erudin, the city of the Erudite scholars. El'Arad presides over the High Council and the Academy of the Arcane Sciences, balancing centuries of arcane tradition against the constant threat of the heretic Paineel faction. A figure of immense intellect and guarded ambition.</div>
+              </div>
+            </div>
+
+            <!-- Mayor Gubbin -->
+            <div class="figure-card ally" id="mayor-gubbin">
+              <div class="figure-portrait-wrap">
+                <img src="https://wiki.project1999.com/images/thumb/Npc_mayor_gubbin.png/250px-Npc_mayor_gubbin.png" alt="Mayor Gubbin" loading="lazy">
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Mayor Gubbin</div>
+                <div class="figure-title">Mayor of Rivervale</div>
+                <div class="figure-meta">Halfling &bull; Rivervale, Antonica</div>
+                <div class="figure-desc">The wealthiest halfling ever to live, having made his fortune adventuring alongside Antonius Bayle III and securing a great treasure hoard from the fairiefolk of Lesser Faydark. A former rogue turned civic leader, he now governs Rivervale quietly — keeping his storied past deliberately out of conversation.</div>
+              </div>
+            </div>
+
+            <!-- King Kazon Stormhammer -->
+            <div class="figure-card ally" id="kazon-stormhammer">
+              <div class="figure-portrait-wrap">
+                <img src="https://wiki.project1999.com/images/thumb/Npc_king_kazon_stormhammer.png/200px-Npc_king_kazon_stormhammer.png" alt="King Kazon Stormhammer" loading="lazy">
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">King Kazon Stormhammer</div>
+                <div class="figure-title">King of Kaladim; Lord of the Dwarves</div>
+                <div class="figure-meta">Dwarf &bull; South Kaladim, Faydwer</div>
+                <div class="figure-desc">A formidable warrior-king who rules the Dwarven stronghold of Kaladim from his throne room deep within the mountain fortress. Protected by the Bloodforge Brigade — his most elite honor guard — Stormhammer embodies the stubborn martial pride of the Dwarven people and their long alliance with the forces of Good.</div>
+              </div>
+            </div>
+
+            <!-- King Ak'Anon -->
+            <div class="figure-card ally" id="king-akanon">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">⚙️</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">King Ak'Anon</div>
+                <div class="figure-title">Immortal Clockwork Sovereign of the Gnomes</div>
+                <div class="figure-meta">Clockwork &bull; Ak'Anon, Steamfont Mountains</div>
+                <div class="figure-desc">The greatest invention of all gnomekind — a mechanical ruler infused with the memories and accumulated wisdom of the original King Horatio Ak'Anon, reborn in clockwork so that gnomish civilization might benefit from his guidance in perpetuity. He has presided over Ak'Anon for nearly five centuries, a marvel of engineering and governance both.</div>
+              </div>
+            </div>
+
+            <!-- Halas Council of Elders -->
+            <div class="figure-card ally" id="halas-council">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">🪬</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Halas Council of Elders</div>
+                <div class="figure-title">Governing Body of the Northmen Nation</div>
+                <div class="figure-meta">Barbarian &bull; Halas, Everfrost Peaks</div>
+                <div class="figure-desc">Fourteen Elders chosen by merit from fourteen scattered Northmen tribes, the Council governs through decentralization by design — a system devised by the reformer Burke Wingfoot after the fall of the ancient Barbarian Kingdom to ensure no single ruler could again corrupt the nation. They communicate through scouts and meet at hidden, rotating locations.</div>
+              </div>
+            </div>
+
+            <!-- Al'Kabor -->
+            <div class="figure-card ally" id="alkabor">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">🌩️</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Al'Kabor</div>
+                <div class="figure-title">The Most Powerful Wizard in All of Norrath</div>
+                <div class="figure-meta">Erudite &bull; West Freeport / Dreadlands / Luclin</div>
+                <div class="figure-desc">An arrogant and brilliant Erudite wizard who has devoted centuries to research on the Combine Empire, the Kedge race, and arcane immortality. He traveled with Firiona Vie's company and personally confronted Phinigel Autropos in the depths of Kedge Keep. His obsessive research eventually opened a portal to Luclin — triggering storms that reshaped the age.</div>
+              </div>
+            </div>
+
+            <!-- Tsaph Katta -->
+            <div class="figure-card ally" id="tsaph-katta">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">🏛️</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Tsaph Katta</div>
+                <div class="figure-title">Imperator of the Combine Empire</div>
+                <div class="figure-meta">Human &bull; Katta Castellum, Luclin</div>
+                <div class="figure-desc">The visionary founder-emperor who sought to unite all races of Norrath — including the dark ones — under a single banner of civilization. Betrayed and poisoned by his own general Seru at the First Combine Summit, he was sealed in magical stasis by loyal followers who fled to the moon Luclin. He survives as a comatose symbol of a lost age of unity, preserved in the city built in his name.</div>
+              </div>
+            </div>
+
+          </div><!-- /figure-grid allies -->
+        </div>
+      </div>
+
+      <!-- ═══ ENEMIES ═══════════════════════════════════════════════════════ -->
+      <div class="content-section" id="enemies" style="margin-bottom:20px;">
+        <div class="section-header enemy-header"><span>⚔️</span><h2>Enemies &amp; Threats</h2></div>
+        <div class="section-body">
+          <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
+            Warlords, tyrants, and ancient evils who oppose the party and the forces of Good across Norrath.
+            These figures command armies, cults, and dark powers that shape the campaign's greatest conflicts.
+          </p>
+
+          <div class="figure-grid">
+
+            <!-- Mayong Mistmoore -->
+            <div class="figure-card enemy" id="mayong">
+              <div class="figure-portrait-wrap">
+                <img src="https://wiki.project1999.com/images/Npc_mayong_mistmoore.png" alt="Mayong Mistmoore" loading="lazy">
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Mayong Mistmoore</div>
+                <div class="figure-title">Lord of Castle Mistmoore; First Vampire of Norrath</div>
+                <div class="figure-meta">Ancient Elf (Cursed) &bull; Castle Mistmoore, Lesser Faydark</div>
+                <div class="figure-desc">One of the oldest living creatures on Norrath — an elf of a forgotten age cursed to become the very first vampire. Vain, sophisticated, and calculating, he has spent millennia accumulating arcane knowledge, creating the drachnid race, and maintaining a vast spy network across Norrath. His ultimate goal is godhood — a goal he has been methodically working toward for centuries.</div>
+              </div>
+            </div>
+
+            <!-- Lord Inquisitor Seru -->
+            <div class="figure-card enemy" id="seru">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">👁️</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Lord Inquisitor Seru</div>
+                <div class="figure-title">Lord Inquisitor of the Combine Inquisition; Betrayer of the Empire</div>
+                <div class="figure-meta">Human (Transformed) &bull; Sanctus Seru, Luclin</div>
+                <div class="figure-desc">Once Tsaph Katta's most trusted general, Seru's fanatical belief in racial purity drove him to poison his own emperor. He fled to Luclin with the Combine Inquisition and built Sanctus Seru — a city of iron discipline and absolute obedience. Centuries of obsession have transformed him into something barely human, a zealot made manifest in terrible flesh.</div>
+              </div>
+            </div>
+
+            <!-- Jurglash -->
+            <div class="figure-card enemy" id="jurglash">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">🪓</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Jurglash</div>
+                <div class="figure-title">Warlord; Founder of the Grobb Clan</div>
+                <div class="figure-meta">Troll &bull; Innothule Swamp / Grobb, Antonica</div>
+                <div class="figure-desc">The troll warlord who rose from the ruins of the Ykeshan Clan and unified the scattered trolls of the Innothule Swamp into the Grobb Clan. Under his leadership, shamanic traditions devoted to Cazic-Thule and Innoruuk were established, the Nightkeep was built, and Da Bashers were forged into a feared fighting force. His legacy endures in every troll who calls Grobb home.</div>
+              </div>
+            </div>
+
+            <!-- Naythox Thex -->
+            <div class="figure-card enemy" id="naythox-thex">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">🗡️</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Naythox Thex</div>
+                <div class="figure-title">King of Neriak; Lord of the Teir'Dal</div>
+                <div class="figure-meta">Dark Elf &bull; Darklight Palace, Neriak, Nektulos Forest</div>
+                <div class="figure-desc">A young but formidable dark elf warrior-king, great-grandchild of Nevar Thex the founder of the House of Thex. He rules Neriak from Darklight Palace through the Indigo Brotherhood (his warrior elite) and the Dreadguard. His politically turbulent marriage to Queen Cristanos — arranged to unify the four arcane circles of dark elf power — has devolved into bitter civil war.</div>
+              </div>
+            </div>
+
+            <!-- Emperor Vekin -->
+            <div class="figure-card enemy" id="emperor-vekin">
+              <div class="figure-portrait-wrap">
+                <div class="figure-avatar">🦎</div>
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Emperor Vekin</div>
+                <div class="figure-title">First Emperor of the Cabilisian Empire; Founder of Modern Iksar Power</div>
+                <div class="figure-meta">Iksar &bull; Vekin Palace, Cabilis East, Kunark</div>
+                <div class="figure-desc">The warlord who rebuilt Iksar civilization from ruin, uniting the surviving clans through martial supremacy and founding the Cabilisian Empire with Cabilis as its capital. Descended from the Army of Ik's elite soldiers, he was notorious for his love of torture and maintained vast dungeons beneath his palace. He viewed the resurrected Venril Sathir as the gravest threat to his rising empire.</div>
+              </div>
+            </div>
+
+            <!-- Sir Lucan D'Lere -->
+            <div class="figure-card enemy" id="sir-lucan">
+              <div class="figure-portrait-wrap">
+                <img src="https://wiki.project1999.com/images/Srlcn2.JPG" alt="Sir Lucan D'Lere" loading="lazy">
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Sir Lucan D'Lere</div>
+                <div class="figure-title">Commander of the Freeport Militia</div>
+                <div class="figure-meta">Human &bull; West Freeport, Antonica</div>
+                <div class="figure-desc">A former Paladin of the Knights of Truth who fell from grace after killing a fellow knight in a dispute, then formed the Freeport Militia — a corrupt paramilitary force staffed by mercenaries and criminals. He rules West Freeport through intimidation and bribery, and is a persistent nemesis to good-aligned adventurers passing through the continent's most dangerous city.</div>
+              </div>
+            </div>
+
+            <!-- Overlord Virate Manaar -->
+            <div class="figure-card enemy" id="virate-manaar">
+              <div class="figure-portrait-wrap">
+                <img src="https://wiki.project1999.com/images/Npc_overlord_virate_manaar.png" alt="Overlord Virate Manaar" loading="lazy">
+              </div>
+              <div class="figure-body">
+                <div class="figure-name">Overlord Virate Manaar</div>
+                <div class="figure-title">Overlord of Paineel; Protector of the Seekers</div>
+                <div class="figure-meta">Erudite &bull; Paineel (The Hole), Odus</div>
+                <div class="figure-desc">The military commander of Darkglow Palace and protector of Paineel's necromantic Seekers of the Dark Truth. Virate Manaar represents the martial arm of the Heretics — Erudite outcasts who worship Cazic-Thule and practice shadow knight arts and necromancy. He ensures the Seekers can conduct their dark research undisturbed by rivals or outside forces.</div>
+              </div>
+            </div>
+
+          </div><!-- /figure-grid enemies -->
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>The Atlas — Campaign Reference Site</p>
+  </footer>
+</div>
+
+<script src="js/zones-data.js"></script>
+<script src="js/main.js"></script>
+<script src="js/search.js"></script>
+</body>
+</html>
