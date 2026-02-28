@@ -9,6 +9,111 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js" data-protect="true"></script>
+  <style>
+    /* ── World Events (homepage) ─────────────────────────────── */
+    .events-grid-home {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .event-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-left: 3px solid var(--border-gold);
+      padding: 18px 18px 15px;
+      position: relative;
+      transition: border-left-color 0.2s, box-shadow 0.2s;
+    }
+    .event-card:hover { box-shadow: 0 2px 16px rgba(201,168,76,0.1); }
+    .event-card.status-red    { border-left-color: #c03030; }
+    .event-card.status-yellow { border-left-color: #b8920a; }
+    .event-card.status-green  { border-left-color: #2d8a3e; }
+    .event-status {
+      position: absolute;
+      top: 16px; right: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .event-status-label {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+    }
+    .event-status-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #444;
+      border: 2px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .event-card.status-none   .event-status-dot { background: #444; }
+    .event-card.status-green  .event-status-dot { background: #2d8a3e; box-shadow: 0 0 6px rgba(45,138,62,0.5); }
+    .event-card.status-yellow .event-status-dot { background: #b8920a; box-shadow: 0 0 6px rgba(184,146,10,0.5); }
+    .event-card.status-red    .event-status-dot { background: #c03030; box-shadow: 0 0 6px rgba(192,48,48,0.6); }
+    .event-card.status-none   .event-status-label { color: var(--text-dim); }
+    .event-card.status-green  .event-status-label { color: #3daa50; }
+    .event-card.status-yellow .event-status-label { color: #d4a820; }
+    .event-card.status-red    .event-status-label { color: #e04040; }
+    .event-num {
+      font-family: 'Cinzel', serif;
+      font-size: 10px; letter-spacing: 2px;
+      color: var(--text-dim); text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .event-title {
+      font-family: 'Cinzel', serif;
+      font-size: 15px; color: var(--text-heading);
+      margin-bottom: 4px; padding-right: 100px; line-height: 1.3;
+    }
+    .event-subtitle {
+      font-family: 'IM Fell English', serif;
+      font-size: 12px; color: var(--accent-gold);
+      font-style: italic; margin-bottom: 10px;
+    }
+    .event-desc-short {
+      font-size: 13px; line-height: 1.65;
+      color: var(--text-secondary);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .event-notes-preview {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-dim);
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+    .events-footer-link {
+      text-align: right;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+    .events-footer-link a {
+      color: var(--accent-gold);
+      text-decoration: none;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.04em;
+    }
+    .events-footer-link a:hover { text-decoration: underline; }
+    .events-legend-home {
+      display: flex; gap: 16px;
+      margin-bottom: 16px; align-items: center; flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .legend-dot-none   { background: #444; border: 1px solid #666; }
+    .legend-dot-green  { background: #2d8a3e; }
+    .legend-dot-yellow { background: #b8920a; }
+    .legend-dot-red    { background: #c03030; }
+  </style>
 </head>
 <body>
 <div class="site-wrapper">
@@ -121,56 +226,23 @@
         </div>
       </div>
 
-      <!-- QUICK ZONE HIGHLIGHTS -->
-      <h2 class="page-title" style="font-size:20px;margin-bottom:16px;">
-        <span class="title-icon">🗺</span> Featured Lands
+      <!-- WORLD EVENTS -->
+      <h2 class="page-title" style="font-size:20px;margin-bottom:10px;">
+        <span class="title-icon">⚔️</span> World Events
       </h2>
 
-      <div id="featured-zones" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:28px;"></div>
+      <div class="events-legend-home">
+        <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);font-family:'Cinzel',serif;">Status:</span>
+        <span class="legend-item"><span class="legend-dot legend-dot-none"></span>Monitoring</span>
+        <span class="legend-item"><span class="legend-dot legend-dot-green"></span>Stable</span>
+        <span class="legend-item"><span class="legend-dot legend-dot-yellow"></span>Escalating</span>
+        <span class="legend-item"><span class="legend-dot legend-dot-red"></span>Crisis</span>
+      </div>
 
-      <!-- RECENT UPDATES & INFO -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap;">
+      <div class="events-grid-home" id="home-events-grid"></div>
 
-        <div class="updates-box">
-          <h3>📖 Campaign Updates</h3>
-          <div class="update-item">
-            <span class="update-date">Latest</span>
-            <span class="update-text"><a href="sessions.html">Session log added</a> — the party ventures into the Burning Woods</span>
-          </div>
-          <div class="update-item">
-            <span class="update-date">Recent</span>
-            <span class="update-text"><a href="zones/charasis.html">Charasis (Howling Stones)</a> entry updated with new NPC intel</span>
-          </div>
-          <div class="update-item">
-            <span class="update-date">Recent</span>
-            <span class="update-text"><a href="planes.html">Planes of Power</a> section expanded with Plane of Time details</span>
-          </div>
-          <div class="update-item">
-            <span class="update-date">Earlier</span>
-            <span class="update-text"><a href="lore.html#gods">Pantheon</a> — Solusek Ro and Innoruuk entries added</span>
-          </div>
-        </div>
-
-        <div class="updates-box">
-          <h3>⚔️ DM Notes</h3>
-          <div class="update-item">
-            <span class="update-date">Tip</span>
-            <span class="update-text">Lands are organized by continent. Use the sidebar to filter by region.</span>
-          </div>
-          <div class="update-item">
-            <span class="update-date">Tip</span>
-            <span class="update-text">Each land page includes Bestiary, Dangers, Benefits, and Notable NPCs.</span>
-          </div>
-          <div class="update-item">
-            <span class="update-date">Tip</span>
-            <span class="update-text">House rules and campaign-specific modifications are in the <a href="houserules.html">House Rules</a> section.</span>
-          </div>
-          <div class="update-item">
-            <span class="update-date">Tip</span>
-            <span class="update-text">Party character sheets are available in <a href="party.html">The Party</a>.</span>
-          </div>
-        </div>
-
+      <div class="events-footer-link">
+        <a href="events.html">View all events &amp; GM notes →</a>
       </div>
 
     </main>
@@ -192,23 +264,63 @@
 <script src="js/search.js"></script>
 <script>
   renderHomepageStats();
+</script>
+<script>
+(function () {
+  var FIREBASE_PATH = 'eq-atlas/world-events';
 
-  // Featured zones — pick a varied selection
-  const featuredIds = ['blackburrow', 'mistmoore-castle', 'city-of-mist', 'karnors-castle', 'old-sebilis', 'burning-wood'];
-  const featuredContainer = document.getElementById('featured-zones');
-  if (featuredContainer && typeof ZONES !== 'undefined') {
-    const featured = featuredIds.map(id => ZONES.find(z => z.id === id)).filter(Boolean);
-    featuredContainer.innerHTML = featured.map(zone => `
-      <a href="zones/${zone.id}.html" class="zone-card">
-        <div class="zone-region">${zone.continent}</div>
-        <h3>${zone.name}</h3>
-        <p class="zone-excerpt">${zone.excerpt}</p>
-        <div class="zone-tags">
-          ${(zone.tags || []).slice(0,3).map(t => `<span class="tag">${t}</span>`).join('')}
-        </div>
-      </a>
-    `).join('');
+  var EVENTS = [
+    { id: 'scales-of-war',  num: 'Event I',   title: 'The Scales of War',         subtitle: 'The Iksar Empire seeks a foothold in the West',                    desc: 'The newly emboldened Cabilisian Empire under Emperor Vekin has made a bold demand: the right to establish a permanent Iksar settlement on the eastern shores of Antonica. The western cities hear it as an invasion by another name. No one wants to be the city that says yes. No one wants to start the war by saying no.' },
+    { id: 'iron-city',      num: 'Event II',  title: 'The Iron City',              subtitle: 'Sir Lucan D\'Lere tightens his grip on the throat of Norrath',      desc: 'Freeport has always been dangerous, but something has changed. The Freeport Militia now operates as an open extortion racket. The Knights of Truth have been driven underground. Dark elven advisors from Neriak dine at the Militia House. And whispers say Lucan is not entirely mortal anymore.' },
+    { id: 'green-tide',     num: 'Event III', title: 'The Green Tide',             subtitle: 'The children of Rallos Zek march west',                            desc: 'Something has stirred Ogres and Trolls into coordinated, patient action — almost unheard of. They cross the Innothule Swamp in force and make camp in the Desert of Ro. They are not raiding. They are settling. Whatever drives the Green Tide, it is patient — and patient Trolls are far more terrifying than frenzied ones.' },
+    { id: 'empty-throne',   num: 'Event IV',  title: 'The Empty Throne',           subtitle: 'Qeynos holds its breath as its king fades',                       desc: 'Antonius Bayle IV is dying. His healers cannot explain it — not poison, not disease, not age. He simply fades. He has no heir. The Circle of Ten is fractured. Meanwhile, gnolls of Blackburrow raid as far south as the Plains of Karana, united under a new banner by a High Shaman who found something old and hungry in the ruins below.' },
+    { id: 'lord-of-night',  num: 'Event V',   title: 'The Lord of Night Returns',  subtitle: 'Mayong Mistmoore sets his red eyes on Felwithe',                  desc: 'Mayong Mistmoore has returned to his castle — quieter, more deliberate, more patient. Elven nobles are found drained in their beds. A Koada\'Dal ambassador vanished on the road to Kelethin. He has sent a single letter to King Tearis Thex, sealed in black wax: "What was taken will be returned. Open the gate."' },
+    { id: 'into-the-white', num: 'Event VI',  title: 'Into the White',             subtitle: 'Dwarves and gnomes sail together toward a legend frozen in ice',   desc: 'The gnomish vessel Icebreaker is the greatest feat of engineering in Norrath\'s history. King Kazon Stormhammer has committed Kaladim\'s finest to the expedition: ancient dwarven sagas speak of a clan separated from their kin in the earliest age, the Coldain, believed to still live on a frozen continent to the south.' },
+    { id: 'bone-and-spire', num: 'Event VII', title: 'The Bone and the Spire',     subtitle: 'The dead walk in the north, and the old spires hum with something new', desc: 'Miragul — the first necromancer, unseen for centuries — has been spotted moving through Everfrost. He is not wandering. He is searching. Simultaneously, wizard spires across Norrath hum strangely and show ghostly images of Al\'Kabor, the vanished Erudite wizard. Two men obsessed with transcending death. Their work is aligning.' }
+  ];
+
+  var STATUS_LABELS = { none: 'Monitoring', green: 'Stable', yellow: 'Escalating', red: 'Crisis' };
+  var _state = {};
+
+  function escHtml(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
+
+  function renderHomeEvents() {
+    var grid = document.getElementById('home-events-grid');
+    if (!grid) return;
+    grid.innerHTML = EVENTS.map(function (ev) {
+      var st = _state[ev.id] || { status: 'none', notes: '' };
+      var statusClass = 'status-' + (st.status || 'none');
+      var statusLabel = STATUS_LABELS[st.status] || STATUS_LABELS.none;
+      var notesHtml = (st.notes && st.notes.trim())
+        ? '<div class="event-notes-preview">' + escHtml(st.notes) + '</div>'
+        : '';
+      return '<div class="event-card ' + statusClass + '">' +
+        '<div class="event-status">' +
+          '<span class="event-status-label">' + statusLabel + '</span>' +
+          '<span class="event-status-dot"></span>' +
+        '</div>' +
+        '<div class="event-num">' + ev.num + '</div>' +
+        '<div class="event-title">' + ev.title + '</div>' +
+        '<div class="event-subtitle">' + ev.subtitle + '</div>' +
+        '<div class="event-desc-short">' + ev.desc + '</div>' +
+        notesHtml +
+      '</div>';
+    }).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.firebaseDB) {
+      window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
+        _state = snapshot.val() || {};
+        renderHomeEvents();
+      });
+    } else {
+      renderHomeEvents();
+    }
+  });
+})();
 </script>
 </body>
 </html>
