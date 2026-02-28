@@ -15,6 +15,17 @@ const GM_KEY        = 'eq_atlas_gm';
 const GM_TOKEN      = 'gm_active';
 const GM_PASS_HASH  = 'aba9796a63f9a96b21885a899240408c7783b91fccaabe57482918d71fc5d5bd';
 
+// ── GM Persistent Visibility Config ──────────────────────────────────────────
+// Zones and NPCs listed here are hidden from players on ALL browsers.
+// To update: use GM Mode → "Export Config", copy the output, paste it here
+// (replacing the GM_HIDDEN_CONFIG block below), then commit and push.
+// ---------------------------------------------------------------------------
+const GM_HIDDEN_CONFIG = {
+  zones: [],
+  npcs:  []
+};
+// ---------------------------------------------------------------------------
+
 // Hash a string with SHA-256, return hex string
 async function sha256(str) {
   const buf = await crypto.subtle.digest(
@@ -83,17 +94,35 @@ function deactivateGM() {
   location.reload();
 }
 
-// ── GM Hidden State (persists in localStorage across page loads) ─
+// ── GM Hidden State ──────────────────────────────────────────────────────────
+// Two layers:
+//   1. GM_HIDDEN_CONFIG (above) — committed to the repo, applies to all browsers
+//   2. localStorage — per-browser session overrides; use Export Config to promote
+//      these to the config and commit so they persist everywhere.
 
 const GM_HIDDEN_KEY = 'eq_gm_hidden';
 
-function _getGMHidden() {
+function _getLocalHidden() {
   try { return JSON.parse(localStorage.getItem(GM_HIDDEN_KEY)) || { zones: [], npcs: [] }; }
   catch (e) { return { zones: [], npcs: [] }; }
 }
 
+// Returns merged hidden state: config (permanent) + localStorage (local overrides)
+function _getGMHidden() {
+  const local = _getLocalHidden();
+  return {
+    zones: [...new Set([...GM_HIDDEN_CONFIG.zones, ...local.zones])],
+    npcs:  [...new Set([...GM_HIDDEN_CONFIG.npcs,  ...local.npcs])]
+  };
+}
+
+// Saves only the local overrides (config entries don't need to be stored again)
 function _saveGMHidden(data) {
-  localStorage.setItem(GM_HIDDEN_KEY, JSON.stringify(data));
+  const localOnly = {
+    zones: data.zones.filter(z => !GM_HIDDEN_CONFIG.zones.includes(z)),
+    npcs:  data.npcs.filter(n => !GM_HIDDEN_CONFIG.npcs.includes(n))
+  };
+  localStorage.setItem(GM_HIDDEN_KEY, JSON.stringify(localOnly));
 }
 
 function isZoneHidden(zoneId) {
@@ -139,9 +168,25 @@ function gmToggleNPC(zoneId, npcName, btnEl, event) {
 }
 
 function _updateGMHideBtn(btn, isHidden) {
-  btn.title     = isHidden ? 'Reveal to players' : 'Hide from players';
+  btn.title       = isHidden ? 'Reveal to players' : 'Hide from players';
   btn.textContent = isHidden ? '👁' : '🚫';
   btn.classList.toggle('gm-hide-btn-on', isHidden);
+}
+
+// Generates the updated GM_HIDDEN_CONFIG block and copies it to clipboard
+function exportGMConfig() {
+  const merged = _getGMHidden();
+  const block =
+    'const GM_HIDDEN_CONFIG = ' +
+    JSON.stringify(merged, null, 2)
+      .replace(/"([^"]+)":/g, '$1:') +
+    ';';
+  navigator.clipboard.writeText(block).then(function () {
+    const btn = document.getElementById('gm-export-btn');
+    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(function () { btn.textContent = '📋 Export Config'; }, 2000); }
+  }).catch(function () {
+    prompt('Copy this and paste it into auth.js, replacing the GM_HIDDEN_CONFIG block:', block);
+  });
 }
 
 // Inject GM UI elements after the DOM is ready (runs on every protected page)
@@ -170,6 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
     bar.className = 'gm-mode-bar';
     bar.innerHTML = `
       <span>🔮 GM Mode Active — content with a dashed border is hidden from players</span>
+      <button id="gm-export-btn" onclick="exportGMConfig()" class="gm-mode-bar-btn">📋 Export Config</button>
       <button onclick="deactivateGM()" class="gm-mode-bar-btn">Deactivate GM Mode</button>
     `;
     document.body.insertBefore(bar, document.body.firstChild);
