@@ -47,7 +47,7 @@
         <h3>On This Page</h3>
         <ul>
           <li><a href="#races"><span class="nav-icon">👥</span> Available Species</a></li>
-          <li><a href="#death"><span class="nav-icon">💀</span> Death & Recovery</a></li>
+          <li><a href="#death"><span class="nav-icon">💀</span> Death's Door</a></li>
           <li><a href="#restricted"><span class="nav-icon">🚫</span> Restricted Content</a></li>
         </ul>
       </div>
@@ -112,17 +112,39 @@
         </div>
       </div>
 
-      <!-- DEATH & RECOVERY -->
+      <!-- DEATH -->
       <div class="content-section" id="death" style="margin-bottom:20px;">
-        <div class="section-header"><span>💀</span><h2>Death &amp; Recovery</h2></div>
+        <div class="section-header"><span>💀</span><h2>Death's Door</h2></div>
         <div class="section-body">
-          <p><strong style="color:var(--accent-gold);">Experience Debt.</strong> When a character dies and is resurrected, they suffer a 5% experience penalty — they begin the session slightly behind where they were when they fell. This is represented mechanically by requiring an additional milestone to be completed before the next level-up trigger, DM's discretion.</p>
+          <p>When a player character is reduced to 0 hit points, instead of falling unconscious and making death saving throws as normal, they must immediately choose one of the following three options. <strong style="color:var(--text-primary);">The standard death saving throw rules do not apply.</strong></p>
+          <p style="color:var(--text-secondary);margin-bottom:20px;">If your character dies, work with the DM before the next session to create a new character at the same level as the rest of the party.</p>
 
-          <p><strong style="color:var(--accent-gold);">Corpse Recovery.</strong> When a character dies in a dangerous zone, their body remains where they fell. Resurrection magic brings the character back to life at the nearest safe zone — but their equipment remains on their corpse. The party has until the end of the next in-game day to recover the corpse and reclaim the equipment before it decays and is lost.</p>
+          <div style="border-left:3px solid var(--accent-gold);padding:12px 16px;margin-bottom:16px;background:rgba(255,255,255,0.03);border-radius:0 4px 4px 0;">
+            <h3 style="font-family:'Cinzel',serif;color:var(--accent-gold);font-size:15px;margin-bottom:8px;">⚔️ Blaze of Glory</h3>
+            <p>Your character embraces death and goes out in a blaze of glory. You take one final action of your choice — an attack, a spell, a shove, anything — and it automatically succeeds as a critical hit or critical success (with DM approval on non-attack actions). After resolving that action, your character dies. No death saving throws, no stabilization. They are gone.</p>
+          </div>
 
-          <p><strong style="color:var(--accent-gold);">Soul Binding.</strong> Characters may designate a Soul Bind location — a specific city or safe zone they have previously visited. Upon death without resurrection, the character's soul returns to this location rather than requiring a full resurrection. Characters can change their Soul Bind by meditating at a new location (takes 10 minutes and requires a short rest).</p>
+          <div style="border-left:3px solid var(--accent-gold);padding:12px 16px;margin-bottom:16px;background:rgba(255,255,255,0.03);border-radius:0 4px 4px 0;">
+            <h3 style="font-family:'Cinzel',serif;color:var(--accent-gold);font-size:15px;margin-bottom:8px;">🛡️ Avoid Death</h3>
+            <p>Your character falls unconscious but clings to life. They drop to 0 HP and fall prone, but cannot be targeted by attacks or harmful effects while unconscious this way — enemies will turn their attention elsewhere. Your character regains consciousness and returns to 1 HP when an ally uses a healing spell or ability on them, or when the party completes a long rest.</p>
+            <p style="margin-top:10px;">After falling unconscious, roll a d20:</p>
+            <ul style="margin:8px 0 8px 20px;color:var(--text-secondary);">
+              <li style="margin-bottom:6px;">On a <strong style="color:var(--text-primary);">20</strong>, your character's will to survive pulls them back — they immediately stand up with 1 HP and do not gain a Scar.</li>
+              <li style="margin-bottom:6px;">On a result <strong style="color:var(--text-primary);">less than your character's level</strong>, they gain a <strong style="color:var(--accent-gold);">Scar</strong>.</li>
+              <li>On any other result, they simply fall unconscious with no further consequence.</li>
+            </ul>
+            <p>Work with the DM to determine a Scar's lasting narrative effect — a permanent injury, a psychological toll, a lost relationship, or some other consequence. Each Scar is tracked, and some may be healable through specific in-world means determined by the DM.</p>
+            <p style="margin-top:10px;">You can have a number of Scars equal to your <strong style="color:var(--text-primary);">Proficiency Bonus</strong>. If you are reduced to 0 HP and cannot gain a Scar (because you are already at your maximum), you must choose a different option instead.</p>
+          </div>
 
-          <p><strong style="color:var(--accent-gold);">Feign Death</strong> (Monk ability): The monk makes a Deception check (DC 12 + enemy's Wisdom modifier). On success, all enemies that can see the monk believe them to be dead and stop targeting them. Enemies that witnessed the monk "die" unrealistically (i.e., at full health) have advantage on Insight to disbelieve.</p>
+          <div style="border-left:3px solid var(--accent-gold);padding:12px 16px;margin-bottom:4px;background:rgba(255,255,255,0.03);border-radius:0 4px 4px 0;">
+            <h3 style="font-family:'Cinzel',serif;color:var(--accent-gold);font-size:15px;margin-bottom:8px;">🎲 Risk It All</h3>
+            <p>Roll a d20.</p>
+            <ul style="margin:8px 0 0 20px;color:var(--text-secondary);">
+              <li style="margin-bottom:6px;">On a <strong style="color:var(--text-primary);">10 or higher:</strong> Your character surges with adrenaline, stays on their feet, and regains a number of HP equal to the result of the roll.</li>
+              <li>On a <strong style="color:var(--text-primary);">9 or lower:</strong> Your character crosses the threshold. They die immediately.</li>
+            </ul>
+          </div>
         </div>
       </div>
 
