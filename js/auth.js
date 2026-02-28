@@ -15,17 +15,6 @@ const GM_KEY        = 'eq_atlas_gm';
 const GM_TOKEN      = 'gm_active';
 const GM_PASS_HASH  = 'aba9796a63f9a96b21885a899240408c7783b91fccaabe57482918d71fc5d5bd';
 
-// ── GM Persistent Visibility Config ──────────────────────────────────────────
-// Zones and NPCs listed here are hidden from players on ALL browsers.
-// To update: use GM Mode → "Export Config", copy the output, paste it here
-// (replacing the GM_HIDDEN_CONFIG block below), then commit and push.
-// ---------------------------------------------------------------------------
-const GM_HIDDEN_CONFIG = {
-  zones: [],
-  npcs:  []
-};
-// ---------------------------------------------------------------------------
-
 // Hash a string with SHA-256, return hex string
 async function sha256(str) {
   const buf = await crypto.subtle.digest(
@@ -94,43 +83,65 @@ function deactivateGM() {
   location.reload();
 }
 
-// ── GM Hidden State ──────────────────────────────────────────────────────────
-// Two layers:
-//   1. GM_HIDDEN_CONFIG (above) — committed to the repo, applies to all browsers
-//   2. localStorage — per-browser session overrides; use Export Config to promote
-//      these to the config and commit so they persist everywhere.
+// ── GM Hidden State (Firebase Realtime Database) ─────────────────────────────
+// Hidden state is stored in Firebase so it persists across all browsers.
+// sessionStorage is used as an instant-render cache for the current tab session.
 
-const GM_HIDDEN_KEY = 'eq_gm_hidden';
+const FIREBASE_HIDDEN_PATH = 'eq-atlas/hidden';
+const GM_HIDDEN_CACHE_KEY  = 'eq_gm_hidden_cache';
 
-function _getLocalHidden() {
-  try { return JSON.parse(localStorage.getItem(GM_HIDDEN_KEY)) || { zones: [], npcs: [] }; }
+// In-memory cache — initialized from sessionStorage for instant rendering,
+// then kept in sync by the Firebase onValue listener.
+let _gmHiddenCache = (function () {
+  try { return JSON.parse(sessionStorage.getItem(GM_HIDDEN_CACHE_KEY)) || { zones: [], npcs: [] }; }
   catch (e) { return { zones: [], npcs: [] }; }
-}
+})();
 
-// Returns merged hidden state: config (permanent) + localStorage (local overrides)
 function _getGMHidden() {
-  const local = _getLocalHidden();
-  return {
-    zones: [...new Set([...GM_HIDDEN_CONFIG.zones, ...local.zones])],
-    npcs:  [...new Set([...GM_HIDDEN_CONFIG.npcs,  ...local.npcs])]
-  };
+  return _gmHiddenCache;
 }
 
-// Saves only the local overrides (config entries don't need to be stored again)
 function _saveGMHidden(data) {
-  const localOnly = {
-    zones: data.zones.filter(z => !GM_HIDDEN_CONFIG.zones.includes(z)),
-    npcs:  data.npcs.filter(n => !GM_HIDDEN_CONFIG.npcs.includes(n))
-  };
-  localStorage.setItem(GM_HIDDEN_KEY, JSON.stringify(localOnly));
+  _gmHiddenCache = data;
+  try { sessionStorage.setItem(GM_HIDDEN_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+  if (window.firebaseDB) {
+    window.firebaseDB.ref(FIREBASE_HIDDEN_PATH).set(data).catch(function (err) {
+      console.error('Firebase write error (hidden state):', err);
+    });
+  }
 }
 
 function isZoneHidden(zoneId) {
-  return _getGMHidden().zones.includes(zoneId);
+  return _gmHiddenCache.zones.includes(zoneId);
 }
 
 function isNPCHidden(zoneId, npcName) {
-  return _getGMHidden().npcs.includes(zoneId + '::' + npcName);
+  return _gmHiddenCache.npcs.includes(zoneId + '::' + npcName);
+}
+
+// Re-applies the current hidden state to all matching elements on the page.
+// Called when Firebase pushes an update so all browsers stay in sync.
+function _applyHiddenState() {
+  // Zone cards (zones.html grid and any page using zone-card)
+  document.querySelectorAll('.zone-card[data-zone-id]').forEach(function (card) {
+    const zoneId = card.dataset.zoneId;
+    const hidden = _gmHiddenCache.zones.includes(zoneId);
+    card.classList.toggle('gm-card-hidden', hidden);
+    const btn = card.querySelector('.gm-hide-btn');
+    if (btn) _updateGMHideBtn(btn, hidden);
+  });
+
+  // NPC list items on individual zone pages
+  document.querySelectorAll('.gm-hide-btn').forEach(function (btn) {
+    if (btn.closest('.zone-card')) return; // already handled above
+    const onclick = btn.getAttribute('onclick') || '';
+    const match = onclick.match(/gmToggleNPC\(['"]([^'"]+)['"]\s*,\s*['"]([^'"]+)['"]/);
+    if (match) {
+      const hidden = _gmHiddenCache.npcs.includes(match[1] + '::' + match[2]);
+      const li = btn.closest('li');
+      if (li) { li.classList.toggle('gm-npc-hidden', hidden); _updateGMHideBtn(btn, hidden); }
+    }
+  });
 }
 
 // Called by the hide button on zone cards; stops the card link from firing
@@ -141,7 +152,8 @@ function gmToggleZone(zoneId, event) {
   const idx = data.zones.indexOf(zoneId);
   if (idx === -1) data.zones.push(zoneId); else data.zones.splice(idx, 1);
   _saveGMHidden(data);
-  const hidden = isZoneHidden(zoneId);
+  // Optimistic local update (Firebase listener will confirm)
+  const hidden = data.zones.includes(zoneId);
   document.querySelectorAll('.zone-card[data-zone-id="' + zoneId + '"]').forEach(function (card) {
     card.classList.toggle('gm-card-hidden', hidden);
     const btn = card.querySelector('.gm-hide-btn');
@@ -159,12 +171,10 @@ function gmToggleNPC(zoneId, npcName, btnEl, event) {
   const idx = data.npcs.indexOf(key);
   if (idx === -1) data.npcs.push(key); else data.npcs.splice(idx, 1);
   _saveGMHidden(data);
-  const hidden = isNPCHidden(zoneId, npcName);
+  // Optimistic local update
+  const hidden = data.npcs.includes(key);
   const li = btnEl.closest('li');
-  if (li) {
-    li.classList.toggle('gm-npc-hidden', hidden);
-    _updateGMHideBtn(btnEl, hidden);
-  }
+  if (li) { li.classList.toggle('gm-npc-hidden', hidden); _updateGMHideBtn(btnEl, hidden); }
 }
 
 function _updateGMHideBtn(btn, isHidden) {
@@ -173,28 +183,22 @@ function _updateGMHideBtn(btn, isHidden) {
   btn.classList.toggle('gm-hide-btn-on', isHidden);
 }
 
-// Generates the updated GM_HIDDEN_CONFIG block and copies it to clipboard
-function exportGMConfig() {
-  const merged = _getGMHidden();
-  const block =
-    'const GM_HIDDEN_CONFIG = ' +
-    JSON.stringify(merged, null, 2)
-      .replace(/"([^"]+)":/g, '$1:') +
-    ';';
-  navigator.clipboard.writeText(block).then(function () {
-    const btn = document.getElementById('gm-export-btn');
-    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(function () { btn.textContent = '📋 Export Config'; }, 2000); }
-  }).catch(function () {
-    prompt('Copy this and paste it into auth.js, replacing the GM_HIDDEN_CONFIG block:', block);
-  });
-}
-
 // Inject GM UI elements after the DOM is ready (runs on every protected page)
 document.addEventListener('DOMContentLoaded', function () {
   if (!isAuthenticated()) return;
 
   // Apply body class immediately so CSS can show/hide .gm-only elements
   if (isGM()) document.body.classList.add('gm-mode');
+
+  // Start Firebase hidden state listener — updates all browsers in real-time
+  if (window.firebaseDB) {
+    window.firebaseDB.ref(FIREBASE_HIDDEN_PATH).on('value', function (snapshot) {
+      const data = snapshot.val() || { zones: [], npcs: [] };
+      _gmHiddenCache = { zones: data.zones || [], npcs: data.npcs || [] };
+      try { sessionStorage.setItem(GM_HIDDEN_CACHE_KEY, JSON.stringify(_gmHiddenCache)); } catch (e) {}
+      _applyHiddenState();
+    });
+  }
 
   // Add GM toggle button to the top nav (before Sign Out)
   const nav = document.querySelector('.top-nav ul');
@@ -215,7 +219,6 @@ document.addEventListener('DOMContentLoaded', function () {
     bar.className = 'gm-mode-bar';
     bar.innerHTML = `
       <span>🔮 GM Mode Active — content with a dashed border is hidden from players</span>
-      <button id="gm-export-btn" onclick="exportGMConfig()" class="gm-mode-bar-btn">📋 Export Config</button>
       <button onclick="deactivateGM()" class="gm-mode-bar-btn">Deactivate GM Mode</button>
     `;
     document.body.insertBefore(bar, document.body.firstChild);

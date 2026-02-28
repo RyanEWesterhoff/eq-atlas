@@ -214,6 +214,9 @@
     .zone-ac-name { color: var(--text-primary); }
     .zone-ac-region { color: var(--text-dim); font-size: 11px; letter-spacing: 0.5px; }
   </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/auth.js" data-protect="true"></script>
 </head>
 <body>
@@ -293,7 +296,7 @@
 <script>
 // ── Session Log Editor ─────────────────────────────────────
 (function () {
-  var STORAGE_KEY = 'atlas_sessions';
+  var FIREBASE_PATH = 'eq-atlas/sessions';
 
   var DEFAULT_SESSIONS = [
     {
@@ -306,15 +309,25 @@
     }
   ];
 
-  function loadSessions() {
-    try {
-      var stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : DEFAULT_SESSIONS.slice();
-    } catch (e) { return DEFAULT_SESSIONS.slice(); }
+  // In-memory cache updated by Firebase listener
+  var _sessionsCache = [];
+  var _firebaseReady = false;
+
+  function _sortSessions(sessions) {
+    return sessions.slice().sort(function (a, b) {
+      return (b.num || '').localeCompare(a.num || '');
+    });
   }
 
   function saveSessions(sessions) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+    _sessionsCache = sessions;
+    if (window.firebaseDB) {
+      var obj = {};
+      sessions.forEach(function (s) { obj[s.id] = s; });
+      window.firebaseDB.ref(FIREBASE_PATH).set(obj).catch(function (err) {
+        console.error('Firebase write error (sessions):', err);
+      });
+    }
   }
 
   function esc(v) {
@@ -342,7 +355,7 @@
   function renderSessions() {
     var container = document.getElementById('sessions-container');
     if (!container) return;
-    var sessions = loadSessions();
+    var sessions = _sortSessions(_sessionsCache);
     var gmMode = typeof isGM === 'function' && isGM();
     var html = '';
 
@@ -375,9 +388,8 @@
     if (e) e.stopPropagation();
     var entry = document.getElementById('se-' + id);
     if (!entry) return;
-    var sessions = loadSessions();
     var s = null;
-    for (var i = 0; i < sessions.length; i++) { if (sessions[i].id === id) { s = sessions[i]; break; } }
+    for (var i = 0; i < _sessionsCache.length; i++) { if (_sessionsCache[i].id === id) { s = _sessionsCache[i]; break; } }
     if (!s) return;
 
     entry.classList.add('editing');
@@ -421,7 +433,7 @@
   };
 
   window.sessionSave = function (id) {
-    var sessions = loadSessions();
+    var sessions = _sessionsCache.slice();
     var idx = -1;
     for (var i = 0; i < sessions.length; i++) { if (sessions[i].id === id) { idx = i; break; } }
     if (idx === -1) return;
@@ -451,13 +463,13 @@
   window.sessionDelete = function (id, e) {
     if (e) e.stopPropagation();
     if (!confirm('Delete this session entry? This cannot be undone.')) return;
-    var sessions = loadSessions().filter(function (s) { return s.id !== id; });
+    var sessions = _sessionsCache.filter(function (s) { return s.id !== id; });
     saveSessions(sessions);
     renderSessions();
   };
 
   window.sessionAdd = function () {
-    var sessions = loadSessions();
+    var sessions = _sessionsCache.slice();
     var newId = 'session-' + Date.now();
     var nextNum = sessions.length + 1;
     var today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -588,8 +600,27 @@
     field.focus();
   }
 
-  // Initialize after auth.js DOMContentLoaded has run (so isGM() is valid)
-  document.addEventListener('DOMContentLoaded', renderSessions);
+  // Initialize: set up Firebase listener or fall back to defaults
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.firebaseDB) {
+      window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
+        var data = snapshot.val();
+        if (data && typeof data === 'object') {
+          _sessionsCache = Object.values(data);
+        } else {
+          // No data yet — seed Firebase with default sessions
+          _sessionsCache = DEFAULT_SESSIONS.slice();
+          saveSessions(_sessionsCache);
+        }
+        _firebaseReady = true;
+        renderSessions();
+      });
+    } else {
+      // Firebase not configured — show placeholder
+      _sessionsCache = DEFAULT_SESSIONS.slice();
+      renderSessions();
+    }
+  });
 })();
 </script>
 </body>
