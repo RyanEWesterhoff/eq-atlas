@@ -3,6 +3,20 @@
 //  main.js — Navigation, filtering, rendering
 // ============================================================
 
+// ── Difficulty helper ──────────────────────────────────────
+function levelToDifficulty(levelStr) {
+  const min = parseInt(levelStr) || 0;
+  if (min <= 15) return { label: 'Easy',      color: '#3a7a3a', border: '#4fa84f' };
+  if (min <= 30) return { label: 'Medium',    color: '#7a6a18', border: '#c9a84c' };
+  if (min <= 50) return { label: 'Hard',      color: '#7a3a10', border: '#c96830' };
+  return             { label: 'Very Hard',  color: '#7a1a1a', border: '#c03030' };
+}
+
+function difficultyBadge(levelStr) {
+  const d = levelToDifficulty(levelStr);
+  return `<span class="level-badge" style="background:${d.color};border-color:${d.border};color:#f0e8d0;">${d.label}</span>`;
+}
+
 // ── Active page detection ──────────────────────────────────
 (function markActiveNav() {
   const path = window.location.pathname.split('/').pop() || 'index.html';
@@ -89,7 +103,7 @@ function renderZoneDetail(zoneId) {
   const bestiaryRows = (zone.bestiary || []).map(b => `
     <tr>
       <td>${b.name}</td>
-      <td><span class="level-badge">${b.level}</span></td>
+      <td>${difficultyBadge(b.level)}</td>
       <td>${b.type}</td>
     </tr>
   `).join('') || '<tr><td colspan="3" style="color:var(--text-dim);font-style:italic;">No hostile creatures recorded in this area.</td></tr>';
@@ -177,7 +191,7 @@ function renderZoneDetail(zoneId) {
           <thead>
             <tr>
               <th>Creature</th>
-              <th>Level Range</th>
+              <th>Difficulty</th>
               <th>Type</th>
             </tr>
           </thead>
@@ -198,6 +212,18 @@ function renderZoneDetail(zoneId) {
         <ul class="npc-list">
           ${npcItems}
         </ul>
+      </div>
+    </div>
+    ` : ''}
+
+    ${zone.gmNotes ? `
+    <div class="content-section gm-only">
+      <div class="section-header">
+        <span>🔮</span>
+        <h2>GM Notes</h2>
+      </div>
+      <div class="section-body">
+        ${zone.gmNotes.split('\n\n').map(p => `<p>${p.trim()}</p>`).join('')}
       </div>
     </div>
     ` : ''}

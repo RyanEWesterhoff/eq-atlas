@@ -87,6 +87,7 @@
 
 <script src="js/zones-data.js"></script>
 <script src="js/main.js"></script>
+<script src="js/search.js"></script>
 <script>
 // Build bestiary from zone data
 function renderBestiary() {
@@ -141,7 +142,7 @@ function renderBestiary() {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Level</th>
+                <th>Difficulty</th>
                 <th>Type</th>
                 <th>Found In</th>
               </tr>
@@ -150,7 +151,7 @@ function renderBestiary() {
               ${creatures.map(c => `
                 <tr>
                   <td style="font-weight:600;color:var(--text-heading);">${c.name}</td>
-                  <td><span class="level-badge">${c.level}</span></td>
+                  <td>${difficultyBadge(c.level)}</td>
                   <td style="color:var(--text-secondary);font-size:13px;">${c.type}</td>
                   <td><a href="zones/${c.zoneId}.html" style="color:var(--link-color);text-decoration:none;font-size:13px;">${c.zone}</a></td>
                 </tr>
