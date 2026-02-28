@@ -31,12 +31,17 @@ function isAuthenticated() {
   return sessionStorage.getItem(AUTH_KEY) === AUTH_TOKEN;
 }
 
+// Returns relative prefix to site root from current page
+function _rootPrefix() {
+  return window.location.pathname.replace(/\\/g, '/').includes('/zones/') ? '../' : './';
+}
+
 // Redirect to login if not authenticated.
 // Call this at the top of every protected page.
 function requireAuth() {
   if (!isAuthenticated()) {
     const dest = encodeURIComponent(window.location.pathname + window.location.search);
-    window.location.replace('/eq-atlas/login.html?next=' + dest);
+    window.location.replace(_rootPrefix() + 'login.html?next=' + dest);
   }
 }
 
@@ -45,7 +50,7 @@ async function attemptLogin(password, redirectTo) {
   const hash = await sha256(password);
   if (hash === PASS_HASH) {
     sessionStorage.setItem(AUTH_KEY, AUTH_TOKEN);
-    window.location.replace(redirectTo || '/eq-atlas/');
+    window.location.replace(redirectTo || './index.html');
     return true;
   }
   return false;
@@ -55,7 +60,7 @@ async function attemptLogin(password, redirectTo) {
 function logout() {
   sessionStorage.removeItem(AUTH_KEY);
   sessionStorage.removeItem(GM_KEY);
-  window.location.replace('/eq-atlas/login.html');
+  window.location.replace(_rootPrefix() + 'login.html');
 }
 
 // ── GM Mode ─────────────────────────────────────────────────
