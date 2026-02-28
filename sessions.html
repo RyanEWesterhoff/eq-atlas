@@ -205,6 +205,32 @@
     .gm-add-session-btn:hover { background: rgba(201,168,76,0.08); }
     .gm-add-session-btn h3 { font-family: 'Cinzel', serif; margin-bottom: 6px; font-size: 15px; }
     .gm-add-session-btn p { font-size: 13px; color: var(--text-dim); margin: 0; }
+
+    /* Zone autocomplete dropdown */
+    .session-location-wrapper { position: relative; }
+    .zone-ac-dropdown {
+      position: absolute;
+      left: 0; right: 0; top: 100%;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-gold);
+      z-index: 200;
+      max-height: 220px;
+      overflow-y: auto;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    .zone-ac-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-dim);
+    }
+    .zone-ac-item:last-child { border-bottom: none; }
+    .zone-ac-item:hover, .zone-ac-item.ac-active { background: rgba(201,168,76,0.15); }
+    .zone-ac-name { color: var(--text-primary); }
+    .zone-ac-region { color: var(--text-dim); font-size: 11px; letter-spacing: 0.5px; }
   </style>
   <script src="js/auth.js" data-protect="true"></script>
 </head>
@@ -405,7 +431,9 @@
         '<input class="session-edit-input session-title-input" id="edit-title-' + id + '" type="text" value="' + esc(s.title) + '" placeholder="Session Title">' +
         '<input class="session-edit-input session-date-input" id="edit-date-' + id + '" type="text" value="' + esc(s.date) + '" placeholder="Date">' +
       '</div>' +
-      '<div class="session-location-edit" id="edit-loc-' + id + '" contenteditable="true">' + s.location + '</div>' +
+      '<div class="session-location-wrapper">' +
+        '<div class="session-location-edit" id="edit-loc-' + id + '" contenteditable="true">' + s.location + '</div>' +
+      '</div>' +
       '<div class="session-summary-edit" id="edit-summary-' + id + '" contenteditable="true">' + s.summary + '</div>' +
       '<div class="session-xp-edit">' +
         '<span>XP Earned: <input class="session-edit-input" id="edit-xp-' + id + '" type="text" value="' + esc(s.xp) + '" placeholder="—" style="width:80px;"></span>' +
@@ -415,6 +443,7 @@
 
     var summaryEl = document.getElementById('edit-summary-' + id);
     if (summaryEl) summaryEl.focus();
+    setupLocationAutocomplete('edit-loc-' + id);
   };
 
   window.tbCmd = function (e, cmd, arg) {
@@ -485,6 +514,120 @@
     renderSessions();
     sessionEdit(newId);
   };
+
+  function setupLocationAutocomplete(fieldId) {
+    var field = document.getElementById(fieldId);
+    if (!field || typeof ZONES === 'undefined') return;
+    var wrapper = field.parentNode;
+    var dropdown = document.createElement('div');
+    dropdown.className = 'zone-ac-dropdown';
+    dropdown.style.display = 'none';
+    wrapper.appendChild(dropdown);
+    var currentQuery = '';
+
+    field.addEventListener('input', function () {
+      var sel = window.getSelection();
+      if (!sel.rangeCount) { dropdown.style.display = 'none'; return; }
+      var range = sel.getRangeAt(0);
+      var container = range.startContainer;
+      if (container.nodeType !== 3) { dropdown.style.display = 'none'; return; }
+      var beforeCursor = container.textContent.substring(0, range.startOffset);
+      var lastSep = Math.max(
+        beforeCursor.lastIndexOf('\u2192'),
+        beforeCursor.lastIndexOf(','),
+        beforeCursor.lastIndexOf(':')
+      );
+      var query = beforeCursor.substring(lastSep + 1).replace(/^\s+/, '');
+      if (query.length < 1) { dropdown.style.display = 'none'; currentQuery = ''; return; }
+      currentQuery = query;
+
+      var qLow = query.toLowerCase();
+      var matches = ZONES.filter(function (z) { return z.name.toLowerCase().indexOf(qLow) !== -1; }).slice(0, 8);
+      if (matches.length === 0) { dropdown.style.display = 'none'; return; }
+
+      dropdown.innerHTML = matches.map(function (z) {
+        return '<div class="zone-ac-item" data-id="' + z.id + '" data-name="' + z.name.replace(/"/g, '&quot;') + '">' +
+          '<span class="zone-ac-name">' + z.name + '</span>' +
+          '<span class="zone-ac-region">' + z.continent + '</span>' +
+        '</div>';
+      }).join('');
+
+      dropdown.querySelectorAll('.zone-ac-item').forEach(function (item) {
+        item.addEventListener('mousedown', function (e) {
+          e.preventDefault();
+          insertZoneLink(field, item.dataset.id, item.dataset.name, currentQuery);
+          dropdown.style.display = 'none';
+          currentQuery = '';
+        });
+      });
+      dropdown.style.display = 'block';
+    });
+
+    field.addEventListener('blur', function () {
+      setTimeout(function () { dropdown.style.display = 'none'; }, 150);
+    });
+
+    field.addEventListener('keydown', function (e) {
+      if (dropdown.style.display === 'none') return;
+      var items = dropdown.querySelectorAll('.zone-ac-item');
+      var active = dropdown.querySelector('.zone-ac-item.ac-active');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!active) { if (items[0]) items[0].classList.add('ac-active'); }
+        else {
+          active.classList.remove('ac-active');
+          var next = active.nextElementSibling;
+          if (next) next.classList.add('ac-active'); else if (items[0]) items[0].classList.add('ac-active');
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!active) { if (items[items.length - 1]) items[items.length - 1].classList.add('ac-active'); }
+        else {
+          active.classList.remove('ac-active');
+          var prev = active.previousElementSibling;
+          if (prev) prev.classList.add('ac-active'); else if (items[items.length - 1]) items[items.length - 1].classList.add('ac-active');
+        }
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        if (active) {
+          e.preventDefault();
+          insertZoneLink(field, active.dataset.id, active.dataset.name, currentQuery);
+          dropdown.style.display = 'none';
+          currentQuery = '';
+        }
+      } else if (e.key === 'Escape') {
+        dropdown.style.display = 'none';
+      }
+    });
+  }
+
+  function insertZoneLink(field, zoneId, zoneName, query) {
+    var sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    var range = sel.getRangeAt(0);
+    var container = range.startContainer;
+    var endOffset = range.startOffset;
+    if (container.nodeType === 3 && query) {
+      var beforeCursor = container.textContent.substring(0, endOffset);
+      var idx = beforeCursor.toLowerCase().lastIndexOf(query.toLowerCase());
+      if (idx !== -1) {
+        var delRange = document.createRange();
+        delRange.setStart(container, idx);
+        delRange.setEnd(container, idx + query.length);
+        delRange.deleteContents();
+      }
+    }
+    var link = document.createElement('a');
+    link.href = 'zones/' + zoneId + '.html';
+    link.setAttribute('style', 'color:var(--link-color);text-decoration:none;');
+    link.textContent = zoneName;
+    var r = sel.getRangeAt(0);
+    r.insertNode(link);
+    r.setStartAfter(link);
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
+    field.focus();
+  }
 
   // Initialize after auth.js DOMContentLoaded has run (so isGM() is valid)
   document.addEventListener('DOMContentLoaded', renderSessions);
