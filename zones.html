@@ -72,8 +72,17 @@
         Each entry includes bestiary, dangers, benefits, and historical background.
       </p>
 
-      <div style="margin-bottom:24px;border:1px solid var(--border-dim);border-radius:6px;overflow:hidden;">
+      <div style="margin-bottom:24px;border:1px solid var(--border-dim);border-radius:6px;overflow:hidden;cursor:zoom-in;" onclick="openMapModal()">
         <img src="images/maps/EQ Map.png" alt="Map of Norrath" style="width:100%;display:block;">
+      </div>
+
+      <!-- Map lightbox -->
+      <div id="map-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.92);cursor:zoom-out;" onclick="closeMapModal(event)">
+        <div style="position:absolute;top:12px;right:16px;color:#aaa;font-size:13px;pointer-events:none;user-select:none;">Scroll to zoom &nbsp;·&nbsp; Drag to pan &nbsp;·&nbsp; Click outside to close</div>
+        <div id="map-modal-inner" style="position:absolute;inset:0;overflow:hidden;">
+          <img id="map-modal-img" src="images/maps/EQ Map.png" alt="Map of Norrath"
+            style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);max-width:none;cursor:grab;user-select:none;-webkit-user-drag:none;">
+        </div>
       </div>
 
       <!-- FILTER BAR -->
@@ -131,6 +140,89 @@
     const matchBtn = document.querySelector(`button[data-filter-region="${regionParam}"]`);
     if (matchBtn) matchBtn.click();
   }
+</script>
+<script>
+  // ── Map lightbox with zoom + pan ────────────────────────────
+  (function () {
+    var modal = document.getElementById('map-modal');
+    var img   = document.getElementById('map-modal-img');
+    var scale = 1, tx = 0, ty = 0;
+    var dragging = false, startX, startY, startTx, startTy;
+
+    function applyTransform() {
+      img.style.transform = 'translate(calc(-50% + ' + tx + 'px), calc(-50% + ' + ty + 'px)) scale(' + scale + ')';
+    }
+
+    window.openMapModal = function () {
+      scale = 1; tx = 0; ty = 0;
+      applyTransform();
+      modal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    };
+
+    window.closeMapModal = function (e) {
+      if (e && img.contains(e.target)) return;
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    };
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modal.style.display === 'block') closeMapModal();
+    });
+
+    // Scroll to zoom
+    modal.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      var factor = e.deltaY < 0 ? 1.12 : 0.89;
+      scale = Math.min(10, Math.max(0.5, scale * factor));
+      applyTransform();
+    }, { passive: false });
+
+    // Drag to pan
+    img.addEventListener('mousedown', function (e) {
+      dragging = true; startX = e.clientX; startY = e.clientY;
+      startTx = tx; startTy = ty;
+      img.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', function (e) {
+      if (!dragging) return;
+      tx = startTx + (e.clientX - startX);
+      ty = startTy + (e.clientY - startY);
+      applyTransform();
+    });
+    document.addEventListener('mouseup', function () {
+      dragging = false;
+      img.style.cursor = 'grab';
+    });
+
+    // Touch pinch-zoom + pan
+    var lastDist = null, lastMidX, lastMidY;
+    modal.addEventListener('touchstart', function (e) {
+      if (e.touches.length === 2) {
+        lastDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        lastMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        lastMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      } else if (e.touches.length === 1) {
+        dragging = true; startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+        startTx = tx; startTy = ty;
+      }
+    }, { passive: true });
+    modal.addEventListener('touchmove', function (e) {
+      if (e.touches.length === 2) {
+        var dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        if (lastDist) scale = Math.min(10, Math.max(0.5, scale * (dist / lastDist)));
+        lastDist = dist;
+        applyTransform();
+        e.preventDefault();
+      } else if (dragging && e.touches.length === 1) {
+        tx = startTx + (e.touches[0].clientX - startX);
+        ty = startTy + (e.touches[0].clientY - startY);
+        applyTransform();
+      }
+    }, { passive: false });
+    modal.addEventListener('touchend', function () { dragging = false; lastDist = null; });
+  })();
 </script>
 </body>
 </html>
