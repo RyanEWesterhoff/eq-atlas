@@ -65,7 +65,7 @@ function renderZoneGrid(containerSelector, filter = {}) {
   const gmMode = typeof isGM === 'function' && isGM();
 
   container.innerHTML = zones.map(zone => {
-    const cardHidden = gmMode && typeof isZoneHidden === 'function' && isZoneHidden(zone.id);
+    const cardHidden = typeof isZoneHidden === 'function' && isZoneHidden(zone.id);
     const isCity = zone.levelRange === 'City' || zone.levelRange === 'Trade Zone' || zone.levelRange === 'Hub Zone';
     return `
       <a href="zones/${zone.id}.html" class="zone-card${cardHidden ? ' gm-card-hidden' : ''}" data-zone-id="${zone.id}">
@@ -116,7 +116,7 @@ function renderZoneDetail(zoneId) {
   // Notable NPCs
   const gmMode = typeof isGM === 'function' && isGM();
   const npcItems = (zone.notableNPCs || []).map(n => {
-    const npcHidden = gmMode && typeof isNPCHidden === 'function' && isNPCHidden(zone.id, n.name);
+    const npcHidden = typeof isNPCHidden === 'function' && isNPCHidden(zone.id, n.name);
     const safeAttr  = n.name.replace(/"/g, '&quot;');
     const safeZone  = zone.id.replace(/"/g, '&quot;');
     return `
