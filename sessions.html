@@ -49,14 +49,6 @@
       line-height: 1.7;
       color: var(--text-primary);
     }
-    .session-xp {
-      margin-top: 12px;
-      font-size: 13px;
-      color: var(--text-dim);
-      display: flex;
-      gap: 16px;
-    }
-    .session-xp span { color: var(--accent-gold); }
     .placeholder-session {
       background: var(--bg-panel);
       border: 1px dashed var(--border-dim);
@@ -181,16 +173,6 @@
     }
     .session-summary-edit:focus { border-color: var(--accent-gold); }
     .session-summary-edit h2, .session-summary-edit h3 { font-family: 'Cinzel', serif; color: var(--text-heading); margin: 12px 0 6px; }
-    .session-xp-edit {
-      display: flex;
-      gap: 16px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-      font-size: 13px;
-      color: var(--text-dim);
-      align-items: center;
-    }
-
     /* Add session button (GM mode) */
     .gm-add-session-btn {
       background: var(--bg-panel);
@@ -320,10 +302,7 @@
       title: 'Into the Qeynos Hills',
       date: 'Add date here',
       location: '📍 Location: <a href="zones/qeynos-hills.html" style="color:var(--link-color);text-decoration:none;">Qeynos Hills</a> → <a href="zones/blackburrow.html" style="color:var(--link-color);text-decoration:none;">Blackburrow (entrance)</a>',
-      summary: '<p>Replace this text with a summary of what happened during the session. Who did the party encounter? What challenges did they face? What discoveries were made? What plot threads were advanced or introduced?</p><p>Keep it engaging — these logs help players remember what happened and build excitement for the next session.</p>',
-      xp: '—',
-      loot: '—',
-      deaths: '0'
+      summary: '<p>Replace this text with a summary of what happened during the session. Who did the party encounter? What challenges did they face? What discoveries were made? What plot threads were advanced or introduced?</p><p>Keep it engaging — these logs help players remember what happened and build excitement for the next session.</p>'
     }
   ];
 
@@ -357,11 +336,6 @@
       '</div>' +
       '<div class="session-location">' + s.location + '</div>' +
       '<div class="session-summary">' + s.summary + '</div>' +
-      '<div class="session-xp">' +
-        '<div>XP Earned: <span>' + s.xp + '</span></div>' +
-        '<div>Notable Loot: <span>' + s.loot + '</span></div>' +
-        '<div>Deaths: <span>' + s.deaths + '</span></div>' +
-      '</div>' +
     '</div>';
   }
 
@@ -435,11 +409,6 @@
         '<div class="session-location-edit" id="edit-loc-' + id + '" contenteditable="true">' + s.location + '</div>' +
       '</div>' +
       '<div class="session-summary-edit" id="edit-summary-' + id + '" contenteditable="true">' + s.summary + '</div>' +
-      '<div class="session-xp-edit">' +
-        '<span>XP Earned: <input class="session-edit-input" id="edit-xp-' + id + '" type="text" value="' + esc(s.xp) + '" placeholder="—" style="width:80px;"></span>' +
-        '<span>Notable Loot: <input class="session-edit-input" id="edit-loot-' + id + '" type="text" value="' + esc(s.loot) + '" placeholder="—" style="width:140px;"></span>' +
-        '<span>Deaths: <input class="session-edit-input" id="edit-deaths-' + id + '" type="text" value="' + esc(s.deaths) + '" placeholder="0" style="width:50px;"></span>' +
-      '</div>';
 
     var summaryEl = document.getElementById('edit-summary-' + id);
     if (summaryEl) summaryEl.focus();
@@ -462,20 +431,13 @@
     var dateEl    = document.getElementById('edit-date-'    + id);
     var locEl     = document.getElementById('edit-loc-'     + id);
     var summaryEl = document.getElementById('edit-summary-' + id);
-    var xpEl      = document.getElementById('edit-xp-'      + id);
-    var lootEl    = document.getElementById('edit-loot-'    + id);
-    var deathsEl  = document.getElementById('edit-deaths-'  + id);
-
     sessions[idx] = {
       id:       id,
       num:      numEl     ? numEl.value         : sessions[idx].num,
       title:    titleEl   ? titleEl.value       : sessions[idx].title,
       date:     dateEl    ? dateEl.value        : sessions[idx].date,
       location: locEl     ? locEl.innerHTML     : sessions[idx].location,
-      summary:  summaryEl ? summaryEl.innerHTML : sessions[idx].summary,
-      xp:       xpEl      ? xpEl.value         : sessions[idx].xp,
-      loot:     lootEl    ? lootEl.value        : sessions[idx].loot,
-      deaths:   deathsEl  ? deathsEl.value      : sessions[idx].deaths
+      summary:  summaryEl ? summaryEl.innerHTML : sessions[idx].summary
     };
 
     saveSessions(sessions);
@@ -505,10 +467,7 @@
       title:    'New Session',
       date:     today,
       location: '📍 Location: ',
-      summary:  '<p>Session summary goes here.</p>',
-      xp:       '—',
-      loot:     '—',
-      deaths:   '0'
+      summary:  '<p>Session summary goes here.</p>'
     });
     saveSessions(sessions);
     renderSessions();
