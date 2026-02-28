@@ -840,6 +840,10 @@ html, body {
   border-bottom-color: transparent !important;
 }
 
+/* ── GM-Only Nav Items ────────────────────────────────────── */
+.gm-nav-only { display: none; }
+.gm-mode .gm-nav-only { display: list-item; }
+
 /* ── GM-Only Content Blocks ───────────────────────────────── */
 
 /* Hidden from everyone by default */
