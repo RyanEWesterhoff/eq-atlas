@@ -12,13 +12,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 firebase.initializeApp({
-  apiKey:            "REPLACE_ME",
-  authDomain:        "REPLACE_ME.firebaseapp.com",
-  databaseURL:       "https://REPLACE_ME-default-rtdb.firebaseio.com",
-  projectId:         "REPLACE_ME",
-  storageBucket:     "REPLACE_ME.appspot.com",
-  messagingSenderId: "REPLACE_ME",
-  appId:             "REPLACE_ME"
+  apiKey: "AIzaSyAUE1ZEEHszXNSf2_vMj6SQviqZyfB_V3A",
+  authDomain: "eq-dnd-site.firebaseapp.com",
+  databaseURL: "https://eq-dnd-site-default-rtdb.firebaseio.com",
+  projectId: "eq-dnd-site",
+  storageBucket: "eq-dnd-site.firebasestorage.app",
+  messagingSenderId: "40453675548",
+  appId: "1:40453675548:web:04d3171d2fd39daedc5dd9",
+  measurementId: "G-FWV44JBXG3"
 });
 
 window.firebaseDB = firebase.database();
