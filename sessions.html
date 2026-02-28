@@ -64,6 +64,147 @@
       text-align: center;
       color: var(--text-dim);
     }
+
+    /* ── GM Mode Session Editing ──────────────────────────── */
+    .session-entry { position: relative; }
+    .session-gm-controls {
+      display: none;
+      position: absolute;
+      top: 10px; right: 10px;
+      gap: 6px;
+    }
+    .gm-mode .session-gm-controls { display: flex; }
+    .session-gm-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      color: var(--text-secondary);
+      padding: 3px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .session-gm-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .session-gm-btn.danger:hover { border-color: #c03030; color: #c03030; }
+    .session-entry.editing { border-left-color: var(--accent-gold); border-color: var(--border-gold); }
+
+    /* Formatting toolbar */
+    .session-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--bg-nav);
+      border: 1px solid var(--border-dim);
+      border-bottom: none;
+      padding: 6px 8px;
+      flex-wrap: wrap;
+      margin: -20px -20px 16px -20px;
+    }
+    .session-toolbar button {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      padding: 3px 7px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      min-width: 28px;
+      transition: all 0.15s;
+    }
+    .session-toolbar button:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-dim);
+      color: var(--text-primary);
+    }
+    .session-toolbar .tb-save {
+      background: var(--bg-panel);
+      border-color: var(--border-gold);
+      color: var(--accent-gold);
+      margin-left: auto;
+    }
+    .session-toolbar .tb-save:hover { background: var(--accent-gold); color: var(--bg-dark); }
+    .session-toolbar .tb-cancel { border-color: var(--border-dim); color: var(--text-dim); }
+    .tb-sep { width: 1px; height: 18px; background: var(--border-dim); margin: 0 4px; flex-shrink: 0; }
+
+    /* Editable input fields */
+    .session-edit-input {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid var(--border-dim);
+      color: var(--text-primary);
+      padding: 4px 8px;
+      font-family: inherit;
+      font-size: inherit;
+      outline: none;
+    }
+    .session-edit-input:focus { border-color: var(--accent-gold); }
+    .session-num-input {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent-gold);
+      width: 115px;
+    }
+    .session-title-input {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      color: var(--text-heading);
+      flex: 1;
+      min-width: 0;
+    }
+    .session-date-input {
+      font-size: 13px;
+      color: var(--text-dim);
+      width: 160px;
+    }
+    .session-location-edit {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid var(--border-dim);
+      padding: 4px 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-style: italic;
+      margin-bottom: 10px;
+      outline: none;
+      min-height: 28px;
+    }
+    .session-location-edit:focus { border-color: var(--accent-gold); }
+    .session-summary-edit {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid var(--border-dim);
+      padding: 10px 12px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      min-height: 120px;
+      outline: none;
+    }
+    .session-summary-edit:focus { border-color: var(--accent-gold); }
+    .session-summary-edit h2, .session-summary-edit h3 { font-family: 'Cinzel', serif; color: var(--text-heading); margin: 12px 0 6px; }
+    .session-xp-edit {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--text-dim);
+      align-items: center;
+    }
+
+    /* Add session button (GM mode) */
+    .gm-add-session-btn {
+      background: var(--bg-panel);
+      border: 1px dashed var(--border-gold);
+      padding: 24px 32px;
+      text-align: center;
+      color: var(--accent-gold);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 16px;
+    }
+    .gm-add-session-btn:hover { background: rgba(201,168,76,0.08); }
+    .gm-add-session-btn h3 { font-family: 'Cinzel', serif; margin-bottom: 6px; font-size: 15px; }
+    .gm-add-session-btn p { font-size: 13px; color: var(--text-dim); margin: 0; }
   </style>
   <script src="js/auth.js" data-protect="true"></script>
 </head>
@@ -86,7 +227,7 @@
       <li><a href="zones.html">Lands</a></li>
       <li><a href="bestiary.html">Bestiary</a></li>
       <li><a href="lore.html">Lore</a></li>
-      <li><a href="deities.html">Deities</a></li><li><a href="#" onclick="logout();return false;" style="color:var(--text-dim);border-bottom-color:transparent">Sign Out</a></li>
+      <li><a href="deities.html">Deities</a></li><li><a href="sessions.html">Campaign</a></li><li><a href="#" onclick="logout();return false;" style="color:var(--text-dim);border-bottom-color:transparent">Sign Out</a></li>
     </ul>
   </nav>
 
@@ -127,42 +268,8 @@
         who they encountered, what they accomplished, and what mysteries remain unsolved.
       </p>
 
-      <div class="callout info" style="margin-bottom:24px;">
-        <span class="callout-icon">📝</span>
-        <div class="callout-text">
-          <strong>DM Note:</strong> Add session entries below as the campaign progresses.
-          Copy the session template and fill in details after each game session.
-        </div>
-      </div>
-
-      <!-- SESSION ENTRIES — add newest at top -->
-
-      <div class="session-entry">
-        <div class="session-header">
-          <span class="session-num">Session 001</span>
-          <span class="session-title">Into the Qeynos Hills</span>
-          <span class="session-date">Add date here</span>
-        </div>
-        <div class="session-location">
-          📍 Location: <a href="zones/qeynos-hills.html" style="color:var(--link-color);text-decoration:none;">Qeynos Hills</a>
-          → <a href="zones/blackburrow.html" style="color:var(--link-color);text-decoration:none;">Blackburrow (entrance)</a>
-        </div>
-        <div class="session-summary">
-          <p>Replace this text with a summary of what happened during the session. Who did the party encounter?
-          What challenges did they face? What discoveries were made? What plot threads were advanced or introduced?</p>
-          <p>Keep it engaging — these logs help players remember what happened and build excitement for the next session.</p>
-        </div>
-        <div class="session-xp">
-          <div>XP Earned: <span>—</span></div>
-          <div>Notable Loot: <span>—</span></div>
-          <div>Deaths: <span>0</span></div>
-        </div>
-      </div>
-
-      <div class="placeholder-session">
-        <h3 style="font-family:'Cinzel',serif;color:var(--text-secondary);margin-bottom:8px;">+ Add Session</h3>
-        <p style="font-size:14px;">Copy the session entry above and paste it here for each new game session. Add newest sessions at the top.</p>
-      </div>
+      <!-- SESSION ENTRIES — rendered dynamically by sessions-editor.js -->
+      <div id="sessions-container"></div>
 
     </main>
   </div>
@@ -175,5 +282,213 @@
 <script src="js/zones-data.js"></script>
 <script src="js/main.js"></script>
 <script src="js/search.js"></script>
+<script>
+// ── Session Log Editor ─────────────────────────────────────
+(function () {
+  var STORAGE_KEY = 'atlas_sessions';
+
+  var DEFAULT_SESSIONS = [
+    {
+      id: 'session-001',
+      num: 'Session 001',
+      title: 'Into the Qeynos Hills',
+      date: 'Add date here',
+      location: '📍 Location: <a href="zones/qeynos-hills.html" style="color:var(--link-color);text-decoration:none;">Qeynos Hills</a> → <a href="zones/blackburrow.html" style="color:var(--link-color);text-decoration:none;">Blackburrow (entrance)</a>',
+      summary: '<p>Replace this text with a summary of what happened during the session. Who did the party encounter? What challenges did they face? What discoveries were made? What plot threads were advanced or introduced?</p><p>Keep it engaging — these logs help players remember what happened and build excitement for the next session.</p>',
+      xp: '—',
+      loot: '—',
+      deaths: '0'
+    }
+  ];
+
+  function loadSessions() {
+    try {
+      var stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : DEFAULT_SESSIONS.slice();
+    } catch (e) { return DEFAULT_SESSIONS.slice(); }
+  }
+
+  function saveSessions(sessions) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+  }
+
+  function esc(v) {
+    return (v || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function sessionEntryHTML(s, gmMode) {
+    return '<div class="session-entry" id="se-' + s.id + '" data-session-id="' + s.id + '">' +
+      (gmMode
+        ? '<div class="session-gm-controls">' +
+            '<button class="session-gm-btn" onclick="sessionEdit(\'' + s.id + '\',event)">✏ Edit</button>' +
+            '<button class="session-gm-btn danger" onclick="sessionDelete(\'' + s.id + '\',event)">✕</button>' +
+          '</div>'
+        : '') +
+      '<div class="session-header">' +
+        '<span class="session-num">' + s.num + '</span>' +
+        '<span class="session-title">' + s.title + '</span>' +
+        '<span class="session-date">' + s.date + '</span>' +
+      '</div>' +
+      '<div class="session-location">' + s.location + '</div>' +
+      '<div class="session-summary">' + s.summary + '</div>' +
+      '<div class="session-xp">' +
+        '<div>XP Earned: <span>' + s.xp + '</span></div>' +
+        '<div>Notable Loot: <span>' + s.loot + '</span></div>' +
+        '<div>Deaths: <span>' + s.deaths + '</span></div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderSessions() {
+    var container = document.getElementById('sessions-container');
+    if (!container) return;
+    var sessions = loadSessions();
+    var gmMode = typeof isGM === 'function' && isGM();
+    var html = '';
+
+    if (gmMode) {
+      html += '<div class="gm-add-session-btn" onclick="sessionAdd()">' +
+        '<h3>+ Add Session</h3>' +
+        '<p>Click to create a new session log entry</p>' +
+      '</div>';
+    }
+
+    if (sessions.length === 0) {
+      html += '<p style="color:var(--text-dim);font-style:italic;padding:20px 0;">No sessions recorded yet.</p>';
+    } else {
+      for (var i = 0; i < sessions.length; i++) {
+        html += sessionEntryHTML(sessions[i], gmMode);
+      }
+    }
+
+    if (!gmMode) {
+      html += '<div class="placeholder-session">' +
+        '<h3 style="font-family:\'Cinzel\',serif;color:var(--text-secondary);margin-bottom:8px;">+ Add Session</h3>' +
+        '<p style="font-size:14px;">Session entries will appear here as the campaign progresses.</p>' +
+      '</div>';
+    }
+
+    container.innerHTML = html;
+  }
+
+  window.sessionEdit = function (id, e) {
+    if (e) e.stopPropagation();
+    var entry = document.getElementById('se-' + id);
+    if (!entry) return;
+    var sessions = loadSessions();
+    var s = null;
+    for (var i = 0; i < sessions.length; i++) { if (sessions[i].id === id) { s = sessions[i]; break; } }
+    if (!s) return;
+
+    entry.classList.add('editing');
+    entry.innerHTML =
+      '<div class="session-toolbar">' +
+        '<button type="button" title="Bold" onmousedown="tbCmd(event,\'bold\')"><b>B</b></button>' +
+        '<button type="button" title="Italic" onmousedown="tbCmd(event,\'italic\')"><em>I</em></button>' +
+        '<button type="button" title="Underline" onmousedown="tbCmd(event,\'underline\')"><u>U</u></button>' +
+        '<button type="button" title="Strikethrough" onmousedown="tbCmd(event,\'strikeThrough\')"><s>S</s></button>' +
+        '<span class="tb-sep"></span>' +
+        '<button type="button" title="Heading 2" onmousedown="tbCmd(event,\'formatBlock\',\'h2\')">H2</button>' +
+        '<button type="button" title="Heading 3" onmousedown="tbCmd(event,\'formatBlock\',\'h3\')">H3</button>' +
+        '<button type="button" title="Paragraph" onmousedown="tbCmd(event,\'formatBlock\',\'p\')">¶</button>' +
+        '<span class="tb-sep"></span>' +
+        '<button type="button" title="Bullet list" onmousedown="tbCmd(event,\'insertUnorderedList\')">• List</button>' +
+        '<button type="button" title="Numbered list" onmousedown="tbCmd(event,\'insertOrderedList\')">1. List</button>' +
+        '<span class="tb-sep"></span>' +
+        '<button type="button" title="Undo" onmousedown="tbCmd(event,\'undo\')">↩</button>' +
+        '<button type="button" title="Redo" onmousedown="tbCmd(event,\'redo\')">↪</button>' +
+        '<button type="button" class="tb-cancel" onclick="sessionCancel(\'' + id + '\')">✕ Cancel</button>' +
+        '<button type="button" class="tb-save" onclick="sessionSave(\'' + id + '\')">✓ Save</button>' +
+      '</div>' +
+      '<div class="session-header" style="flex-wrap:wrap;gap:8px;">' +
+        '<input class="session-edit-input session-num-input" id="edit-num-' + id + '" type="text" value="' + esc(s.num) + '" placeholder="Session 001">' +
+        '<input class="session-edit-input session-title-input" id="edit-title-' + id + '" type="text" value="' + esc(s.title) + '" placeholder="Session Title">' +
+        '<input class="session-edit-input session-date-input" id="edit-date-' + id + '" type="text" value="' + esc(s.date) + '" placeholder="Date">' +
+      '</div>' +
+      '<div class="session-location-edit" id="edit-loc-' + id + '" contenteditable="true">' + s.location + '</div>' +
+      '<div class="session-summary-edit" id="edit-summary-' + id + '" contenteditable="true">' + s.summary + '</div>' +
+      '<div class="session-xp-edit">' +
+        '<span>XP Earned: <input class="session-edit-input" id="edit-xp-' + id + '" type="text" value="' + esc(s.xp) + '" placeholder="—" style="width:80px;"></span>' +
+        '<span>Notable Loot: <input class="session-edit-input" id="edit-loot-' + id + '" type="text" value="' + esc(s.loot) + '" placeholder="—" style="width:140px;"></span>' +
+        '<span>Deaths: <input class="session-edit-input" id="edit-deaths-' + id + '" type="text" value="' + esc(s.deaths) + '" placeholder="0" style="width:50px;"></span>' +
+      '</div>';
+
+    var summaryEl = document.getElementById('edit-summary-' + id);
+    if (summaryEl) summaryEl.focus();
+  };
+
+  window.tbCmd = function (e, cmd, arg) {
+    e.preventDefault(); // keep focus on contenteditable
+    document.execCommand(cmd, false, arg || null);
+  };
+
+  window.sessionSave = function (id) {
+    var sessions = loadSessions();
+    var idx = -1;
+    for (var i = 0; i < sessions.length; i++) { if (sessions[i].id === id) { idx = i; break; } }
+    if (idx === -1) return;
+
+    var numEl     = document.getElementById('edit-num-'     + id);
+    var titleEl   = document.getElementById('edit-title-'   + id);
+    var dateEl    = document.getElementById('edit-date-'    + id);
+    var locEl     = document.getElementById('edit-loc-'     + id);
+    var summaryEl = document.getElementById('edit-summary-' + id);
+    var xpEl      = document.getElementById('edit-xp-'      + id);
+    var lootEl    = document.getElementById('edit-loot-'    + id);
+    var deathsEl  = document.getElementById('edit-deaths-'  + id);
+
+    sessions[idx] = {
+      id:       id,
+      num:      numEl     ? numEl.value         : sessions[idx].num,
+      title:    titleEl   ? titleEl.value       : sessions[idx].title,
+      date:     dateEl    ? dateEl.value        : sessions[idx].date,
+      location: locEl     ? locEl.innerHTML     : sessions[idx].location,
+      summary:  summaryEl ? summaryEl.innerHTML : sessions[idx].summary,
+      xp:       xpEl      ? xpEl.value         : sessions[idx].xp,
+      loot:     lootEl    ? lootEl.value        : sessions[idx].loot,
+      deaths:   deathsEl  ? deathsEl.value      : sessions[idx].deaths
+    };
+
+    saveSessions(sessions);
+    renderSessions();
+  };
+
+  window.sessionCancel = function (id) {
+    renderSessions();
+  };
+
+  window.sessionDelete = function (id, e) {
+    if (e) e.stopPropagation();
+    if (!confirm('Delete this session entry? This cannot be undone.')) return;
+    var sessions = loadSessions().filter(function (s) { return s.id !== id; });
+    saveSessions(sessions);
+    renderSessions();
+  };
+
+  window.sessionAdd = function () {
+    var sessions = loadSessions();
+    var newId = 'session-' + Date.now();
+    var nextNum = sessions.length + 1;
+    var today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    sessions.unshift({
+      id:       newId,
+      num:      'Session ' + String(nextNum).padStart(3, '0'),
+      title:    'New Session',
+      date:     today,
+      location: '📍 Location: ',
+      summary:  '<p>Session summary goes here.</p>',
+      xp:       '—',
+      loot:     '—',
+      deaths:   '0'
+    });
+    saveSessions(sessions);
+    renderSessions();
+    sessionEdit(newId);
+  };
+
+  // Initialize after auth.js DOMContentLoaded has run (so isGM() is valid)
+  document.addEventListener('DOMContentLoaded', renderSessions);
+})();
+</script>
 </body>
 </html>
