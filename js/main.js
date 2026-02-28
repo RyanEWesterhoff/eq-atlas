@@ -58,23 +58,28 @@ function renderZoneGrid(containerSelector, filter = {}) {
   }
 
   if (zones.length === 0) {
-    container.innerHTML = '<p style="color:var(--text-secondary);padding:20px 0;">No zones match your search.</p>';
+    container.innerHTML = '<p style="color:var(--text-secondary);padding:20px 0;">No lands match your search.</p>';
     return;
   }
 
-  container.innerHTML = zones.map(zone => `
-    <a href="zones/${zone.id}.html" class="zone-card">
-      <div class="zone-region">${zone.continent}</div>
-      <h3>${zone.name}</h3>
-      <p class="zone-excerpt">${zone.excerpt}</p>
-      <div class="zone-tags">
-        ${(zone.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}
-        <span class="tag ${zone.levelRange === 'City' || zone.levelRange === 'Trade Zone' || zone.levelRange === 'Hub Zone' ? 'safe' : 'danger'}">
-          ${zone.levelRange === 'City' || zone.levelRange === 'Trade Zone' || zone.levelRange === 'Hub Zone' ? '🏙 City' : `⚔ ${zone.levelRange}`}
-        </span>
-      </div>
-    </a>
-  `).join('');
+  const gmMode = typeof isGM === 'function' && isGM();
+
+  container.innerHTML = zones.map(zone => {
+    const cardHidden = gmMode && typeof isZoneHidden === 'function' && isZoneHidden(zone.id);
+    const isCity = zone.levelRange === 'City' || zone.levelRange === 'Trade Zone' || zone.levelRange === 'Hub Zone';
+    return `
+      <a href="zones/${zone.id}.html" class="zone-card${cardHidden ? ' gm-card-hidden' : ''}" data-zone-id="${zone.id}">
+        ${gmMode ? `<div class="gm-hide-btn${cardHidden ? ' gm-hide-btn-on' : ''}" title="${cardHidden ? 'Reveal to players' : 'Hide from players'}" onclick="gmToggleZone('${zone.id}', event)">${cardHidden ? '👁' : '🚫'}</div>` : ''}
+        <div class="zone-region">${zone.continent}</div>
+        <h3>${zone.name}</h3>
+        <p class="zone-excerpt">${zone.excerpt}</p>
+        <div class="zone-tags">
+          ${(zone.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}
+          <span class="tag ${isCity ? 'safe' : 'danger'}">${isCity ? '🏙 City' : `⚔ ${zone.levelRange}`}</span>
+        </div>
+      </a>
+    `;
+  }).join('');
 }
 
 // ── Zone detail rendering ──────────────────────────────────
@@ -88,7 +93,7 @@ function renderZoneDetail(zoneId) {
   if (bc) bc.innerHTML = `
     <a href="../index.html">Home</a>
     <span class="sep">›</span>
-    <a href="../zones.html">Zones</a>
+    <a href="../zones.html">Lands</a>
     <span class="sep">›</span>
     ${zone.continent}
     <span class="sep">›</span>
@@ -109,12 +114,20 @@ function renderZoneDetail(zoneId) {
   `).join('') || '<tr><td colspan="3" style="color:var(--text-dim);font-style:italic;">No hostile creatures recorded in this area.</td></tr>';
 
   // Notable NPCs
-  const npcItems = (zone.notableNPCs || []).map(n => `
-    <li>
-      <span class="npc-name">${n.name}</span>
-      <span class="npc-desc">${n.role}</span>
-    </li>
-  `).join('') || '<li><span class="npc-desc" style="color:var(--text-dim);font-style:italic;">No notable NPCs recorded.</span></li>';
+  const gmMode = typeof isGM === 'function' && isGM();
+  const npcItems = (zone.notableNPCs || []).map(n => {
+    const npcHidden = gmMode && typeof isNPCHidden === 'function' && isNPCHidden(zone.id, n.name);
+    const safeAttr  = n.name.replace(/"/g, '&quot;');
+    const safeId    = JSON.stringify(zone.id);
+    const safeName  = JSON.stringify(n.name);
+    return `
+      <li data-npc-name="${safeAttr}"${npcHidden ? ' class="gm-npc-hidden"' : ''}>
+        ${gmMode ? `<div class="gm-hide-btn npc-hide-btn${npcHidden ? ' gm-hide-btn-on' : ''}" title="${npcHidden ? 'Reveal to players' : 'Hide from players'}" onclick="gmToggleNPC(${safeId}, ${safeName}, event)">${npcHidden ? '👁' : '🚫'}</div>` : ''}
+        <span class="npc-name">${n.name}</span>
+        <span class="npc-desc">${n.role}</span>
+      </li>
+    `;
+  }).join('') || '<li><span class="npc-desc" style="color:var(--text-dim);font-style:italic;">No notable NPCs recorded.</span></li>';
 
   // Adjacent zones
   const adjacentList = (zone.adjacentZones || []).map(az => {
@@ -142,7 +155,7 @@ function renderZoneDetail(zoneId) {
           <span class="meta-value">${zone.levelRange}</span>
         </div>
         <div class="meta-item">
-          <span class="meta-label">Connected Zones</span>
+          <span class="meta-label">Connected Lands</span>
           <span class="meta-value" style="font-size:13px;">${adjacentList}</span>
         </div>
       </div>

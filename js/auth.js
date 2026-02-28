@@ -78,6 +78,68 @@ function deactivateGM() {
   location.reload();
 }
 
+// ── GM Hidden State (persists in localStorage across page loads) ─
+
+const GM_HIDDEN_KEY = 'eq_gm_hidden';
+
+function _getGMHidden() {
+  try { return JSON.parse(localStorage.getItem(GM_HIDDEN_KEY)) || { zones: [], npcs: [] }; }
+  catch (e) { return { zones: [], npcs: [] }; }
+}
+
+function _saveGMHidden(data) {
+  localStorage.setItem(GM_HIDDEN_KEY, JSON.stringify(data));
+}
+
+function isZoneHidden(zoneId) {
+  return _getGMHidden().zones.includes(zoneId);
+}
+
+function isNPCHidden(zoneId, npcName) {
+  return _getGMHidden().npcs.includes(zoneId + '::' + npcName);
+}
+
+// Called by the hide button on zone cards; stops the card link from firing
+function gmToggleZone(zoneId, event) {
+  if (event) { event.preventDefault(); event.stopPropagation(); }
+  if (!isGM()) return;
+  const data = _getGMHidden();
+  const idx = data.zones.indexOf(zoneId);
+  if (idx === -1) data.zones.push(zoneId); else data.zones.splice(idx, 1);
+  _saveGMHidden(data);
+  const hidden = isZoneHidden(zoneId);
+  document.querySelectorAll('.zone-card[data-zone-id="' + zoneId + '"]').forEach(function (card) {
+    card.classList.toggle('gm-card-hidden', hidden);
+    const btn = card.querySelector('.gm-hide-btn');
+    if (btn) _updateGMHideBtn(btn, hidden);
+  });
+}
+
+// Called by the hide button on NPC list items
+function gmToggleNPC(zoneId, npcName, event) {
+  if (event) { event.preventDefault(); event.stopPropagation(); }
+  if (!isGM()) return;
+  const data = _getGMHidden();
+  const key = zoneId + '::' + npcName;
+  const idx = data.npcs.indexOf(key);
+  if (idx === -1) data.npcs.push(key); else data.npcs.splice(idx, 1);
+  _saveGMHidden(data);
+  const hidden = isNPCHidden(zoneId, npcName);
+  document.querySelectorAll('.npc-list li').forEach(function (li) {
+    if (li.dataset.npcName === npcName) {
+      li.classList.toggle('gm-npc-hidden', hidden);
+      const btn = li.querySelector('.gm-hide-btn');
+      if (btn) _updateGMHideBtn(btn, hidden);
+    }
+  });
+}
+
+function _updateGMHideBtn(btn, isHidden) {
+  btn.title     = isHidden ? 'Reveal to players' : 'Hide from players';
+  btn.textContent = isHidden ? '👁' : '🚫';
+  btn.classList.toggle('gm-hide-btn-on', isHidden);
+}
+
 // Inject GM UI elements after the DOM is ready (runs on every protected page)
 document.addEventListener('DOMContentLoaded', function () {
   if (!isAuthenticated()) return;

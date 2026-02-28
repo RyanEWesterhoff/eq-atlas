@@ -1012,6 +1012,96 @@ html, body {
   color: var(--text-secondary);
 }
 
+/* ── GM Hide Buttons (zone cards + NPC rows) ──────────────── */
+
+/* zone cards need relative positioning for the absolute button */
+.gm-mode .zone-card {
+  position: relative;
+}
+
+/* hidden by default; only shown in GM mode */
+.gm-hide-btn {
+  display: none;
+}
+
+.gm-mode .gm-hide-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 3px;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s;
+  /* zone-card variant: absolute top-right */
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  background: rgba(8, 4, 0, 0.72);
+  border: 1px solid #3a2010;
+  z-index: 5;
+}
+
+.gm-mode .gm-hide-btn:hover {
+  background: rgba(122, 58, 10, 0.55);
+  border-color: #7a3a0a;
+}
+
+/* active state — content is hidden from players */
+.gm-mode .gm-hide-btn.gm-hide-btn-on {
+  background: rgba(122, 58, 10, 0.4);
+  border-color: #a05020;
+}
+
+/* NPC variant: inline flex item, not absolute */
+.gm-mode .npc-hide-btn {
+  position: static;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+}
+
+/* ── Hidden zone cards ────────────────────────────────────── */
+
+/* player view: invisible */
+body:not(.gm-mode) .zone-card.gm-card-hidden {
+  display: none;
+}
+
+/* GM view: dimmed, dashed amber border */
+.gm-mode .zone-card.gm-card-hidden {
+  opacity: 0.45;
+  border-style: dashed;
+  border-color: #7a3a0a;
+  border-top-color: #7a3a0a;
+}
+
+.gm-mode .zone-card.gm-card-hidden:hover {
+  opacity: 0.65;
+}
+
+/* ── Hidden NPC rows ──────────────────────────────────────── */
+
+/* player view: invisible */
+body:not(.gm-mode) .npc-list li.gm-npc-hidden {
+  display: none;
+}
+
+/* GM view: dimmed with strikethrough */
+.gm-mode .npc-list li.gm-npc-hidden {
+  opacity: 0.4;
+}
+
+.gm-mode .npc-list li.gm-npc-hidden .npc-name,
+.gm-mode .npc-list li.gm-npc-hidden .npc-desc {
+  text-decoration: line-through;
+  text-decoration-color: #7a3a0a;
+}
+
+
 /* ── GLOBAL SEARCH ───────────────────────────────────────── */
 #gs-li {
   margin-left: auto;

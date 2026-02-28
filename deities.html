@@ -35,16 +35,16 @@
     .deity-portrait {
       width: 100%;
       aspect-ratio: 1 / 1;
-      object-fit: cover;
-      object-position: top center;
+      object-fit: contain;
+      object-position: center;
       display: block;
-      background: #0a0a14;
-      filter: sepia(15%) brightness(0.95) contrast(1.05);
+      background: #ffffff;
+      filter: brightness(0.97) contrast(1.02);
       transition: filter 0.2s;
     }
 
     .deity-card:hover .deity-portrait {
-      filter: sepia(0%) brightness(1.05) contrast(1.05);
+      filter: brightness(1.05) contrast(1.05);
     }
 
     .deity-info {
@@ -111,26 +111,29 @@
       background: var(--bg-panel);
       border: 1px solid var(--border-dim);
       border-top: 3px solid var(--accent-gold);
-      max-width: 720px;
+      max-width: 980px;
       width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
+      max-height: 88vh;
+      overflow: hidden;
       display: flex;
       gap: 0;
+      align-items: stretch;
     }
 
     .modal-portrait-col {
-      width: 220px;
       flex-shrink: 0;
-      background: #07070f;
+      background: #ffffff;
+      overflow-y: auto;
+      max-width: 55%;
     }
 
     .modal-portrait-col img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: top center;
+      width: auto;
+      height: auto;
+      max-height: 88vh;
+      max-width: 100%;
       display: block;
+      background: #ffffff;
     }
 
     .modal-content-col {
@@ -207,9 +210,10 @@
       color: var(--text-secondary);
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 700px) {
       .deity-modal { flex-direction: column; }
-      .modal-portrait-col { width: 100%; height: 200px; }
+      .modal-portrait-col { width: 100%; overflow: hidden; }
+      .modal-portrait-col img { max-height: 260px; object-fit: contain; }
     }
   </style>
 </head>
@@ -230,7 +234,7 @@
   <nav class="top-nav">
     <ul>
       <li><a href="index.html">Home</a></li>
-      <li><a href="zones.html">Zones</a></li>
+      <li><a href="zones.html">Lands</a></li>
       <li><a href="bestiary.html">Bestiary</a></li>
       <li><a href="lore.html">Lore</a></li>
       <li><a href="deities.html" class="active">Deities</a></li>
