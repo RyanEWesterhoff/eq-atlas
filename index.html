@@ -91,6 +91,8 @@
       line-height: 1.55;
       white-space: pre-wrap;
     }
+    .event-card { cursor: pointer; }
+    .event-card:hover { border-color: var(--border-gold); }
     .events-footer-link {
       text-align: right;
       margin-top: 12px;
@@ -103,6 +105,93 @@
       letter-spacing: 0.04em;
     }
     .events-footer-link a:hover { text-decoration: underline; }
+
+    /* ── Event modal ─────────────────────────────────────────── */
+    .event-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .event-modal {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-gold);
+      max-width: 680px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 32px 36px 28px;
+      position: relative;
+    }
+    .event-modal-close {
+      position: absolute;
+      top: 14px; right: 16px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 8px;
+    }
+    .event-modal-close:hover { color: var(--accent-gold); }
+    .event-modal-num {
+      font-family: 'Cinzel', serif;
+      font-size: 10px; letter-spacing: 2px;
+      color: var(--text-dim); text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .event-modal-title {
+      font-family: 'Cinzel', serif;
+      font-size: 22px; color: var(--text-heading);
+      margin-bottom: 6px; line-height: 1.25;
+    }
+    .event-modal-subtitle {
+      font-family: 'IM Fell English', serif;
+      font-size: 14px; color: var(--accent-gold);
+      font-style: italic; margin-bottom: 20px;
+    }
+    .event-modal-status {
+      display: inline-flex; align-items: center; gap: 7px;
+      margin-bottom: 18px;
+      padding: 4px 10px 4px 8px;
+      border: 1px solid var(--border-dim);
+      background: var(--bg-card);
+    }
+    .event-modal-desc {
+      font-size: 15px; line-height: 1.8;
+      color: var(--text-primary);
+    }
+    .event-modal-notes {
+      margin-top: 22px;
+      border-top: 1px solid var(--border-dim);
+      padding-top: 16px;
+    }
+    .event-modal-notes-label {
+      font-family: 'Cinzel', serif;
+      font-size: 10px; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .event-modal-notes-text {
+      font-size: 14px; color: var(--text-secondary);
+      line-height: 1.65; white-space: pre-wrap;
+    }
+    .event-modal-link {
+      display: block;
+      margin-top: 20px;
+      text-align: right;
+      font-size: 12px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.05em;
+    }
+    .event-modal-link:hover { color: var(--accent-gold); }
     .events-legend-home {
       display: flex; gap: 16px;
       margin-bottom: 16px; align-items: center; flex-wrap: wrap;
@@ -228,7 +317,7 @@
 
       <!-- WORLD EVENTS -->
       <h2 class="page-title" style="font-size:20px;margin-bottom:10px;">
-        <span class="title-icon">⚔️</span> World Events
+        <span class="title-icon">⚔️</span> <a href="events.html" style="color:inherit;text-decoration:none;border-bottom:1px solid var(--border-gold);">World Events</a>
       </h2>
 
       <div class="events-legend-home">
@@ -296,7 +385,7 @@
       var notesHtml = (st.notes && st.notes.trim())
         ? '<div class="event-notes-preview">' + escHtml(st.notes) + '</div>'
         : '';
-      return '<div class="event-card ' + statusClass + '">' +
+      return '<div class="event-card ' + statusClass + '" data-event-id="' + ev.id + '">' +
         '<div class="event-status">' +
           '<span class="event-status-label">' + statusLabel + '</span>' +
           '<span class="event-status-dot"></span>' +
@@ -308,6 +397,60 @@
         notesHtml +
       '</div>';
     }).join('');
+
+    // Wire up click → modal
+    grid.querySelectorAll('.event-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        openEventModal(card.dataset.eventId);
+      });
+    });
+  }
+
+  function openEventModal(id) {
+    var ev = null;
+    for (var i = 0; i < EVENTS.length; i++) { if (EVENTS[i].id === id) { ev = EVENTS[i]; break; } }
+    if (!ev) return;
+    var st = _state[id] || { status: 'none', notes: '' };
+    var statusLabel = STATUS_LABELS[st.status] || STATUS_LABELS.none;
+    var statusClass = 'status-' + (st.status || 'none');
+
+    var notesHtml = (st.notes && st.notes.trim())
+      ? '<div class="event-modal-notes">' +
+          '<div class="event-modal-notes-label">Status Notes</div>' +
+          '<div class="event-modal-notes-text">' + escHtml(st.notes) + '</div>' +
+        '</div>'
+      : '';
+
+    var overlay = document.createElement('div');
+    overlay.className = 'event-modal-overlay';
+    overlay.innerHTML =
+      '<div class="event-modal">' +
+        '<button class="event-modal-close" aria-label="Close">&times;</button>' +
+        '<div class="event-modal-num">' + ev.num + '</div>' +
+        '<div class="event-modal-title">' + ev.title + '</div>' +
+        '<div class="event-modal-subtitle">' + ev.subtitle + '</div>' +
+        '<div class="event-modal-status event-card ' + statusClass + '" style="border:none;background:none;padding:0;position:static;cursor:default;">' +
+          '<div class="event-status" style="position:static;">' +
+            '<span class="event-status-dot"></span>' +
+            '<span class="event-status-label">' + statusLabel + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="event-modal-desc">' + ev.desc + '</div>' +
+        notesHtml +
+        '<a class="event-modal-link" href="events.html">View on World Events page →</a>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('.event-modal-close').addEventListener('click', function () {
+      document.body.removeChild(overlay);
+    });
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) document.body.removeChild(overlay);
+    });
+    document.addEventListener('keydown', function onKey(e) {
+      if (e.key === 'Escape') { document.body.removeChild(overlay); document.removeEventListener('keydown', onKey); }
+    });
   }
 
   document.addEventListener('DOMContentLoaded', function () {
