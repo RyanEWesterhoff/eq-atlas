@@ -66,7 +66,6 @@ function renderZoneGrid(containerSelector, filter = {}) {
 
   container.innerHTML = zones.map(zone => {
     const cardHidden = typeof isZoneHidden === 'function' && isZoneHidden(zone.id);
-    const isCity = zone.levelRange === 'City' || zone.levelRange === 'Trade Zone' || zone.levelRange === 'Hub Zone';
     return `
       <a href="zones/${zone.id}.html" class="zone-card${cardHidden ? ' gm-card-hidden' : ''}" data-zone-id="${zone.id}">
         ${gmMode ? `<div class="gm-hide-btn${cardHidden ? ' gm-hide-btn-on' : ''}" title="${cardHidden ? 'Reveal to players' : 'Hide from players'}" onclick="gmToggleZone('${zone.id}', event)">${cardHidden ? '👁' : '🚫'}</div>` : ''}
@@ -75,7 +74,6 @@ function renderZoneGrid(containerSelector, filter = {}) {
         <p class="zone-excerpt">${zone.excerpt}</p>
         <div class="zone-tags">
           ${(zone.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}
-          <span class="tag ${isCity ? 'safe' : 'danger'}">${isCity ? '🏙 City' : `⚔ ${zone.levelRange}`}</span>
         </div>
       </a>
     `;
