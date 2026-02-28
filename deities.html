@@ -111,9 +111,9 @@
       background: var(--bg-panel);
       border: 1px solid var(--border-dim);
       border-top: 3px solid var(--accent-gold);
-      max-width: 980px;
       width: 100%;
-      max-height: 88vh;
+      max-width: 1200px;
+      height: 88vh;
       overflow: hidden;
       display: flex;
       gap: 0;
@@ -122,22 +122,20 @@
 
     .modal-portrait-col {
       flex-shrink: 0;
+      height: 88vh;
       background: #ffffff;
-      overflow-y: auto;
-      max-width: 55%;
     }
 
     .modal-portrait-col img {
+      height: 88vh;
       width: auto;
-      height: auto;
-      max-height: 88vh;
-      max-width: 100%;
       display: block;
       background: #ffffff;
     }
 
     .modal-content-col {
       flex: 1;
+      min-width: 200px;
       padding: 24px;
       overflow-y: auto;
     }
@@ -442,7 +440,7 @@ const DEITIES_DATA = [
     title: "The Warlord",
     alignment: "evil",
     symbol: "⚔️",
-    img: "images/deities/rallos-zek.JPG",
+    img: "images/deities/Zek.png",
     domains: ["War", "Conquest", "Strength"],
     worshippers: "Warriors of evil alignment, ogres, giants, those who believe strength justifies domination.",
     realm: "The Plane of War — a realm of perpetual battle where the combatants are among the most powerful beings in existence.",
@@ -454,7 +452,7 @@ const DEITIES_DATA = [
     title: "The Prime Healer",
     alignment: "good",
     symbol: "✚",
-    img: "images/deities/rodcet-nife.png",
+    img: "images/deities/Rodcet.png",
     domains: ["Healing", "Life", "Medicine"],
     worshippers: "Clerics of healing, those who minister to the sick and dying, healers of all kinds.",
     realm: "A realm of pure vital energy where no wound remains unhealed and no disease can take hold.",
@@ -490,7 +488,7 @@ const DEITIES_DATA = [
     title: "The Mother of All",
     alignment: "good",
     symbol: "🌿",
-    img: "images/deities/tunare.gif",
+    img: "images/deities/Tunare.png",
     domains: ["Nature", "Growth", "Elves"],
     worshippers: "Druids, rangers, elves, those who protect natural places and living things.",
     realm: "The Plane of Growth — a realm of impossible natural beauty where all living things exist in perfect harmony.",
@@ -502,7 +500,7 @@ const DEITIES_DATA = [
     title: "The Wurmqueen",
     alignment: "neutral",
     symbol: "🐉",
-    img: "images/deities/veeshan.gif",
+    img: "images/deities/Veeshan.png",
     domains: ["Dragons", "Ancient Power", "The First Claim"],
     worshippers: "Dragons (who revere rather than worship), a handful of mortals who seek draconic power.",
     realm: "Veeshan's Peak on Kunark — the original mark of her claim on Norrath, where the most powerful of her draconic children are buried.",

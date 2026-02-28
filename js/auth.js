@@ -116,7 +116,8 @@ function gmToggleZone(zoneId, event) {
 }
 
 // Called by the hide button on NPC list items
-function gmToggleNPC(zoneId, npcName, event) {
+// btnEl = the button div (passed as `this` from onclick)
+function gmToggleNPC(zoneId, npcName, btnEl, event) {
   if (event) { event.preventDefault(); event.stopPropagation(); }
   if (!isGM()) return;
   const data = _getGMHidden();
@@ -125,13 +126,11 @@ function gmToggleNPC(zoneId, npcName, event) {
   if (idx === -1) data.npcs.push(key); else data.npcs.splice(idx, 1);
   _saveGMHidden(data);
   const hidden = isNPCHidden(zoneId, npcName);
-  document.querySelectorAll('.npc-list li').forEach(function (li) {
-    if (li.dataset.npcName === npcName) {
-      li.classList.toggle('gm-npc-hidden', hidden);
-      const btn = li.querySelector('.gm-hide-btn');
-      if (btn) _updateGMHideBtn(btn, hidden);
-    }
-  });
+  const li = btnEl.closest('li');
+  if (li) {
+    li.classList.toggle('gm-npc-hidden', hidden);
+    _updateGMHideBtn(btnEl, hidden);
+  }
 }
 
 function _updateGMHideBtn(btn, isHidden) {

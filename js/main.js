@@ -118,11 +118,10 @@ function renderZoneDetail(zoneId) {
   const npcItems = (zone.notableNPCs || []).map(n => {
     const npcHidden = gmMode && typeof isNPCHidden === 'function' && isNPCHidden(zone.id, n.name);
     const safeAttr  = n.name.replace(/"/g, '&quot;');
-    const safeId    = JSON.stringify(zone.id);
-    const safeName  = JSON.stringify(n.name);
+    const safeZone  = zone.id.replace(/"/g, '&quot;');
     return `
       <li data-npc-name="${safeAttr}"${npcHidden ? ' class="gm-npc-hidden"' : ''}>
-        ${gmMode ? `<div class="gm-hide-btn npc-hide-btn${npcHidden ? ' gm-hide-btn-on' : ''}" title="${npcHidden ? 'Reveal to players' : 'Hide from players'}" onclick="gmToggleNPC(${safeId}, ${safeName}, event)">${npcHidden ? '👁' : '🚫'}</div>` : ''}
+        ${gmMode ? `<div class="gm-hide-btn npc-hide-btn${npcHidden ? ' gm-hide-btn-on' : ''}" title="${npcHidden ? 'Reveal to players' : 'Hide from players'}" data-zone="${safeZone}" data-npc="${safeAttr}" onclick="gmToggleNPC(this.dataset.zone, this.dataset.npc, this, event)">${npcHidden ? '👁' : '🚫'}</div>` : ''}
         <span class="npc-name">${n.name}</span>
         <span class="npc-desc">${n.role}</span>
       </li>
