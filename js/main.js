@@ -244,7 +244,7 @@ function renderZoneDetail(zoneId) {
 function setupFilters(gridSelector) {
   const searchInput = document.getElementById('zone-search');
   const regionBtns = document.querySelectorAll('button[data-filter-region]');
-  const tagBtns = document.querySelectorAll('button[data-filter-tag]');
+  const tagBtns = document.querySelectorAll('[data-filter-tag]');
 
   let activeFilter = {};
 
