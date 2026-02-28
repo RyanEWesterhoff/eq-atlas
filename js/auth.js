@@ -13,7 +13,7 @@ const PASS_HASH  = '1ae3ca3ea0e1b7f7f8c7a978f20747a79dd94c08ec0e17ae574028f9462d
 // To change: compute sha256 of your chosen password and replace the hash below.
 const GM_KEY        = 'eq_atlas_gm';
 const GM_TOKEN      = 'gm_active';
-const GM_PASS_HASH  = 'aba9796a63f9a96b21885a899240408c7783b91fccaabe57482918d71fc5d5bd';
+const GM_PASS_HASH  = '0400d92f0b3088e2ab69e159723970c89fd2d8f24d080d6e6997acb242c2973d';
 
 // Hash a string with SHA-256, return hex string
 async function sha256(str) {
