@@ -192,7 +192,7 @@
   renderHomepageStats();
 
   // Featured zones — pick a varied selection
-  const featuredIds = ['blackburrow', 'castle-mistmoore', 'city-of-mist', 'plane-of-knowledge', 'akheva-ruins', 'burning-woods'];
+  const featuredIds = ['blackburrow', 'mistmoore-castle', 'city-of-mist', 'karnors-castle', 'old-sebilis', 'burning-wood'];
   const featuredContainer = document.getElementById('featured-zones');
   if (featuredContainer && typeof ZONES !== 'undefined') {
     const featured = featuredIds.map(id => ZONES.find(z => z.id === id)).filter(Boolean);
