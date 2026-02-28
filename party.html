@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Party — EverQuest Atlas Campaign</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .character-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-top: 3px solid var(--border-gold);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .character-card h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      color: var(--text-heading);
+      margin-bottom: 4px;
+    }
+    .character-class {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      color: var(--accent-gold);
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+      margin: 14px 0;
+    }
+    .stat-item {
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border-dim);
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .stat-item .s-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      display: block;
+      margin-bottom: 3px;
+    }
+    .stat-item .s-value {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      color: var(--accent-gold);
+    }
+    .char-bio {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      margin-top: 12px;
+    }
+    .char-bio p + p { margin-top: 10px; }
+    .placeholder-card {
+      background: var(--bg-panel);
+      border: 1px dashed var(--border-dim);
+      padding: 32px;
+      text-align: center;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+    }
+    .placeholder-card h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">
+        EverQuest Atlas
+        <span>The Maps of Myrist</span>
+      </a>
+      <div class="header-divider"></div>
+      <div class="header-quote">"The strength of the group is each member; the strength of each member is the group."</div>
+    </div>
+  </header>
+
+  <nav class="top-nav">
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="zones.html">Zones</a></li>
+      <li><a href="bestiary.html">Bestiary</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="planes.html">Planes of Power</a></li>
+    </ul>
+  </nav>
+
+  <div class="content-area">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Campaign</h3>
+        <ul>
+          <li><a href="party.html" class="active"><span class="nav-icon">🧙</span> The Party</a></li>
+          <li><a href="sessions.html"><span class="nav-icon">📖</span> Session Logs</a></li>
+          <li><a href="houserules.html"><span class="nav-icon">📋</span> House Rules</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <h3>Reference</h3>
+        <ul>
+          <li><a href="zones.html"><span class="nav-icon">🗺</span> Zones</a></li>
+          <li><a href="bestiary.html"><span class="nav-icon">🐉</span> Bestiary</a></li>
+          <li><a href="lore.html"><span class="nav-icon">📜</span> Lore</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="sep">›</span>
+        The Party
+      </div>
+
+      <h1 class="page-title">
+        <span class="title-icon">🧙</span>
+        The Party
+      </h1>
+
+      <p style="color:var(--text-secondary);margin-bottom:24px;font-size:15px;">
+        The adventurers who dare explore the world of Norrath together. Character sheets, backstories,
+        and campaign notes for each party member.
+      </p>
+
+      <!-- PLACEHOLDER CHARACTERS — DM should replace with actual party members -->
+      <div class="callout info" style="margin-bottom:24px;">
+        <span class="callout-icon">📝</span>
+        <div class="callout-text">
+          <strong>DM Note:</strong> Replace the placeholder characters below with your actual player characters.
+          Edit <code>party.html</code> to add real names, classes, backstories, and stats.
+        </div>
+      </div>
+
+      <div class="character-card">
+        <h2>Character Name</h2>
+        <div class="character-class">Race · Class · Level</div>
+        <div class="stat-grid">
+          <div class="stat-item"><span class="s-label">STR</span><span class="s-value">—</span></div>
+          <div class="stat-item"><span class="s-label">DEX</span><span class="s-value">—</span></div>
+          <div class="stat-item"><span class="s-label">CON</span><span class="s-value">—</span></div>
+          <div class="stat-item"><span class="s-label">INT</span><span class="s-value">—</span></div>
+          <div class="stat-item"><span class="s-label">WIS</span><span class="s-value">—</span></div>
+          <div class="stat-item"><span class="s-label">CHA</span><span class="s-value">—</span></div>
+          <div class="stat-item"><span class="s-label">HP</span><span class="s-value">—</span></div>
+          <div class="stat-item"><span class="s-label">AC</span><span class="s-value">—</span></div>
+        </div>
+        <div class="char-bio">
+          <p>Add this character's backstory here. Where did they come from? What drives them to adventure?
+          How did they come to join the party?</p>
+        </div>
+      </div>
+
+      <div class="placeholder-card">
+        <h3>+ Add Party Member</h3>
+        <p>Copy the character card above and fill in your player's character details.</p>
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>EverQuest Atlas: The Maps of Myrist — Campaign Reference Site</p>
+  </footer>
+</div>
+
+<script src="js/zones-data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

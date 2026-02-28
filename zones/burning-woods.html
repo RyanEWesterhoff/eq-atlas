@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zone — EverQuest Atlas: The Maps of Myrist</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="site-wrapper">
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="site-logo">
+        EverQuest Atlas
+        <span>The Maps of Myrist</span>
+      </a>
+      <div class="header-divider"></div>
+      <div class="header-quote">"Every danger documented is a life preserved." — Field Scout's Creed</div>
+    </div>
+  </header>
+  <nav class="top-nav">
+    <ul>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../zones.html" class="active">Zones</a></li>
+      <li><a href="../bestiary.html">Bestiary</a></li>
+      <li><a href="../lore.html">Lore</a></li>
+      <li><a href="../planes.html">Planes of Power</a></li>
+    </ul>
+  </nav>
+  <div class="content-area">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Continents</h3>
+        <ul>
+          <li><a href="../zones.html?region=Antonica"><span class="nav-icon">🌿</span> Antonica</a></li>
+          <li><a href="../zones.html?region=Faydwer"><span class="nav-icon">🌲</span> Faydwer</a></li>
+          <li><a href="../zones.html?region=Odus"><span class="nav-icon">📚</span> Odus</a></li>
+          <li><a href="../zones.html?region=Kunark"><span class="nav-icon">🦎</span> Kunark</a></li>
+          <li><a href="../zones.html?region=Velious"><span class="nav-icon">❄️</span> Velious</a></li>
+          <li><a href="../zones.html?region=Luclin (The Moon)"><span class="nav-icon">🌙</span> Luclin</a></li>
+          <li><a href="../planes.html"><span class="nav-icon">⚡</span> The Planes</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <h3>Navigation</h3>
+        <ul>
+          <li><a href="../zones.html"><span class="nav-icon">🗺</span> All Zones</a></li>
+          <li><a href="../bestiary.html"><span class="nav-icon">🐉</span> Bestiary</a></li>
+          <li><a href="../lore.html"><span class="nav-icon">📜</span> World Lore</a></li>
+        </ul>
+      </div>
+    </aside>
+    <main class="main-panel zone-detail">
+      <div class="breadcrumb" id="zone-breadcrumb"></div>
+      <h1 class="page-title" id="zone-page-title" style="margin-bottom:0;border-bottom:none;"></h1>
+      <div id="zone-detail-content"></div>
+    </main>
+  </div>
+  <footer class="site-footer">
+    <p>EverQuest Atlas: The Maps of Myrist — Campaign Reference Site</p>
+  </footer>
+</div>
+<script>const ZONE_ID = 'burning-woods';</script>
+<script src="../js/zones-data.js"></script>
+<script src="../js/main.js"></script>
+<script>
+  renderZoneDetail(ZONE_ID);
+  const zone = ZONES.find(z => z.id === ZONE_ID);
+  if (zone) document.title = zone.name + ' — EverQuest Atlas: The Maps of Myrist';
+</script>
+</body>
+</html>

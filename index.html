@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EverQuest Atlas — The Maps of Myrist | Campaign Reference</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="site-wrapper">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">
+        EverQuest Atlas
+        <span>The Maps of Myrist</span>
+      </a>
+      <div class="header-divider"></div>
+      <div class="header-quote">
+        "I can take little credit for the words that follow this introduction. They are the
+        culmination of a thousand writers, poets and bards…"
+        <br><em style="color:var(--accent-gold)">— Maelin Starpyre, Grand Librarian</em>
+      </div>
+    </div>
+  </header>
+
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <ul>
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="zones.html">Zones</a></li>
+      <li><a href="bestiary.html">Bestiary</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="planes.html">Planes of Power</a></li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="content-area">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Continents</h3>
+        <ul>
+          <li><a href="zones.html?region=Antonica"><span class="nav-icon">🌿</span> Antonica</a></li>
+          <li><a href="zones.html?region=Faydwer"><span class="nav-icon">🌲</span> Faydwer</a></li>
+          <li><a href="zones.html?region=Odus"><span class="nav-icon">📚</span> Odus</a></li>
+          <li><a href="zones.html?region=Kunark"><span class="nav-icon">🦎</span> Kunark</a></li>
+          <li><a href="zones.html?region=Velious"><span class="nav-icon">❄️</span> Velious</a></li>
+          <li><a href="zones.html?region=Luclin"><span class="nav-icon">🌙</span> Luclin</a></li>
+          <li><a href="planes.html"><span class="nav-icon">⚡</span> The Planes</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Quick Reference</h3>
+        <ul>
+          <li><a href="bestiary.html"><span class="nav-icon">🐉</span> All Creatures</a></li>
+          <li><a href="lore.html"><span class="nav-icon">📜</span> World Lore</a></li>
+          <li><a href="lore.html#factions"><span class="nav-icon">⚔️</span> Factions</a></li>
+          <li><a href="lore.html#gods"><span class="nav-icon">✨</span> Pantheon</a></li>
+          <li><a href="lore.html#history"><span class="nav-icon">🏛</span> History</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Campaign</h3>
+        <ul>
+          <li><a href="party.html"><span class="nav-icon">🧙</span> The Party</a></li>
+          <li><a href="sessions.html"><span class="nav-icon">📖</span> Session Logs</a></li>
+          <li><a href="houserules.html"><span class="nav-icon">📋</span> House Rules</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- MAIN PANEL -->
+    <main class="main-panel">
+
+      <div class="hero-banner">
+        <h1>Welcome to Norrath</h1>
+        <div class="hero-subtitle">A World of Adventure, Peril, and Ancient Mystery</div>
+        <div class="hero-intro">
+          <p class="drop-cap">Herein lies the collected knowledge of the great Library of Myrist — every zone, every danger, every
+          creature that walks, crawls, flies, or haunts the world of Norrath and the planes beyond. From the rolling
+          hills of Antonica to the frozen wastes of Velious, from the jungles of Kunark to the lunar surface of
+          Luclin, and finally to the divine realms of the Planes of Power — this atlas charts the known world.</p>
+
+          <p>Each entry preserves an air of mystery to the world. You will find no loot tables or walkthrough
+          material here — only the knowledge a seasoned traveler would share with a trusted companion:
+          where the dangers lie, what power can be found, and the history that shaped every ruin and city.</p>
+
+          <p style="margin-top:16px;font-style:italic;color:var(--text-secondary);">
+            "The possibility of a new manifestation previously unknown to mortal ideals of the cosmos is an
+            exciting prospect indeed, but it is as deadly as it is intriguing."
+            <br>— Maelin Starpyre
+          </p>
+        </div>
+
+        <div class="stat-row">
+          <a href="zones.html" class="stat-box">
+            <span class="stat-num" id="stat-zones">–</span>
+            <span class="stat-label">Zones</span>
+          </a>
+          <a href="zones.html" class="stat-box">
+            <span class="stat-num" id="stat-continents">–</span>
+            <span class="stat-label">Continents</span>
+          </a>
+          <a href="bestiary.html" class="stat-box">
+            <span class="stat-num" id="stat-creatures">–</span>
+            <span class="stat-label">Creatures</span>
+          </a>
+          <a href="lore.html" class="stat-box">
+            <span class="stat-num">5</span>
+            <span class="stat-label">Eras</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- QUICK ZONE HIGHLIGHTS -->
+      <h2 class="page-title" style="font-size:20px;margin-bottom:16px;">
+        <span class="title-icon">🗺</span> Featured Zones
+      </h2>
+
+      <div id="featured-zones" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:28px;"></div>
+
+      <!-- RECENT UPDATES & INFO -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap;">
+
+        <div class="updates-box">
+          <h3>📖 Campaign Updates</h3>
+          <div class="update-item">
+            <span class="update-date">Latest</span>
+            <span class="update-text"><a href="sessions.html">Session log added</a> — the party ventures into the Burning Woods</span>
+          </div>
+          <div class="update-item">
+            <span class="update-date">Recent</span>
+            <span class="update-text"><a href="zones/charasis.html">Charasis (Howling Stones)</a> entry updated with new NPC intel</span>
+          </div>
+          <div class="update-item">
+            <span class="update-date">Recent</span>
+            <span class="update-text"><a href="planes.html">Planes of Power</a> section expanded with Plane of Time details</span>
+          </div>
+          <div class="update-item">
+            <span class="update-date">Earlier</span>
+            <span class="update-text"><a href="lore.html#gods">Pantheon</a> — Solusek Ro and Innoruuk entries added</span>
+          </div>
+        </div>
+
+        <div class="updates-box">
+          <h3>⚔️ DM Notes</h3>
+          <div class="update-item">
+            <span class="update-date">Tip</span>
+            <span class="update-text">Zones are organized by continent. Use the sidebar to filter by region.</span>
+          </div>
+          <div class="update-item">
+            <span class="update-date">Tip</span>
+            <span class="update-text">Each zone page includes Bestiary, Dangers, Benefits, and Notable NPCs.</span>
+          </div>
+          <div class="update-item">
+            <span class="update-date">Tip</span>
+            <span class="update-text">House rules and campaign-specific modifications are in the <a href="houserules.html">House Rules</a> section.</span>
+          </div>
+          <div class="update-item">
+            <span class="update-date">Tip</span>
+            <span class="update-text">Party character sheets are available in <a href="party.html">The Party</a>.</span>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <p>
+      EverQuest Atlas: The Maps of Myrist — Campaign Reference Site &nbsp;|&nbsp;
+      Content based on the atlas compiled by <em>Maelin Starpyre</em> &nbsp;|&nbsp;
+      Original game world by <em>Daybreak Game Company</em>
+    </p>
+  </footer>
+
+</div>
+
+<script src="js/zones-data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  renderHomepageStats();
+
+  // Featured zones — pick a varied selection
+  const featuredIds = ['blackburrow', 'castle-mistmoore', 'city-of-mist', 'plane-of-knowledge', 'akheva-ruins', 'burning-woods'];
+  const featuredContainer = document.getElementById('featured-zones');
+  if (featuredContainer && typeof ZONES !== 'undefined') {
+    const featured = featuredIds.map(id => ZONES.find(z => z.id === id)).filter(Boolean);
+    featuredContainer.innerHTML = featured.map(zone => `
+      <a href="zones/${zone.id}.html" class="zone-card">
+        <div class="zone-region">${zone.continent}</div>
+        <h3>${zone.name}</h3>
+        <p class="zone-excerpt">${zone.excerpt}</p>
+        <div class="zone-tags">
+          ${(zone.tags || []).slice(0,3).map(t => `<span class="tag">${t}</span>`).join('')}
+        </div>
+      </a>
+    `).join('');
+  }
+</script>
+</body>
+</html>

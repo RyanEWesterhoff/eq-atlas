@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bestiary — EverQuest Atlas: The Maps of Myrist</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="site-wrapper">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">
+        EverQuest Atlas
+        <span>The Maps of Myrist</span>
+      </a>
+      <div class="header-divider"></div>
+      <div class="header-quote">"Know your enemy before you face them. The unprepared do not return." — Warrior's Maxim</div>
+    </div>
+  </header>
+
+  <nav class="top-nav">
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="zones.html">Zones</a></li>
+      <li><a href="bestiary.html" class="active">Bestiary</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="planes.html">Planes of Power</a></li>
+    </ul>
+  </nav>
+
+  <div class="content-area">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Creature Types</h3>
+        <ul>
+          <li><a href="#undead"><span class="nav-icon">💀</span> Undead</a></li>
+          <li><a href="#humanoid"><span class="nav-icon">⚔️</span> Humanoids</a></li>
+          <li><a href="#beast"><span class="nav-icon">🐺</span> Beasts</a></li>
+          <li><a href="#dragon"><span class="nav-icon">🐉</span> Dragons</a></li>
+          <li><a href="#elemental"><span class="nav-icon">🔥</span> Elementals</a></li>
+          <li><a href="#construct"><span class="nav-icon">⚙️</span> Constructs</a></li>
+          <li><a href="#fey"><span class="nav-icon">✨</span> Fey</a></li>
+          <li><a href="#aberration"><span class="nav-icon">🌀</span> Aberrations</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <h3>By Tier</h3>
+        <ul>
+          <li><a href="#tier-1"><span class="nav-icon">🟢</span> Levels 1–20</a></li>
+          <li><a href="#tier-2"><span class="nav-icon">🟡</span> Levels 21–40</a></li>
+          <li><a href="#tier-3"><span class="nav-icon">🟠</span> Levels 41–60</a></li>
+          <li><a href="#tier-4"><span class="nav-icon">🔴</span> Levels 61+</a></li>
+          <li><a href="#bosses"><span class="nav-icon">★</span> Named / Bosses</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="sep">›</span>
+        Bestiary
+      </div>
+
+      <h1 class="page-title">
+        <span class="title-icon">🐉</span>
+        Bestiary of Norrath
+      </h1>
+
+      <p style="color:var(--text-secondary);margin-bottom:24px;font-size:15px;">
+        A comprehensive catalog of the creatures inhabiting the zones of Norrath, from the humblest gnoll pup to
+        the divine avatars of the Planes of Power. Entries are grouped by creature type and sorted by danger level.
+      </p>
+
+      <div id="bestiary-content"></div>
+
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>EverQuest Atlas: The Maps of Myrist — Campaign Reference Site</p>
+  </footer>
+</div>
+
+<script src="js/zones-data.js"></script>
+<script src="js/main.js"></script>
+<script>
+// Build bestiary from zone data
+function renderBestiary() {
+  if (typeof ZONES === 'undefined') return;
+
+  // Collect all creatures with zone info
+  const allCreatures = [];
+  ZONES.forEach(zone => {
+    (zone.bestiary || []).forEach(b => {
+      allCreatures.push({ ...b, zone: zone.name, zoneId: zone.id, continent: zone.continent });
+    });
+  });
+
+  // Group by type
+  const typeGroups = {};
+  allCreatures.forEach(c => {
+    const types = c.type.split(' / ');
+    const primaryType = types[0];
+    if (!typeGroups[primaryType]) typeGroups[primaryType] = [];
+    typeGroups[primaryType].push(c);
+  });
+
+  const typeOrder = ['Humanoid','Undead','Beast','Dragon','Elemental','Construct','Fey','Aberration','Giant','Draconian','Summoned'];
+  const typeIcons = {
+    'Humanoid':'⚔️', 'Undead':'💀', 'Beast':'🐺', 'Dragon':'🐉',
+    'Elemental':'🔥', 'Construct':'⚙️', 'Fey':'✨', 'Aberration':'🌀',
+    'Giant':'🗿', 'Draconian':'🦎', 'Summoned':'🌀', 'Boss':'★'
+  };
+
+  const sortedTypes = [...new Set([...typeOrder, ...Object.keys(typeGroups)])].filter(t => typeGroups[t]);
+
+  const container = document.getElementById('bestiary-content');
+  container.innerHTML = sortedTypes.map(type => {
+    const creatures = typeGroups[type].sort((a,b) => {
+      const aMin = parseInt(a.level) || 0;
+      const bMin = parseInt(b.level) || 0;
+      return aMin - bMin;
+    });
+
+    const anchorId = type.toLowerCase().replace(/\s+/g,'-');
+    const icon = typeIcons[type] || '•';
+
+    return `
+      <div class="content-section" id="${anchorId}" style="margin-bottom:20px;">
+        <div class="section-header">
+          <span>${icon}</span>
+          <h2>${type}s</h2>
+          <span style="margin-left:auto;font-size:12px;color:var(--text-dim);">${creatures.length} entries</span>
+        </div>
+        <div class="section-body" style="padding:0;">
+          <table class="bestiary-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Level</th>
+                <th>Type</th>
+                <th>Found In</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${creatures.map(c => `
+                <tr>
+                  <td style="font-weight:600;color:var(--text-heading);">${c.name}</td>
+                  <td><span class="level-badge">${c.level}</span></td>
+                  <td style="color:var(--text-secondary);font-size:13px;">${c.type}</td>
+                  <td><a href="zones/${c.zoneId}.html" style="color:var(--link-color);text-decoration:none;font-size:13px;">${c.zone}</a></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+renderBestiary();
+</script>
+</body>
+</html>

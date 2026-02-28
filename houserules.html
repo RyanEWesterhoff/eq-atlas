@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>House Rules — EverQuest Atlas Campaign</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="site-wrapper">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">
+        EverQuest Atlas
+        <span>The Maps of Myrist</span>
+      </a>
+      <div class="header-divider"></div>
+      <div class="header-quote">"The rules are only a beginning — what matters is the story." — DM's Note</div>
+    </div>
+  </header>
+
+  <nav class="top-nav">
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="zones.html">Zones</a></li>
+      <li><a href="bestiary.html">Bestiary</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="planes.html">Planes of Power</a></li>
+    </ul>
+  </nav>
+
+  <div class="content-area">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Campaign</h3>
+        <ul>
+          <li><a href="party.html"><span class="nav-icon">🧙</span> The Party</a></li>
+          <li><a href="sessions.html"><span class="nav-icon">📖</span> Session Logs</a></li>
+          <li><a href="houserules.html" class="active"><span class="nav-icon">📋</span> House Rules</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <h3>On This Page</h3>
+        <ul>
+          <li><a href="#races"><span class="nav-icon">👥</span> Available Races</a></li>
+          <li><a href="#classes"><span class="nav-icon">⚔️</span> Available Classes</a></li>
+          <li><a href="#death"><span class="nav-icon">💀</span> Death & Recovery</a></li>
+          <li><a href="#travel"><span class="nav-icon">🗺</span> Travel Rules</a></li>
+          <li><a href="#factions"><span class="nav-icon">🤝</span> Faction System</a></li>
+          <li><a href="#custom"><span class="nav-icon">✨</span> EQ-Specific Rules</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="sep">›</span>
+        House Rules
+      </div>
+
+      <h1 class="page-title">
+        <span class="title-icon">📋</span>
+        House Rules
+      </h1>
+
+      <p style="color:var(--text-secondary);margin-bottom:24px;font-size:15px;">
+        Campaign-specific rules, modifications to the base D&D system, and EverQuest-specific mechanics
+        adapted for tabletop play. These rules are in addition to — or supersede — the standard D&D rules.
+      </p>
+
+      <!-- AVAILABLE RACES -->
+      <div class="content-section" id="races" style="margin-bottom:20px;">
+        <div class="section-header"><span>👥</span><h2>Available Races</h2></div>
+        <div class="section-body">
+          <p>The following races from the world of Norrath are available for player characters. Each race is
+          mapped to its closest D&D equivalent with additional racial traits reflecting their EverQuest origins.</p>
+
+          <table class="bestiary-table" style="margin-top:12px;">
+            <thead>
+              <tr><th>EQ Race</th><th>D&D Base</th><th>Starting Region</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Human</td><td>Human</td><td>Antonica (Freeport or Qeynos)</td><td>Standard traits</td></tr>
+              <tr><td>High Elf</td><td>High Elf</td><td>Faydwer (Felwithe)</td><td>+Int, Wizard/Cleric affinity</td></tr>
+              <tr><td>Wood Elf</td><td>Wood Elf</td><td>Faydwer (Kelethin)</td><td>+Dex, Ranger/Druid affinity</td></tr>
+              <tr><td>Dark Elf</td><td>Drow</td><td>Antonica (Neriak)</td><td>Shadow Walk, darkvision 120ft</td></tr>
+              <tr><td>Dwarf</td><td>Hill Dwarf</td><td>Faydwer (Kaladim)</td><td>Standard traits + Forage underground</td></tr>
+              <tr><td>Gnome</td><td>Rock Gnome</td><td>Faydwer (Ak'Anon)</td><td>Tinker's Tools proficiency</td></tr>
+              <tr><td>Halfling</td><td>Halfling</td><td>Antonica (Rivervale)</td><td>Standard traits</td></tr>
+              <tr><td>Erudite</td><td>Custom (Human+)</td><td>Odus (Erudin)</td><td>+3 Int, -2 Str/Con, exceptional magic</td></tr>
+              <tr><td>Iksar</td><td>Custom Lizardfolk</td><td>Kunark (Cabilis)</td><td>Regeneration, Natural Armor, Forage</td></tr>
+              <tr><td>Vah Shir</td><td>Custom (Tabaxi base)</td><td>Luclin (Shar Vahl)</td><td>Cat's Grace, claw attack option</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AVAILABLE CLASSES -->
+      <div class="content-section" id="classes" style="margin-bottom:20px;">
+        <div class="section-header"><span>⚔️</span><h2>Available Classes</h2></div>
+        <div class="section-body">
+          <p>Standard D&D 5e classes are available with the following EverQuest-specific flavor adaptations:</p>
+
+          <table class="bestiary-table" style="margin-top:12px;">
+            <thead>
+              <tr><th>EQ Class</th><th>D&D Equivalent</th><th>Key Flavor</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Warrior</td><td>Fighter</td><td>Defensive specialization, group tank role</td></tr>
+              <tr><td>Cleric</td><td>Cleric</td><td>Healing emphasis; turn undead is core identity</td></tr>
+              <tr><td>Druid</td><td>Druid</td><td>Teleportation via Druid Rings (as ritual spell)</td></tr>
+              <tr><td>Wizard</td><td>Wizard</td><td>Translocate ability (single-target teleport)</td></tr>
+              <tr><td>Enchanter</td><td>Sorcerer (Charm lineage)</td><td>Crowd control as primary identity</td></tr>
+              <tr><td>Magician</td><td>Conjurer Wizard</td><td>Pet is a permanent companion, not temporary</td></tr>
+              <tr><td>Necromancer</td><td>Necromancer Wizard</td><td>Undead pet, life-tap spells drain HP to restore caster</td></tr>
+              <tr><td>Shaman</td><td>Cleric/Druid hybrid</td><td>Buff mastery; slow and debuff enemies effectively</td></tr>
+              <tr><td>Bard</td><td>Bard</td><td>Song cycling — maintain multiple songs simultaneously</td></tr>
+              <tr><td>Ranger</td><td>Ranger</td><td>Archery focus; limited druid spells</td></tr>
+              <tr><td>Rogue</td><td>Rogue</td><td>Backstab (from behind only, strict)</td></tr>
+              <tr><td>Monk</td><td>Monk</td><td>Feign Death ability (Deception vs. enemy Insight)</td></tr>
+              <tr><td>Paladin</td><td>Paladin (Devotion)</td><td>Divine Stun; limited self-resurrection</td></tr>
+              <tr><td>Shadow Knight</td><td>Paladin (Oathbreaker)</td><td>Harm Touch (1/long rest, melee touch for 5d10)</td></tr>
+              <tr><td>Beastlord</td><td>Ranger + Druid</td><td>Permanent animal companion; melee + pet hybrid</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DEATH & RECOVERY -->
+      <div class="content-section" id="death" style="margin-bottom:20px;">
+        <div class="section-header"><span>💀</span><h2>Death &amp; Recovery</h2></div>
+        <div class="section-body">
+          <p><strong style="color:var(--accent-gold);">Experience Debt.</strong> When a character dies and is resurrected, they suffer a 5% experience penalty — they begin the session slightly behind where they were when they fell. This is represented mechanically by requiring an additional milestone to be completed before the next level-up trigger, DM's discretion.</p>
+
+          <p><strong style="color:var(--accent-gold);">Corpse Recovery.</strong> When a character dies in a dangerous zone, their body remains where they fell. Resurrection magic brings the character back to life at the nearest safe zone — but their equipment remains on their corpse. The party has until the end of the next in-game day to recover the corpse and reclaim the equipment before it decays and is lost.</p>
+
+          <p><strong style="color:var(--accent-gold);">Soul Binding.</strong> Characters may designate a Soul Bind location — a specific city or safe zone they have previously visited. Upon death without resurrection, the character's soul returns to this location rather than requiring a full resurrection. Characters can change their Soul Bind by meditating at a new location (takes 10 minutes and requires a short rest).</p>
+
+          <p><strong style="color:var(--accent-gold);">Feign Death</strong> (Monk ability): The monk makes a Deception check (DC 12 + enemy's Wisdom modifier). On success, all enemies that can see the monk believe them to be dead and stop targeting them. Enemies that witnessed the monk "die" unrealistically (i.e., at full health) have advantage on Insight to disbelieve.</p>
+        </div>
+      </div>
+
+      <!-- TRAVEL RULES -->
+      <div class="content-section" id="travel" style="margin-bottom:20px;">
+        <div class="section-header"><span>🗺</span><h2>Travel Rules</h2></div>
+        <div class="section-body">
+          <p><strong style="color:var(--accent-gold);">Zone Travel.</strong> Moving between adjacent zones requires travel time based on terrain. Road travel: 30 minutes per zone. Wilderness travel: 1–2 hours per zone. Dangerous zones (dungeon, high-level outdoor): 1 encounter check per zone entered.</p>
+
+          <p><strong style="color:var(--accent-gold);">Druid Rings.</strong> Druids of level 5+ may use ancient stone circles to teleport themselves and up to 5 willing allies to any other Druid Ring they have previously visited. This requires 1 minute of casting time and a spell slot of appropriate level. Druid Rings exist in: West Karana, East Karana, North Karana, Butcherblock Mountains, Toxxulia Forest, Wakening Land (Velious), and several Kunark locations.</p>
+
+          <p><strong style="color:var(--accent-gold);">Wizard Translocate.</strong> Wizards of level 9+ may translocate a single willing creature to any location the wizard has previously visited and designated as a translocate anchor. This requires a 6th-level spell slot and 1 minute of casting. Mass translocate affects the full party at 7th level slot.</p>
+
+          <p><strong style="color:var(--accent-gold);">Sea Travel.</strong> Passenger ships operate between Freeport–Butcherblock, Freeport–Firiona Vie (Kunark), and Butcherblock–Firiona Vie. Travel time is handled narratively. Ships depart every 2–4 hours in-game. Shipwreck encounters are possible at DM's discretion.</p>
+        </div>
+      </div>
+
+      <!-- FACTION SYSTEM -->
+      <div class="content-section" id="factions" style="margin-bottom:20px;">
+        <div class="section-header"><span>🤝</span><h2>Faction System</h2></div>
+        <div class="section-body">
+          <p>Every major organization in Norrath maintains a Faction Standing toward each character, ranging from <em>Ally</em> (warmly welcomed) to <em>Scowls</em> (attacked on sight). Actions taken by the party affect faction standings.</p>
+
+          <table class="bestiary-table" style="margin-top:12px;">
+            <thead>
+              <tr><th>Standing</th><th>Threshold</th><th>Effects</th></tr>
+            </thead>
+            <tbody>
+              <tr><td style="color:var(--success-text);">Ally</td><td>900–1000</td><td>Special quests, discounts, protected sanctuary</td></tr>
+              <tr><td style="color:#66cc66;">Warmly</td><td>700–899</td><td>Full services, aid in combat if asked</td></tr>
+              <tr><td style="color:#aaaa44;">Kindly</td><td>500–699</td><td>Standard services, polite interaction</td></tr>
+              <tr><td style="color:var(--text-secondary);">Amiably</td><td>300–499</td><td>Basic services available</td></tr>
+              <tr><td style="color:var(--text-secondary);">Indifferent</td><td>100–299</td><td>Neutral; will not attack unprovoked</td></tr>
+              <tr><td style="color:#cc8844);">Apprehensively</td><td>0–99</td><td>Wary; may refuse service</td></tr>
+              <tr><td style="color:#cc6644;">Dubiously</td><td>-100–-1</td><td>Hostile attitude; no services</td></tr>
+              <tr><td style="color:var(--danger-text);">Threateningly</td><td>-200–-101</td><td>Will attack if party lingers</td></tr>
+              <tr><td style="color:#cc2222;">Scowls</td><td>Below -200</td><td>Attacks on sight; no exceptions</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:14px;color:var(--text-secondary);font-size:14px;">
+            Faction changes occur when the party completes quests, defeats NPCs tied to factions, or makes
+            specific dialogue choices. Killing a Qeynos guardsman damages Qeynos faction; completing a
+            Qeynos quest improves it. Some factions are mutually exclusive (improving one harms another).
+          </p>
+        </div>
+      </div>
+
+      <!-- EQ-SPECIFIC RULES -->
+      <div class="content-section" id="custom" style="margin-bottom:20px;">
+        <div class="section-header"><span>✨</span><h2>EverQuest-Specific Rules</h2></div>
+        <div class="section-body">
+          <p><strong style="color:var(--accent-gold);">Camping a Spawn.</strong> When the party waits in a specific location for a named NPC to appear (a "camp"), encounters in that zone occur at accelerated pace. Named NPCs appear on a 1d6 hours schedule; waiting characters may take short rests but not long rests without abandoning the camp.</p>
+
+          <p><strong style="color:var(--accent-gold);">See Invisible.</strong> Many powerful creatures possess magical awareness that defeats mundane invisibility. Divinity-touched entities, powerful undead, and most high-level adversaries can automatically perceive invisible targets within 60 feet. Only creatures with this limitation noted can be fooled by Invisibility spells.</p>
+
+          <p><strong style="color:var(--accent-gold);">Lull / Mesmerize.</strong> Enchant effects that reduce hostility ("lulling" creatures) last only as long as concentration is maintained and break immediately if the affected creature takes damage. Mesmerize (Hold Person/Monster) breaks on damage as normal. Crowd control is valuable but fragile.</p>
+
+          <p><strong style="color:var(--accent-gold);">Aggro Range.</strong> Different creatures have different hostile awareness ranges. Undead and naturally aggressive creatures are hostile at 30 feet. Standard enemies are hostile at 15 feet unless they observe the party. Rare "see-invis" enemies detect invisible creatures within their standard range regardless.</p>
+
+          <p><strong style="color:var(--accent-gold);">Tradeskills.</strong> Characters may specialize in a craft (Smithing, Tailoring, Brewing, Baking, Fletching, Pottery, Jewel Crafting). Crafted goods may exceed the quality available for purchase; legendary crafted items require rare components and high skill. Tradeskill advancement is tracked separately from combat advancement.</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>EverQuest Atlas: The Maps of Myrist — Campaign Reference Site</p>
+  </footer>
+</div>
+
+<script src="js/zones-data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
