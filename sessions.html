@@ -379,6 +379,7 @@
 <div class="mention-hover-card" id="mention-hover-card"></div>
 
 <script src="js/zones-data.js"></script>
+<script src="js/glossary-data.js"></script>
 <script src="js/main.js"></script>
 <script src="js/search.js"></script>
 <script>
@@ -479,14 +480,24 @@
 
   function _buildMentionTargets() {
     var targets = CHARACTERS.map(function (c) {
-      return { name: c.name, url: c.url, type: 'character', label: c.label };
+      return { name: c.name, url: c.url, type: 'character', label: c.label, key: c.url.split('#')[1] };
     });
     if (typeof ZONES !== 'undefined') {
       ZONES.forEach(function (z) {
-        targets.push({ name: z.name, url: 'zones/' + z.id + '.html', type: 'zone', label: z.continent });
+        targets.push({ name: z.name, url: 'zones/' + z.id + '.html', type: 'zone', label: z.continent, key: z.id });
+      });
+    }
+    if (typeof GLOSSARY_DATA !== 'undefined') {
+      GLOSSARY_DATA.forEach(function (e) {
+        targets.push({ name: e.term, url: 'glossary.html#entry-' + e.id, type: 'glossary', label: e.tags[0], key: e.id });
       });
     }
     return targets;
+  }
+
+  function _glossaryTagLabel(t) {
+    return { antonica:'Antonica', odus:'Odus', luclin:'Luclin', faydwer:'Faydwer',
+             kunark:'Kunark', velious:'Velious', planes:'Planes', general:'General' }[t] || t;
   }
 
   function _escapeRegex(s) {
@@ -524,7 +535,7 @@
           if (/[A-Za-z0-9']/.test(before) || /[A-Za-z0-9']/.test(after)) continue;
           // No overlap with existing matches
           if (matches.some(function (x) { return s < x.end && e > x.start; })) continue;
-          var mKey = t.type === 'character' ? t.url.split('#')[1] : t.url.replace('zones/', '').replace('.html', '');
+          var mKey = t.key || (t.type === 'character' ? t.url.split('#')[1] : t.url.replace('zones/', '').replace('.html', ''));
           matches.push({ start: s, end: e, text: m[0], url: t.url, type: t.type, key: mKey });
         }
       });
@@ -549,7 +560,27 @@
       textNode.parentNode.replaceChild(frag, textNode);
     });
 
+    _enrichExistingLinks(div);
     return div.innerHTML;
+  }
+
+  // Annotate any existing <a> tags that match known mention targets (handles
+  // autocomplete-inserted links that were saved without data-mention-* attrs)
+  function _enrichExistingLinks(div) {
+    var targets = _buildMentionTargets();
+    var urlMap = {};
+    targets.forEach(function (t) { urlMap[t.url] = t; });
+    Array.from(div.querySelectorAll('a[href]')).forEach(function (a) {
+      if (a.dataset.mentionType) return;
+      var t = urlMap[a.getAttribute('href')];
+      if (t) {
+        a.dataset.mentionType = t.type;
+        a.dataset.mentionKey  = t.key;
+        if (!a.style.color) {
+          a.style.cssText = 'color:var(--link-color,#c9a84c);text-decoration:none;border-bottom:1px dotted currentColor;';
+        }
+      }
+    });
   }
 
   // @ mention autocomplete on a contenteditable summary field
@@ -590,10 +621,15 @@
       if (!results.length) { dropdown.style.display = 'none'; return; }
 
       dropdown.innerHTML = results.map(function (t) {
-        var icon = t.type === 'character' ? '👤' : '🗺';
-        return '<div class="zone-ac-item" data-url="' + t.url + '" data-name="' + t.name.replace(/"/g, '&quot;') + '">' +
+        var icon = t.type === 'character' ? '👤' : t.type === 'glossary' ? '📖' : '🗺';
+        var labelText = t.type === 'glossary' ? _glossaryTagLabel(t.label) : t.label;
+        return '<div class="zone-ac-item"' +
+          ' data-url="' + t.url + '"' +
+          ' data-name="' + t.name.replace(/"/g, '&quot;') + '"' +
+          ' data-type="' + t.type + '"' +
+          ' data-key="' + (t.key || '') + '">' +
           '<span class="zone-ac-name">' + icon + ' ' + t.name + '</span>' +
-          '<span class="zone-ac-region">' + t.label + '</span>' +
+          '<span class="zone-ac-region">' + labelText + '</span>' +
         '</div>';
       }).join('');
 
@@ -601,7 +637,7 @@
         item.addEventListener('mousedown', function (e) {
           e.preventDefault();
           var info2 = getAtQuery();
-          if (info2) _insertMentionLink(field, item.dataset.url, item.dataset.name, info2);
+          if (info2) _insertMentionLink(field, item.dataset.url, item.dataset.name, info2, item.dataset.type, item.dataset.key);
           dropdown.style.display = 'none';
         });
       });
@@ -628,7 +664,7 @@
         if (active) {
           e.preventDefault();
           var info2 = getAtQuery();
-          if (info2) _insertMentionLink(field, active.dataset.url, active.dataset.name, info2);
+          if (info2) _insertMentionLink(field, active.dataset.url, active.dataset.name, info2, active.dataset.type, active.dataset.key);
           dropdown.style.display = 'none';
         }
       } else if (e.key === 'Escape') {
@@ -637,7 +673,7 @@
     });
   }
 
-  function _insertMentionLink(field, url, name) {
+  function _insertMentionLink(field, url, name, _info, mentionType, mentionKey) {
     var sel = window.getSelection();
     if (!sel.rangeCount) return;
     var range = sel.getRangeAt(0);
@@ -659,6 +695,8 @@
     a.href = url;
     a.style.cssText = 'color:var(--link-color,#c9a84c);text-decoration:none;border-bottom:1px dotted currentColor;';
     a.textContent = name;
+    if (mentionType) a.dataset.mentionType = mentionType;
+    if (mentionKey)  a.dataset.mentionKey  = mentionKey;
     var r = sel.getRangeAt(0);
     r.insertNode(a);
     var space = document.createTextNode('\u00a0');
@@ -999,6 +1037,18 @@
             '<div class="mhc-title">' + zone.continent + '</div>' +
             '<div class="mhc-meta">' + (zone.region || '') + (zone.levelRange ? ' · ' + zone.levelRange : '') + '</div>' +
             '<div class="mhc-desc">' + (zone.excerpt || '') + '</div>' +
+          '</div>';
+      } else if (type === 'glossary' && typeof GLOSSARY_DATA !== 'undefined') {
+        var gEntry = null;
+        for (var j = 0; j < GLOSSARY_DATA.length; j++) { if (GLOSSARY_DATA[j].id === key) { gEntry = GLOSSARY_DATA[j]; break; } }
+        if (!gEntry) return;
+        var tagStr = gEntry.tags.map(function (t) { return _glossaryTagLabel(t); }).join(' · ');
+        html =
+          '<div class="mhc-portrait"><div class="mhc-portrait-icon" style="font-size:42px;opacity:0.45;">📖</div></div>' +
+          '<div class="mhc-body">' +
+            '<div class="mhc-badge" style="color:var(--accent-gold);">Glossary · ' + tagStr + '</div>' +
+            '<div class="mhc-name">' + gEntry.term + '</div>' +
+            '<div class="mhc-desc">' + gEntry.def + '</div>' +
           '</div>';
       }
 
