@@ -335,6 +335,228 @@
     return (v || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  // ── @ Mention & auto-link engine ───────────────────────────
+  var CHARACTERS = [
+    { name: 'King Tearis Thex',       url: 'allies.html#tearis-thex',        label: 'Ally' },
+    { name: 'Tearis Thex',            url: 'allies.html#tearis-thex',        label: 'Ally' },
+    { name: 'Firiona Vie',            url: 'allies.html#firiona-vie',        label: 'Ally' },
+    { name: 'Antonius Bayle IV',      url: 'allies.html#antonius-bayle',     label: 'Ally' },
+    { name: 'Antonius Bayle',         url: 'allies.html#antonius-bayle',     label: 'Ally' },
+    { name: "El'Arad",                url: 'allies.html#elarad',             label: 'Ally' },
+    { name: 'Mayor Gubbin',           url: 'allies.html#mayor-gubbin',       label: 'Ally' },
+    { name: 'Gubbin',                 url: 'allies.html#mayor-gubbin',       label: 'Ally' },
+    { name: 'King Kazon Stormhammer', url: 'allies.html#kazon-stormhammer',  label: 'Ally' },
+    { name: 'Kazon Stormhammer',      url: 'allies.html#kazon-stormhammer',  label: 'Ally' },
+    { name: "King Ak'Anon",           url: 'allies.html#king-akanon',        label: 'Ally' },
+    { name: 'Halas Council',          url: 'allies.html#halas-council',      label: 'Ally' },
+    { name: "Al'Kabor",               url: 'allies.html#alkabor',            label: 'Ally' },
+    { name: 'Tsaph Katta',            url: 'allies.html#tsaph-katta',        label: 'Ally' },
+    { name: 'Mayong Mistmoore',       url: 'allies.html#mayong',             label: 'Enemy' },
+    { name: 'Mayong',                 url: 'allies.html#mayong',             label: 'Enemy' },
+    { name: 'Lord Inquisitor Seru',   url: 'allies.html#seru',               label: 'Enemy' },
+    { name: 'Inquisitor Seru',        url: 'allies.html#seru',               label: 'Enemy' },
+    { name: 'Jurglash',               url: 'allies.html#jurglash',           label: 'Enemy' },
+    { name: 'Naythox Thex',           url: 'allies.html#naythox-thex',       label: 'Enemy' },
+    { name: 'Emperor Vekin',          url: 'allies.html#emperor-vekin',      label: 'Enemy' },
+    { name: 'Vekin',                  url: 'allies.html#emperor-vekin',      label: 'Enemy' },
+    { name: "Sir Lucan D'Lere",       url: 'allies.html#sir-lucan',          label: 'Enemy' },
+    { name: "Lucan D'Lere",           url: 'allies.html#sir-lucan',          label: 'Enemy' },
+    { name: 'Lucan',                  url: 'allies.html#sir-lucan',          label: 'Enemy' },
+    { name: 'Overlord Virate Manaar', url: 'allies.html#virate-manaar',      label: 'Enemy' },
+    { name: 'Virate Manaar',          url: 'allies.html#virate-manaar',      label: 'Enemy' }
+  ];
+
+  function _buildMentionTargets() {
+    var targets = CHARACTERS.map(function (c) {
+      return { name: c.name, url: c.url, type: 'character', label: c.label };
+    });
+    if (typeof ZONES !== 'undefined') {
+      ZONES.forEach(function (z) {
+        targets.push({ name: z.name, url: 'zones/' + z.id + '.html', type: 'zone', label: z.continent });
+      });
+    }
+    return targets;
+  }
+
+  function _escapeRegex(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // Walk a DOM node tree and auto-link unlinked occurrences of known names
+  function autoLinkHTML(html) {
+    var targets = _buildMentionTargets();
+    targets.sort(function (a, b) { return b.name.length - a.name.length; }); // longest first
+
+    var div = document.createElement('div');
+    div.innerHTML = html;
+
+    function collectTextNodes(node, out) {
+      if (node.nodeType === 1 && node.tagName === 'A') return; // skip existing links
+      if (node.nodeType === 3) { out.push(node); return; }
+      Array.from(node.childNodes).forEach(function (c) { collectTextNodes(c, out); });
+    }
+
+    var textNodes = [];
+    collectTextNodes(div, textNodes);
+
+    textNodes.forEach(function (textNode) {
+      var text = textNode.textContent;
+      var matches = [];
+      targets.forEach(function (t) {
+        var re = new RegExp(_escapeRegex(t.name), 'gi');
+        var m;
+        while ((m = re.exec(text)) !== null) {
+          var s = m.index, e = m.index + m[0].length;
+          // Avoid mid-word matches
+          var before = s > 0 ? text[s - 1] : ' ';
+          var after  = e < text.length ? text[e] : ' ';
+          if (/[A-Za-z0-9']/.test(before) || /[A-Za-z0-9']/.test(after)) continue;
+          // No overlap with existing matches
+          if (matches.some(function (x) { return s < x.end && e > x.start; })) continue;
+          matches.push({ start: s, end: e, text: m[0], url: t.url });
+        }
+      });
+
+      if (!matches.length) return;
+      matches.sort(function (a, b) { return a.start - b.start; });
+
+      var frag = document.createDocumentFragment();
+      var pos = 0;
+      matches.forEach(function (match) {
+        if (pos < match.start) frag.appendChild(document.createTextNode(text.slice(pos, match.start)));
+        var a = document.createElement('a');
+        a.href = match.url;
+        a.style.cssText = 'color:var(--link-color,#c9a84c);text-decoration:none;border-bottom:1px dotted currentColor;';
+        a.textContent = match.text;
+        frag.appendChild(a);
+        pos = match.end;
+      });
+      if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+      textNode.parentNode.replaceChild(frag, textNode);
+    });
+
+    return div.innerHTML;
+  }
+
+  // @ mention autocomplete on a contenteditable summary field
+  function setupMentionAutocomplete(fieldId) {
+    var field = document.getElementById(fieldId);
+    if (!field) return;
+
+    var dropdown = document.createElement('div');
+    dropdown.className = 'zone-ac-dropdown';
+    dropdown.style.display = 'none';
+    // Ensure parent is positioned so dropdown sits below field
+    field.style.position = 'relative';
+    field.parentNode.style.position = 'relative';
+    field.parentNode.appendChild(dropdown);
+
+    function getAtQuery() {
+      var sel = window.getSelection();
+      if (!sel.rangeCount) return null;
+      var range = sel.getRangeAt(0);
+      var container = range.startContainer;
+      if (container.nodeType !== 3) return null;
+      var before = container.textContent.substring(0, range.startOffset);
+      var atIdx = before.lastIndexOf('@');
+      if (atIdx === -1) return null;
+      var query = before.slice(atIdx + 1);
+      if (/\n/.test(query)) return null;
+      return { query: query.toLowerCase(), atIdx: atIdx, container: container, endOffset: range.startOffset };
+    }
+
+    field.addEventListener('input', function () {
+      var info = getAtQuery();
+      if (!info) { dropdown.style.display = 'none'; return; }
+
+      var results = _buildMentionTargets().filter(function (t) {
+        return t.name.toLowerCase().indexOf(info.query) !== -1;
+      }).slice(0, 10);
+
+      if (!results.length) { dropdown.style.display = 'none'; return; }
+
+      dropdown.innerHTML = results.map(function (t) {
+        var icon = t.type === 'character' ? '👤' : '🗺';
+        return '<div class="zone-ac-item" data-url="' + t.url + '" data-name="' + t.name.replace(/"/g, '&quot;') + '">' +
+          '<span class="zone-ac-name">' + icon + ' ' + t.name + '</span>' +
+          '<span class="zone-ac-region">' + t.label + '</span>' +
+        '</div>';
+      }).join('');
+
+      dropdown.querySelectorAll('.zone-ac-item').forEach(function (item) {
+        item.addEventListener('mousedown', function (e) {
+          e.preventDefault();
+          var info2 = getAtQuery();
+          if (info2) _insertMentionLink(field, item.dataset.url, item.dataset.name, info2);
+          dropdown.style.display = 'none';
+        });
+      });
+      dropdown.style.display = 'block';
+    });
+
+    field.addEventListener('blur', function () {
+      setTimeout(function () { dropdown.style.display = 'none'; }, 150);
+    });
+
+    field.addEventListener('keydown', function (e) {
+      if (dropdown.style.display === 'none') return;
+      var items = dropdown.querySelectorAll('.zone-ac-item');
+      var active = dropdown.querySelector('.zone-ac-item.ac-active');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!active) { if (items[0]) items[0].classList.add('ac-active'); }
+        else { active.classList.remove('ac-active'); (active.nextElementSibling || items[0]).classList.add('ac-active'); }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!active) { if (items[items.length - 1]) items[items.length - 1].classList.add('ac-active'); }
+        else { active.classList.remove('ac-active'); (active.previousElementSibling || items[items.length - 1]).classList.add('ac-active'); }
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        if (active) {
+          e.preventDefault();
+          var info2 = getAtQuery();
+          if (info2) _insertMentionLink(field, active.dataset.url, active.dataset.name, info2);
+          dropdown.style.display = 'none';
+        }
+      } else if (e.key === 'Escape') {
+        dropdown.style.display = 'none';
+      }
+    });
+  }
+
+  function _insertMentionLink(field, url, name) {
+    var sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    var range = sel.getRangeAt(0);
+    var container = range.startContainer;
+    if (container.nodeType !== 3) return;
+
+    var before = container.textContent.substring(0, range.startOffset);
+    var atIdx = before.lastIndexOf('@');
+    if (atIdx === -1) return;
+
+    // Delete @query
+    var del = document.createRange();
+    del.setStart(container, atIdx);
+    del.setEnd(container, range.startOffset);
+    del.deleteContents();
+
+    // Insert link + trailing space
+    var a = document.createElement('a');
+    a.href = url;
+    a.style.cssText = 'color:var(--link-color,#c9a84c);text-decoration:none;border-bottom:1px dotted currentColor;';
+    a.textContent = name;
+    var r = sel.getRangeAt(0);
+    r.insertNode(a);
+    var space = document.createTextNode('\u00a0');
+    a.parentNode.insertBefore(space, a.nextSibling);
+    r = document.createRange();
+    r.setStartAfter(space);
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
+    field.focus();
+  }
+
   function sessionEntryHTML(s, gmMode) {
     return '<div class="session-entry" id="se-' + s.id + '" data-session-id="' + s.id + '">' +
       (gmMode
@@ -349,7 +571,7 @@
         '<span class="session-date">' + s.date + '</span>' +
       '</div>' +
       '<div class="session-location">' + s.location + '</div>' +
-      '<div class="session-summary">' + s.summary + '</div>' +
+      '<div class="session-summary">' + autoLinkHTML(s.summary) + '</div>' +
     '</div>';
   }
 
@@ -410,6 +632,8 @@
         '<span class="tb-sep"></span>' +
         '<button type="button" title="Undo" onmousedown="tbCmd(event,\'undo\')">↩</button>' +
         '<button type="button" title="Redo" onmousedown="tbCmd(event,\'redo\')">↪</button>' +
+        '<span class="tb-sep"></span>' +
+        '<span style="font-size:11px;color:var(--text-dim);padding:0 4px;">@ to link</span>' +
         '<button type="button" class="tb-cancel" onclick="sessionCancel(\'' + id + '\')">✕ Cancel</button>' +
         '<button type="button" class="tb-save" onclick="sessionSave(\'' + id + '\')">✓ Save</button>' +
       '</div>' +
@@ -421,11 +645,14 @@
       '<div class="session-location-wrapper">' +
         '<div class="session-location-edit" id="edit-loc-' + id + '" contenteditable="true">' + s.location + '</div>' +
       '</div>' +
-      '<div class="session-summary-edit" id="edit-summary-' + id + '" contenteditable="true">' + s.summary + '</div>';
+      '<div class="session-summary-wrapper" style="position:relative;">' +
+        '<div class="session-summary-edit" id="edit-summary-' + id + '" contenteditable="true">' + s.summary + '</div>' +
+      '</div>';
 
     var summaryEl = document.getElementById('edit-summary-' + id);
     if (summaryEl) summaryEl.focus();
     setupLocationAutocomplete('edit-loc-' + id);
+    setupMentionAutocomplete('edit-summary-' + id);
   };
 
   window.tbCmd = function (e, cmd, arg) {
