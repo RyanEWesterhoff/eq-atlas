@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/jpeg" href="images/EQ_favicon.jpg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Session Logs — EverQuest Atlas Campaign</title>
   <link rel="stylesheet" href="css/style.css">
@@ -213,6 +214,90 @@
     .zone-ac-item:hover, .zone-ac-item.ac-active { background: rgba(201,168,76,0.15); }
     .zone-ac-name { color: var(--text-primary); }
     .zone-ac-region { color: var(--text-dim); font-size: 11px; letter-spacing: 0.5px; }
+
+    /* ── Mention hover card ─────────────────────────────────── */
+    .mention-hover-card {
+      display: none;
+      position: fixed;
+      z-index: 900;
+      width: 600px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-gold);
+      box-shadow: 0 12px 48px rgba(0,0,0,0.85);
+      pointer-events: none;
+      overflow: hidden;
+      flex-direction: row;
+    }
+    .mention-hover-card.visible { display: flex; }
+    .mhc-portrait {
+      width: 152px;
+      min-width: 152px;
+      background: #0a0a0a;
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .mhc-portrait img {
+      width: 152px;
+      height: 100%;
+      min-height: 192px;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+    }
+    .mhc-portrait-icon {
+      width: 152px;
+      min-height: 192px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      opacity: 0.35;
+    }
+    .mhc-body {
+      padding: 20px 24px;
+      flex: 1;
+      min-width: 0;
+    }
+    .mhc-badge {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .mhc-name {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent-gold);
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .mhc-title {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .mhc-meta {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+    }
+    .mhc-desc {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
   </style>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -238,7 +323,7 @@
       <li><a href="zones.html">Lands</a></li>
       <li class="gm-nav-only"><a href="bestiary.html">Bestiary</a></li>
       <li><a href="lore.html">Lore</a></li>
-      <li><a href="deities.html">Deities</a></li><li><a href="allies.html">Figures</a></li><li><a href="sessions.html">Campaign</a></li><li><a href="#" onclick="logout();return false;" style="color:var(--text-dim);border-bottom-color:transparent">Sign Out</a></li>
+      <li><a href="deities.html">Deities</a></li><li><a href="allies.html">Figures</a></li><li><a href="sessions.html">Campaign</a></li><li><a href="glossary.html">Glossary</a></li><li><a href="#" onclick="logout();return false;" style="color:var(--text-dim);border-bottom-color:transparent">Sign Out</a></li>
     </ul>
   </nav>
 
@@ -290,6 +375,8 @@
     <p>The Atlas — Campaign Reference Site</p>
   </footer>
 </div>
+
+<div class="mention-hover-card" id="mention-hover-card"></div>
 
 <script src="js/zones-data.js"></script>
 <script src="js/main.js"></script>
@@ -363,8 +450,32 @@
     { name: "Lucan D'Lere",           url: 'allies.html#sir-lucan',          label: 'Enemy' },
     { name: 'Lucan',                  url: 'allies.html#sir-lucan',          label: 'Enemy' },
     { name: 'Overlord Virate Manaar', url: 'allies.html#virate-manaar',      label: 'Enemy' },
-    { name: 'Virate Manaar',          url: 'allies.html#virate-manaar',      label: 'Enemy' }
+    { name: 'Virate Manaar',          url: 'allies.html#virate-manaar',      label: 'Enemy' },
+    { name: "Lanys T'Vyl",            url: 'allies.html#lanys-tvyl',         label: 'Enemy' },
+    { name: 'Lanys',                  url: 'allies.html#lanys-tvyl',         label: 'Enemy' }
   ];
+
+  // Rich data for hover cards — keyed by the anchor ID in allies.html
+  var FIGURE_INFO = {
+    'tearis-thex':     { name: 'King Tearis Thex',           badge: 'ally',   title: "King of the Koada'Dal; Ruler of Felwithe",                     meta: 'High Elf · Felwithe, Greater Faydark',                    portrait: 'images/figures/King Tearis Thex.png',            desc: 'Centuries-old sovereign of Felwithe, known for unwavering conviction and uncompromising judgment. Father of Firiona Vie.' },
+    'firiona-vie':     { name: 'Firiona Vie',                 badge: 'ally',   title: 'Champion of Tunare; Princess of Felwithe',                     meta: 'High Elf · Felwithe / Firiona Vie Outpost',               portrait: 'images/figures/Firiona Vie.png',                 desc: 'Most celebrated hero of Norrath — a paladin blessed by Tunare who led the campaign against the Ring of Scale in Kunark.' },
+    'antonius-bayle':  { name: 'Antonius Bayle IV',           badge: 'ally',   title: 'High Keeper of the Sword; Ruler of Qeynos',                    meta: 'Human · Qeynos, Antonica',                                portrait: 'images/figures/Antonius Bale IV.png',            desc: 'Devout Paladin of Karana who rules Qeynos with just governance. Most powerful force for Good on Antonica.' },
+    'elarad':          { name: "El'Arad",                     badge: 'ally',   title: 'Lord Primarch of Erudin; High Arcane Authority',               meta: 'Erudite · Erudin, Odus',                                  portrait: "images/figures/El'arad.png",                     desc: 'Preeminent political and magical authority of Erudin, presiding over the High Council and Academy of the Arcane Sciences.' },
+    'mayor-gubbin':    { name: 'Mayor Gubbin',                badge: 'ally',   title: 'Mayor of Rivervale',                                           meta: 'Halfling · Rivervale, Antonica',                          portrait: 'images/figures/Mayor Gubbin.png',                desc: 'Wealthiest halfling alive — former adventuring rogue who made his fortune with Antonius Bayle III, now governs Rivervale quietly.' },
+    'kazon-stormhammer': { name: 'King Kazon Stormhammer',   badge: 'ally',   title: 'King of Kaladim; Lord of the Dwarves',                         meta: 'Dwarf · South Kaladim, Faydwer',                          portrait: 'images/figures/King Kazon Stormhammer.png',      desc: 'Formidable warrior-king of the dwarven stronghold Kaladim, protected by his elite Bloodforge Brigade honor guard.' },
+    'king-akanon':     { name: "King Ak'Anon",               badge: 'ally',   title: 'Immortal Clockwork Sovereign of the Gnomes',                   meta: "Clockwork · Ak'Anon, Steamfont Mountains",                portrait: "images/figures/King Ak'Anon.png",                desc: "A mechanical ruler infused with the wisdom of King Horatio Ak'Anon, governing gnomish civilization for nearly five centuries." },
+    'halas-council':   { name: 'Halas Council of Elders',    badge: 'ally',   title: 'Governing Body of the Northmen Nation',                        meta: 'Barbarian · Halas, Everfrost Peaks',                      portrait: 'images/figures/Halas Council of Elders.png',    desc: 'Fourteen Elders chosen from fourteen Northmen tribes, governing through decentralization to prevent any single ruler from seizing power.' },
+    'alkabor':         { name: "Al'Kabor",                   badge: 'ally',   title: 'The Most Powerful Wizard in All of Norrath',                   meta: 'Erudite · West Freeport / Dreadlands / Luclin',           portrait: "images/figures/Al'Kabor.png",                    desc: 'Arrogant and brilliant Erudite wizard who traveled with Firiona Vie and opened a portal to Luclin, reshaping the age.' },
+    'tsaph-katta':     { name: 'Tsaph Katta',                badge: 'ally',   title: 'Imperator of the Combine Empire',                              meta: 'Human · Katta Castellum, Luclin',                         portrait: 'images/figures/Tsaph Katta.png',                 desc: 'Visionary founder-emperor who sought to unite all races. Betrayed by General Seru, now preserved in magical stasis on Luclin.' },
+    'mayong':          { name: 'Mayong Mistmoore',            badge: 'enemy',  title: 'Lord of Castle Mistmoore; First Vampire of Norrath',           meta: 'Ancient Elf (Cursed) · Castle Mistmoore, Lesser Faydark', portrait: 'images/figures/Mayong Mistmoore.png',            desc: 'One of the oldest creatures on Norrath — an elf cursed to become the first vampire. His ultimate goal is godhood.' },
+    'seru':            { name: 'Lord Inquisitor Seru',        badge: 'enemy',  title: 'Lord Inquisitor; Betrayer of the Combine Empire',              meta: 'Human (Transformed) · Sanctus Seru, Luclin',             portrait: 'images/figures/Lord Inquisitor Seru.png',       desc: "Once Tsaph Katta's most trusted general, Seru poisoned his own emperor over racial purity. Now rules Sanctus Seru on Luclin." },
+    'jurglash':        { name: 'Jurglash',                    badge: 'enemy',  title: 'Warlord; Founder of the Grobb Clan',                           meta: 'Troll · Innothule Swamp / Grobb, Antonica',              portrait: 'images/figures/Jurglash.png',                    desc: 'Troll warlord who unified the trolls of Innothule into the Grobb Clan, establishing shamanic traditions devoted to Cazic-Thule.' },
+    'naythox-thex':    { name: 'Naythox Thex',               badge: 'enemy',  title: "King of Neriak; Lord of the Teir'Dal",                         meta: 'Dark Elf · Darklight Palace, Neriak',                    portrait: 'images/figures/Naythox Thex.png',                desc: 'Young warrior-king of Neriak ruling through the Indigo Brotherhood. His political marriage to Queen Cristanos has devolved into civil war.' },
+    'emperor-vekin':   { name: 'Emperor Vekin',              badge: 'enemy',  title: 'First Emperor of the Cabilisian Empire',                       meta: 'Iksar · Vekin Palace, Cabilis East, Kunark',             portrait: 'images/figures/Emperor Vekin.png',               desc: 'Warlord who rebuilt Iksar civilization from ruin and founded the Cabilisian Empire. Notorious for his love of torture.' },
+    'sir-lucan':       { name: "Sir Lucan D'Lere",           badge: 'enemy',  title: 'Commander of the Freeport Militia',                            meta: 'Human · West Freeport, Antonica',                         portrait: "images/figures/Sir Lucan D'Lere.png",            desc: 'Fallen paladin who formed the corrupt Freeport Militia. Rules West Freeport through intimidation and bribery.' },
+    'virate-manaar':   { name: 'Overlord Virate Manaar',     badge: 'enemy',  title: 'Overlord of Paineel; Protector of the Seekers',                meta: 'Erudite · Paineel (The Hole), Odus',                      portrait: 'images/figures/Overlord Virate Manaar.png',      desc: "Military commander of Darkglow Palace and protector of Paineel's necromantic Seekers of the Dark Truth." },
+    'lanys-tvyl':      { name: "Lanys T'Vyl",               badge: 'enemy',  title: 'Daughter of Innoruuk; Champion of Hate',                       meta: 'Dark Elf · Plane of Hate / Norrath',                      portrait: "images/figures/Lanys T'Vyl.png",                 desc: "Created from Innoruuk's own essence, the most powerful dark elf ever born. Dark mirror to Firiona Vie — brilliant, ruthless, and devoted to her father's purpose." }
+  };
 
   function _buildMentionTargets() {
     var targets = CHARACTERS.map(function (c) {
@@ -413,7 +524,8 @@
           if (/[A-Za-z0-9']/.test(before) || /[A-Za-z0-9']/.test(after)) continue;
           // No overlap with existing matches
           if (matches.some(function (x) { return s < x.end && e > x.start; })) continue;
-          matches.push({ start: s, end: e, text: m[0], url: t.url });
+          var mKey = t.type === 'character' ? t.url.split('#')[1] : t.url.replace('zones/', '').replace('.html', '');
+          matches.push({ start: s, end: e, text: m[0], url: t.url, type: t.type, key: mKey });
         }
       });
 
@@ -428,6 +540,8 @@
         a.href = match.url;
         a.style.cssText = 'color:var(--link-color,#c9a84c);text-decoration:none;border-bottom:1px dotted currentColor;';
         a.textContent = match.text;
+        a.dataset.mentionType = match.type;
+        a.dataset.mentionKey  = match.key;
         frag.appendChild(a);
         pos = match.end;
       });
@@ -828,8 +942,94 @@
     field.focus();
   }
 
+  // ── Hover card for mention links ───────────────────────────
+  function initMentionHoverCard() {
+    var card = document.getElementById('mention-hover-card');
+    var container = document.getElementById('sessions-container');
+    if (!card || !container) return;
+    var hideTimer = null;
+
+    container.addEventListener('mouseover', function (e) {
+      var link = e.target.closest ? e.target.closest('a[data-mention-type]') : null;
+      if (!link) { scheduleHide(); return; }
+      clearTimeout(hideTimer);
+      populateCard(link);
+    });
+
+    container.addEventListener('mouseout', function (e) {
+      scheduleHide();
+    });
+
+    function scheduleHide() {
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(function () { card.classList.remove('visible'); }, 120);
+    }
+
+    function populateCard(link) {
+      var type = link.dataset.mentionType;
+      var key  = link.dataset.mentionKey;
+      var html = '';
+
+      if (type === 'character') {
+        var info = FIGURE_INFO[key];
+        if (!info) return;
+        var badgeColor = info.badge === 'ally' ? '#6aaa6a' : '#c05050';
+        var icon = info.badge === 'ally' ? '🤝' : '⚔️';
+        html =
+          '<div class="mhc-portrait">' +
+            '<img src="' + info.portrait + '" alt="" ' +
+              'onerror="this.parentNode.innerHTML=\'<div class=\\\"mhc-portrait-icon\\\">' + icon + '</div>\'">' +
+          '</div>' +
+          '<div class="mhc-body">' +
+            '<div class="mhc-badge" style="color:' + badgeColor + ';">' + (info.badge === 'ally' ? 'Ally' : 'Enemy') + '</div>' +
+            '<div class="mhc-name">' + info.name + '</div>' +
+            '<div class="mhc-title">' + info.title + '</div>' +
+            '<div class="mhc-meta">' + info.meta + '</div>' +
+            '<div class="mhc-desc">' + info.desc + '</div>' +
+          '</div>';
+      } else if (type === 'zone' && typeof ZONES !== 'undefined') {
+        var zone = null;
+        for (var i = 0; i < ZONES.length; i++) { if (ZONES[i].id === key) { zone = ZONES[i]; break; } }
+        if (!zone) return;
+        html =
+          '<div class="mhc-portrait"><div class="mhc-portrait-icon">🗺</div></div>' +
+          '<div class="mhc-body">' +
+            '<div class="mhc-badge" style="color:var(--accent-gold);">Zone</div>' +
+            '<div class="mhc-name">' + zone.name + '</div>' +
+            '<div class="mhc-title">' + zone.continent + '</div>' +
+            '<div class="mhc-meta">' + (zone.region || '') + (zone.levelRange ? ' · ' + zone.levelRange : '') + '</div>' +
+            '<div class="mhc-desc">' + (zone.excerpt || '') + '</div>' +
+          '</div>';
+      }
+
+      if (!html) return;
+      card.innerHTML = html;
+      card.classList.add('visible');
+      positionCard(link);
+    }
+
+    function positionCard(link) {
+      var rect   = link.getBoundingClientRect();
+      var cardW  = 600;
+      var gap    = 10;
+      var left   = rect.left;
+      var top    = rect.bottom + gap;
+
+      if (left + cardW > window.innerWidth - 8) left = window.innerWidth - cardW - 8;
+      if (left < 8) left = 8;
+
+      // Flip above if not enough room below
+      var estH = 220;
+      if (top + estH > window.innerHeight - 8) top = rect.top - estH - gap;
+
+      card.style.left = left + 'px';
+      card.style.top  = top  + 'px';
+    }
+  }
+
   // Initialize: set up Firebase listener or fall back to defaults
   document.addEventListener('DOMContentLoaded', function () {
+    initMentionHoverCard();
     if (window.firebaseDB) {
       window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
         var data = snapshot.val();

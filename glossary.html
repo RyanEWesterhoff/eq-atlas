@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/jpeg" href="images/EQ_favicon.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glossary — EverQuest Atlas Campaign</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js" data-protect="true"></script>
+  <style>
+    /* ── Glossary Controls ───────────────────────────────────── */
+    .glossary-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .glossary-search {
+      flex: 1 1 220px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      color: var(--text-primary);
+      padding: 7px 12px;
+      font-size: 13px;
+      font-family: 'IM Fell English', serif;
+      min-width: 160px;
+    }
+    .glossary-search:focus {
+      outline: none;
+      border-color: var(--border-gold);
+    }
+    .glossary-search::placeholder { color: var(--text-dim); }
+
+    /* ── Tag filter pills ────────────────────────────────────── */
+    .tag-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .tag-pill {
+      padding: 4px 11px;
+      font-size: 11px;
+      letter-spacing: 0.8px;
+      font-family: 'Cinzel', serif;
+      text-transform: uppercase;
+      border: 1px solid var(--border-dim);
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .tag-pill:hover { border-color: var(--border-gold); color: var(--text-secondary); }
+    .tag-pill.active { background: var(--bg-panel); color: var(--text-heading); border-color: var(--border-gold); }
+
+    .tag-pill[data-tag="all"].active       { border-color: var(--accent-gold); }
+    .tag-pill[data-tag="antonica"].active  { border-color: #7aad5a; color: #7aad5a; }
+    .tag-pill[data-tag="odus"].active      { border-color: #5a8ec7; color: #5a8ec7; }
+    .tag-pill[data-tag="luclin"].active    { border-color: #9b72c8; color: #9b72c8; }
+    .tag-pill[data-tag="faydwer"].active   { border-color: #5fb882; color: #5fb882; }
+    .tag-pill[data-tag="kunark"].active    { border-color: #c88a3c; color: #c88a3c; }
+    .tag-pill[data-tag="velious"].active   { border-color: #7ab8cc; color: #7ab8cc; }
+    .tag-pill[data-tag="planes"].active    { border-color: #cc6060; color: #cc6060; }
+    .tag-pill[data-tag="general"].active   { border-color: #888; color: #aaa; }
+
+    /* ── Letter nav ──────────────────────────────────────────── */
+    .letter-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--border-dim);
+      padding-bottom: 12px;
+    }
+    .letter-nav a {
+      display: inline-block;
+      width: 26px; height: 26px;
+      line-height: 26px; text-align: center;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .letter-nav a:hover  { color: var(--accent-gold); }
+    .letter-nav a.has-entries { color: var(--text-secondary); }
+    .letter-nav a.no-entries { opacity: 0.3; pointer-events: none; }
+
+    /* ── Letter sections ─────────────────────────────────────── */
+    .letter-section { margin-bottom: 10px; }
+    .letter-heading {
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      color: var(--accent-gold);
+      border-bottom: 1px solid var(--border-dim);
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+      margin-top: 28px;
+    }
+    .letter-section:first-of-type .letter-heading { margin-top: 0; }
+
+    /* ── Glossary entries ────────────────────────────────────── */
+    .glossary-entry {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-left: 3px solid transparent;
+      padding: 14px 16px 12px;
+      margin-bottom: 8px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .glossary-entry:hover { border-color: var(--border-gold); border-left-color: var(--border-gold); }
+
+    .entry-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .entry-term {
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      color: var(--text-heading);
+      flex: 1;
+      line-height: 1.3;
+    }
+    .entry-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      flex-shrink: 0;
+      padding-right: 26px;
+    }
+    .entry-tag {
+      font-size: 10px;
+      letter-spacing: 0.7px;
+      font-family: 'Cinzel', serif;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border: 1px solid;
+    }
+    .tag-antonica { color: #7aad5a; border-color: rgba(122,173,90,0.4); }
+    .tag-odus     { color: #5a8ec7; border-color: rgba(90,142,199,0.4); }
+    .tag-luclin   { color: #9b72c8; border-color: rgba(155,114,200,0.4); }
+    .tag-faydwer  { color: #5fb882; border-color: rgba(95,184,130,0.4); }
+    .tag-kunark   { color: #c88a3c; border-color: rgba(200,138,60,0.4); }
+    .tag-velious  { color: #7ab8cc; border-color: rgba(122,184,204,0.4); }
+    .tag-planes   { color: #cc6060; border-color: rgba(204,96,96,0.4); }
+    .tag-general  { color: #888;    border-color: rgba(136,136,136,0.35); }
+
+    .entry-def {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+    }
+
+    /* ── GM hidden state ─────────────────────────────────────── */
+    .glossary-entry.gm-hidden {
+      border-style: dashed;
+      opacity: 0.55;
+    }
+    .glossary-entry.gm-hidden .entry-term::after {
+      content: ' [hidden]';
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+    }
+    body:not(.gm-mode) .glossary-entry.gm-hidden { display: none; }
+
+    /* ── GM toggle button ────────────────────────────────────── */
+    .entry-gm-toggle {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-dim);
+      padding: 2px 4px;
+      line-height: 1;
+      display: none;
+    }
+    body.gm-mode .entry-gm-toggle { display: block; }
+    .entry-gm-toggle:hover { color: var(--accent-gold); }
+
+    /* ── No results ──────────────────────────────────────────── */
+    .no-results {
+      text-align: center;
+      padding: 48px 0;
+      color: var(--text-dim);
+      font-family: 'IM Fell English', serif;
+      font-size: 16px;
+      font-style: italic;
+    }
+
+    /* ── Count indicator ─────────────────────────────────────── */
+    .entry-count {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">The Atlas</a>
+      <div class="header-divider"></div>
+      <div class="header-quote">
+        "I can take little credit for the words that follow this introduction. They are the
+        culmination of a thousand writers, poets and bards…"
+        <br><em style="color:var(--accent-gold)">— Maelin Starpyre, Grand Librarian</em>
+      </div>
+    </div>
+  </header>
+
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="zones.html">Lands</a></li>
+      <li class="gm-nav-only"><a href="bestiary.html">Bestiary</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="deities.html">Deities</a></li>
+      <li><a href="allies.html">Figures</a></li>
+      <li><a href="sessions.html">Campaign</a></li>
+      <li><a href="glossary.html" class="active">Glossary</a></li>
+      <li><a href="#" onclick="logout();return false;" style="color:var(--text-dim);border-bottom-color:transparent">Sign Out</a></li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="content-area">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Continents</h3>
+        <ul>
+          <li><a href="zones.html?region=Antonica"><span class="nav-icon">🌿</span> Antonica</a></li>
+          <li><a href="zones.html?region=Faydwer"><span class="nav-icon">🌲</span> Faydwer</a></li>
+          <li><a href="zones.html?region=Odus"><span class="nav-icon">📚</span> Odus</a></li>
+          <li><a href="zones.html?region=Kunark"><span class="nav-icon">🦎</span> Kunark</a></li>
+          <li><a href="zones.html?region=Velious"><span class="nav-icon">❄️</span> Velious</a></li>
+          <li class="gm-nav-only"><a href="zones.html?region=Luclin"><span class="nav-icon">🌙</span> Luclin</a></li>
+          <li><a href="zones.html?region=The Planes"><span class="nav-icon">⚡</span> The Planes</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Quick Reference</h3>
+        <ul>
+          <li class="gm-nav-only"><a href="bestiary.html"><span class="nav-icon">🐉</span> All Creatures</a></li>
+          <li><a href="lore.html"><span class="nav-icon">📜</span> World Lore</a></li>
+          <li><a href="lore.html#factions"><span class="nav-icon">⚔️</span> Factions</a></li>
+          <li><a href="lore.html#history"><span class="nav-icon">🏛</span> History</a></li>
+          <li><a href="glossary.html" style="color:var(--accent-gold)"><span class="nav-icon">📖</span> Glossary</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Campaign</h3>
+        <ul>
+          <li><a href="party.html"><span class="nav-icon">🧙</span> The Party</a></li>
+          <li><a href="sessions.html"><span class="nav-icon">📖</span> Session Logs</a></li>
+          <li><a href="events.html"><span class="nav-icon">⚔</span> World Events</a></li>
+          <li><a href="houserules.html"><span class="nav-icon">📋</span> House Rules</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- MAIN PANEL -->
+    <main class="main-panel">
+
+      <div class="section-header">
+        <h1 class="section-title">Glossary of Norrath</h1>
+        <p class="section-subtitle" style="font-family:'IM Fell English',serif;font-style:italic;color:var(--accent-gold);font-size:14px;margin-top:4px">
+          Peoples, places, factions, and forces — from the Creation to the Planes of Power
+        </p>
+      </div>
+
+      <!-- Controls -->
+      <div class="glossary-controls">
+        <input type="text" class="glossary-search" id="glossarySearch" placeholder="Search terms…" autocomplete="off">
+      </div>
+
+      <div class="tag-filters" id="tagFilters">
+        <button class="tag-pill active" data-tag="all">All</button>
+        <button class="tag-pill" data-tag="antonica">Antonica</button>
+        <button class="tag-pill" data-tag="odus">Odus</button>
+        <button class="tag-pill" data-tag="luclin">Luclin</button>
+        <button class="tag-pill" data-tag="faydwer">Faydwer</button>
+        <button class="tag-pill" data-tag="kunark">Kunark</button>
+        <button class="tag-pill" data-tag="velious">Velious</button>
+        <button class="tag-pill" data-tag="planes">Planes</button>
+        <button class="tag-pill" data-tag="general">General</button>
+      </div>
+
+      <!-- Letter nav -->
+      <div class="letter-nav" id="letterNav"></div>
+
+      <!-- Entry count -->
+      <div class="entry-count" id="entryCount"></div>
+
+      <!-- Entry list -->
+      <div id="glossaryList"></div>
+
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>The Atlas — Campaign Reference Site</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var FIREBASE_PATH = 'eq-atlas/glossary-hidden';
+
+  // ── Glossary data ─────────────────────────────────────────────
+  var GLOSSARY = [
+    // A
+    { id: 'age-of-creation', term: 'Age of Creation', tags: ['general'],
+      def: 'The earliest recorded era of Norrath\'s history, when the gods first walked the world and shaped its races, continents, and laws. Most of what is known comes from fragmentary divine texts and oral tradition.' },
+    { id: 'age-of-enlightenment', term: 'Age of Enlightenment', tags: ['odus'],
+      def: 'The period following Erud\'s founding of Erudin on Odus, during which the Erudites developed the first human magical traditions since the Combine Empire. Ended with the civil war that created the Hole and Paineel.' },
+    { id: 'age-of-monuments', term: 'Age of Monuments', tags: ['general'],
+      def: 'An era of great construction among the elder races — dwarves, elves, and ogres — before the Rallosian wars reshaped the continent.' },
+    { id: 'age-of-hollow-crowns', term: 'Age of Hollow Crowns', tags: ['general'],
+      def: 'The current era, characterized by political fragmentation, rising evil, and the stirring of ancient powers. Began roughly with the Erudite civil war and Lucan\'s seizure of Freeport.' },
+    { id: 'akelha-ra', term: "Akelha'Ra", tags: ['luclin'],
+      def: 'The former High Priestess of the Akheva and leader of the faction that opposes Aten Ha Ra. Exists as a spirit after being destroyed by Aten Ha Ra\'s storm, imprisoned and separated from Luclin\'s power.' },
+    { id: 'akheva', term: 'Akheva', tags: ['luclin'],
+      def: 'The four-armed creations of the goddess Luclin, placed on her moon as its guardians. Divided by civil war into two factions — those loyal to Aten Ha Ra in Vex Thal, and the outcasts in Ka Vethan.' },
+    { id: 'al-kabor', term: "Al'Kabor", tags: ['luclin', 'odus'],
+      def: 'The greatest Erudite wizard of the Age. Brilliant, arrogant, and obsessive. Said to be stranded on Luclin after his experiments accidentally opened a pathway to the moon. A companion of Firiona Vie despite his perpetual irritation with everyone around him.' },
+    { id: 'antonius-bayle', term: 'Antonius Bayle', tags: ['antonica'],
+      def: 'The name carried by the ruling line of Qeynos. Antonius Bayle I founded the city; subsequent rulers bearing the name have governed with varying degrees of success. The name is also a title as much as a name — each ruler takes it upon ascending the throne.' },
+    { id: 'arx-seru', term: 'Arx Seru', tags: ['luclin'],
+      def: "The fortress at the center of Sanctus Seru where Lord Inquisitor Seru sealed himself inside a time-slowing magical chamber, emerging only rarely. No one is permitted to enter without his explicit invitation." },
+    { id: 'aten-ha-ra', term: 'Aten Ha Ra', tags: ['luclin'],
+      def: "The High Priestess of the Akheva and ruler of Vex Thal, the sacred city of Luclin's servants. Created from Akelha'Ra's own consciousness as a reflection of her, she overthrew her progenitor and now leads the Akheva with absolute authority." },
+
+    // B
+    { id: 'bertoxxulous', term: 'Bertoxxulous', tags: ['planes'],
+      def: 'The Plaguebringer, god of disease and decay. Patron deity of the Dark Reflection faction in Ak\'Anon and the Bloodsabers cult in Qeynos. Often depicted as a rotting, pestilent figure. One of the more active malevolent gods in the Age of Turmoil.' },
+    { id: 'bloodsabers', term: 'Bloodsabers', tags: ['antonica'],
+      def: 'A secret cult of Bertoxxulous operating in the sewers beneath Qeynos. They work to undermine Qeynos from within, funding corrupt officials and spreading plague.' },
+    { id: 'bloody-kithicor', term: 'Bloody Kithicor', tags: ['antonica'],
+      def: 'The battle fought between the forces of Firiona Vie and Lanys T\'Vyl in Kithicor Forest. Firiona was victorious, but Innoruuk opened a portal to the Plane of Hate to rescue Lanys, releasing dark energies that permanently corrupted the forest. Kithicor is now infested with powerful undead at night as a lasting scar of the battle.' },
+    { id: 'brell-serilis', term: 'Brell Serilis', tags: ['planes'],
+      def: 'The Duke of Below, god of the earth and patron of dwarves, gnomes, and halflings. Created underground races and sealed the passage between Norrath and the Plane of Underfoot with the Vault of Living Stone. His elementals are found throughout the Hole after the Heretics accidentally broke the seal.' },
+    { id: 'brotherhood-the', term: 'Brotherhood, The', tags: ['odus'],
+      def: 'The inner circle of scholars founded by Miragul in Paineel after his return from exile. Its purpose was to seek out and explore the mysteries of the cosmos through any means necessary, including necromancy.' },
+
+    // C
+    { id: 'cabilis', term: 'Cabilis', tags: ['kunark'],
+      def: 'Also called New Sebilis. The capital city of the modern Iksar Cabilisian Empire, built in the moors northeast of the Lake of Ill Omen on the ruins of a former Iksar town. Ruled by Emperor Vekin.' },
+    { id: 'cabilisian-empire', term: 'Cabilisian Empire', tags: ['kunark'],
+      def: "The current Iksar nation, reconstituted from scattered tribes by Emperor Vekin after the destruction of the Sebilisian Empire. Smaller and less powerful than its ancient predecessor but growing rapidly under Vekin's iron leadership." },
+    { id: 'cazic-thule', term: 'Cazic-Thule', tags: ['planes'],
+      def: 'The Faceless One, god of fear. Creator of the Trolls, Lizardmen, and the Iksar. Patron of Paineel\'s Harbingers of Fear. His Plane of Fear is one of the original raid destinations accessible to mortal adventurers.' },
+    { id: 'circle-of-ten', term: 'Circle of Ten', tags: ['antonica'],
+      def: 'The council of advisors to the ruler of Qeynos. Established by Antonius Bayle IV. Comprises representatives of the city\'s major factions and guilds, theoretically providing checks on the crown\'s power.' },
+    { id: 'claws-of-veeshan', term: 'Claws of Veeshan', tags: ['velious'],
+      def: 'The faction of dragons that inhabits Velious, led by the ancient Lord Yelinak. They believe dragons should remain apart from the affairs of lesser races. In centuries-long cold war with the Ring of Scale and the frost giants of Kael Drakkel.' },
+    { id: 'coldain', term: 'Coldain', tags: ['velious'],
+      def: 'A civilization of dwarves living in the icy mountains of Velious, separated from their kin on Faydwer in the earliest age. Proud, insular, and deeply suspicious of outsiders. The dwarven sagas of Kaladim speak of them as a lost clan.' },
+    { id: 'combine-empire', term: 'Combine Empire', tags: ['general'],
+      def: 'The great multi-racial empire that dominated Norrath in an earlier age. Its capital was Takish-Hiz in the Elddar Forest. Collapsed after the poisoning of Imperator Tsaph Katta and the civil war between his Loyalists and General Seru\'s Inquisition. Most of its surviving population fled to Luclin.' },
+    { id: 'combine-loyalists', term: 'Combine Loyalists', tags: ['luclin'],
+      def: "The faction of the Combine Empire that remained faithful to the stasis-bound Imperator Tsaph Katta. They followed his advisor Lcea Katta to Luclin and founded Katta Castellum, where they continue to search for a cure for Katta's poisoning." },
+    { id: 'crusade-of-tears', term: 'Crusade of Tears', tags: ['antonica'],
+      def: "The holy crusade launched by the Knights of Truth of Freeport, called by the twin gods Mithaniel and Erollisi Marr to purge undead from Faydwer. Their departure left Freeport's defense in the hands of Sir Lucan D'Lere, which had catastrophic consequences for the city's governance." },
+    { id: 'crusaders-of-greenmist', term: 'Crusaders of Greenmist', tags: ['kunark'],
+      def: 'An elite order of Iksar shadow knights within Cabilis. Named after the Greenmist — the plague that freed the Iksar from Shissar enslavement. One of the five guild factions that share power in Cabilis. Known for extreme xenophobia and advocacy for Iksar supremacy.' },
+
+    // D
+    { id: 'da-bashers', term: 'Da Bashers', tags: ['antonica'],
+      def: 'The warrior guild of Grobb, the troll city. A feared fighting force even by the standards of the brutish troll clans.' },
+    { id: 'dagnor-butcherblock', term: 'Dagnor Butcherblock', tags: ['faydwer'],
+      def: 'The legendary first dwarven king of Kaladim, whose warhammer — called Dagnor\'s Fist or the Butcherblock Hammer — is a sacred relic of the dwarven people. The cauldron bearing his name is believed to be where he died.' },
+    { id: 'danak-dhorentath', term: 'Danak Dhorentath', tags: ['kunark'],
+      def: 'The Iksar shaman responsible for the kidnapping of Firiona Vie. A servant of Venril Sathir who used the corrupted Lifeguide to attempt to channel power to Cazic-Thule.' },
+    { id: 'darkglow-palace', term: 'Darkglow Palace', tags: ['odus'],
+      def: "The seat of government in Paineel, home of the Overlord and the Hand which Shields — the military arm of the city's triumvirate." },
+    { id: 'deepwater-knights', term: 'Deepwater Knights', tags: ['odus'],
+      def: "The knightly order of Erudin that serves as the city's military and law enforcement. Deeply loyal to the original ideals of Erudin, they came into conflict with Head Councilman El'Arad when he seized control of the city and disbanded their order." },
+
+    // E
+    { id: 'el-arad', term: "El'Arad", tags: ['odus'],
+      def: "The head councilman of Erudin who seized control of the city through manipulation and murder, killing the Vicegerent Jabalah with void creatures when confronted. Aligned with Roehn Theer. Destroyed the Deepwater Knights and established himself as Erudin's de facto dictator." },
+    { id: 'elddar-forest', term: 'Elddar Forest', tags: ['general'],
+      def: 'The ancient elven homeland that covered the southeastern quarter of the continent of Tunaria before Solusek Ro raised the Serpent\'s Spine Mountains and turned the forest to desert. Its ruins became the Desert of Ro.' },
+    { id: 'emerald-circle', term: 'Emerald Circle', tags: ['kunark'],
+      def: 'The council of five Iksar nobles established after the death of Emperor Ganak and the end of the dragon-Iksar war. Briefly governed the Sebilisian Empire before political infighting caused it to collapse back into tribal conflict.' },
+    { id: 'emerald-warriors', term: 'Emerald Warriors', tags: ['faydwer'],
+      def: 'The warrior guild and city guard of Kelethin. Led by Guildmaster Regren.' },
+    { id: 'emperor-ganak', term: 'Emperor Ganak', tags: ['kunark'],
+      def: 'The last emperor of the ancient Sebilisian Empire, who died in aerial combat above the Field of Bone when he dueled the Ring of Scale leader Jaled\'Dar. Both were incinerated by magic and fire. His death ended the dragon-Iksar war and the Sebilisian Empire simultaneously.' },
+    { id: 'emperor-vekin', term: 'Emperor Vekin', tags: ['kunark'],
+      def: "The founder and ruler of the Cabilisian Empire — the modern Iksar nation rebuilt from scattered tribes. A warrior of extraordinary martial skill descended from the Army of Ik. Known for his love of torture, which he considers both an art form and a political tool. Has no Sathir blood and views Venril Sathir's return as a direct threat." },
+    { id: 'erollisi-marr', term: 'Erollisi Marr', tags: ['planes'],
+      def: 'The Goddess of Love, twin sister of Mithaniel Marr. Co-creator of the Barbarian race alongside her brother. Her followers tend toward compassion and healing. She and Mithaniel jointly called the Crusade of Tears.' },
+    { id: 'erud', term: 'Erud', tags: ['odus'],
+      def: "The founding father of Erudin and the Erudite people. Led a group of discontented intellectuals from Qeynos to the island of Odus, where he founded a city of pure learning. The Erudites are named after him and the sea crossing between Antonica and Odus is called Erud's Crossing." },
+    { id: 'erudin', term: 'Erudin', tags: ['odus'],
+      def: 'The gleaming marble city of the Erudites on the island of Odus. A city-state governed by a High Council of scholars and nobles. Home to the greatest library of good-aligned races in Norrath. In perpetual cold war with the heretic city of Paineel across the Toxxulia Forest.' },
+    { id: 'eye-of-seru', term: 'Eye / Hand / Heart / Shoulders of Seru', tags: ['luclin'],
+      def: "The four Praesertum factions that govern Sanctus Seru in Lord Inquisitor Seru's name. Each controls a different aspect of the city — military, civil, commerce, and oversight." },
+
+    // F
+    { id: 'faydark-champions', term: "Faydark's Champions", tags: ['faydwer'],
+      def: 'The ranger guild of Kelethin, led by Guildmaster Maesyn Trueshot. Considered among the finest archers in all of Norrath.' },
+    { id: 'fell-blade', term: 'Fell Blade, The', tags: ['odus'],
+      def: 'The shadow knight guild and militia of Paineel. Led by Mandaril Dark Knife.' },
+    { id: 'field-of-bone', term: 'Field of Bone', tags: ['kunark'],
+      def: "The barren plain in Kunark where the final battle between Emperor Ganak and Jaled'Dar took place. Their deaths above this plain marked the end of both the Sebilisian Empire and the Ring of Scale's direct involvement in Iksar affairs." },
+    { id: 'firiona-vie', term: 'Firiona Vie', tags: ['faydwer', 'kunark'],
+      def: 'Daughter of King Tearis Thex of Felwithe and the Chosen of Tunare — the goddess\'s living champion on Norrath. A skilled ranger and warrior who has spent the Age fighting against the forces of Innoruuk and recovering from mysterious memory loss. The outpost on Kunark bearing her name was built to find and rescue her after her capture by Danak Dhorentath.' },
+    { id: 'freeport-militia', term: 'Freeport Militia', tags: ['antonica'],
+      def: "The mercenary police force created by Sir Lucan D'Lere to replace the Knights of Truth as Freeport's guardians. Originally formed from mercenaries and lower-class soldiers, it has grown increasingly corrupt and operates largely as a protection racket." },
+
+    // G
+    { id: 'galeth-veredeth', term: 'Galeth Veredeth', tags: ['faydwer', 'kunark'],
+      def: "Firiona Vie's most devoted guardian and mentor. A High Elf paladin who oversaw the construction of the Firiona Vie outpost on Kunark and led the rescue mission to recover Firiona from Danak Dhorentath. Carries deep guilt over failing to protect her." },
+    { id: 'gate-callers', term: 'Gate Callers', tags: ['odus'],
+      def: 'One of the good-aligned magical factions of Erudin, specializing in dimensional and translocation magic.' },
+    { id: 'gemchoppers', term: 'Gemchoppers', tags: ['faydwer'],
+      def: "The warrior guild and police force of Ak'Anon. Allied with King Ak'Anon." },
+    { id: 'greenmist', term: 'Greenmist', tags: ['kunark'],
+      def: "The divine plague that annihilated the Shissar enslavers of the Iksar. Summoned by the Iksar hero Rile, it destroyed every Shissar it touched while leaving the Iksar unharmed. The Shissar surviving on Luclin sealed themselves behind an airless dome to protect against it. The Greenmist Khukri is the most powerful Shissar-bane weapon." },
+    { id: 'greenblood-knights', term: 'Greenblood Knights', tags: ['antonica'],
+      def: 'The shadow knight guild of Oggok, named in honor of Warlord Murdunk. Leadership is decided through mortal combat. Current leader: Soonog.' },
+    { id: 'grimlings', term: 'Grimlings', tags: ['luclin'],
+      def: "Native creatures of Luclin who have taken over the Iksar mines on the moon's dark side and gone to war with the Vah Shir." },
+    { id: 'gromzek-stone', term: 'Gromzek Stone', tags: ['antonica'],
+      def: "An ancient troll artifact carved by the shaman Zraxth, inscribed with prophecy about the coming of The Wun — a great troll champion who will unite the clans and lead them to dominance. Has changed hands between the Grobb Clan and Brokenskull Clan multiple times." },
+    { id: 'guk', term: 'Guk', tags: ['antonica'],
+      def: "The ancient Froglok city beneath the Innothule Swamp. Upper Guk is still inhabited by living frogloks; Lower Guk is infested with the undead victims of the curse placed by Warlord Ykesha's troll shaman through the power of Innoruuk." },
+
+    // H
+    { id: 'hand-which-shields', term: 'Hand which Shields', tags: ['odus'],
+      def: "The military and protective arm of Paineel's triumvirate, based in Darkglow Palace and led by Overlord Virate Manaar." },
+    { id: 'harbingers-of-fear', term: 'Harbingers of Fear', tags: ['odus'],
+      def: 'The priest guild of Paineel, devoted to Cazic-Thule. Led by Sern Adolia, who has held the position for so long that even his own followers approach him with trepidation.' },
+    { id: 'heretics', term: 'Heretics', tags: ['odus'],
+      def: "The name given by Erudin to the necromancer faction expelled during the Erudite civil war. They call themselves the Seekers of the Dark Truth. Founded Paineel in the Hole created by the magical explosion that ended the war." },
+    { id: 'high-men', term: 'High Men', tags: ['odus'],
+      def: 'The original name for the Erudite people before they became fully distinct from regular humans. Used in the founding era of Erudin.' },
+    { id: 'house-of-thex', term: 'House of Thex', tags: ['faydwer'],
+      def: 'The ruling dynasty of both Felwithe (Koada\'Dal) and Neriak (Teir\'Dal), sharing a distant common ancestry from before Innoruuk\'s corruption of the elven king and queen. King Tearis Thex rules the high elves; King Naythox Thex rules the dark elves.' },
+
+    // I
+    { id: 'iksar', term: 'Iksar', tags: ['kunark'],
+      def: "The lizard-people of Kunark, created by Cazic-Thule. Once rulers of a vast empire that rivaled the dragons. Deeply xenophobic and driven by racial pride. Their society is divided into five castes: warriors, scaled mystics (shamans), crusaders (shadow knights), swifttails (monks), and the skulking (rogues/assassins)." },
+    { id: 'indigo-brotherhood', term: 'Indigo Brotherhood', tags: ['faydwer'],
+      def: "The elite military order of Neriak, loyal to King Naythox Thex. One of the key factions in the city's civil cold war against Queen Cristanos Thex's Lodge of the Dead." },
+    { id: 'innoruuk', term: 'Innoruuk', tags: ['planes', 'faydwer'],
+      def: "The Prince of Hate, god of the dark elves. Created the Teir'Dal by kidnapping and corrupting the high elven king and queen. Father of Lanys T'Vyl. One of the most actively malevolent gods in Norrath, constantly working to spread hatred, spite, and despair across the mortal realm." },
+
+    // J
+    { id: 'jaled-dar', term: "Jaled'Dar", tags: ['kunark'],
+      def: "The leader of the Ring of Scale who died in aerial combat with Emperor Ganak above the Field of Bone. His daughter Phara Dar assumed leadership of the Ring of Scale after his death." },
+
+    // K
+    { id: 'ka-vethan', term: 'Ka Vethan', tags: ['luclin'],
+      def: "The original Akheva city on Luclin, destroyed by Aten Ha Ra's storm during the Akheva civil war. Its ruins in the Maiden's Eye are home to the outcast Akheva who remain loyal to the memory of Akelha'Ra." },
+    { id: 'kaladim', term: 'Kaladim', tags: ['faydwer'],
+      def: 'The dwarven city built into the Butcherblock Mountains of Faydwer. Ruled by King Kazon Stormhammer. Home of the Storm Guard warrior guild led by Furtog Ogrebane.' },
+    { id: 'katta-castellum', term: 'Katta Castellum', tags: ['luclin'],
+      def: "The Combine Loyalist city on Luclin, built on the dark side of the moon to hide the stasis-bound Tsaph Katta from Seru's forces. Ruled by Lcea Katta, Tsaph's closest advisor." },
+    { id: 'kerafyrm', term: 'Kerafyrm (The Sleeper)', tags: ['velious'],
+      def: "Also known as The Sleeper. A prismatic dragon born of two dragons of opposing elements in violation of Veeshan's first law. His parents were executed and he was raised by Kildrukaun before becoming so powerful and dangerous that the dragons imprisoned him in Sleeper's Tomb on Velious rather than kill him, as killing another dragon violates Veeshan's second law." },
+    { id: 'kerrans', term: 'Kerrans', tags: ['odus', 'luclin'],
+      def: "The cat-people of Odus who lived alongside the Erudites until the magical explosion of the Erudite civil war accidentally launched an entire Kerran city into orbit — where it eventually landed on Luclin, becoming the Vah Shir." },
+    { id: 'king-akanon', term: "King Ak'Anon", tags: ['faydwer'],
+      def: "The immortal mechanical ruler of Ak'Anon. The original King Horatio Ak'Anon was a beloved gnomish ruler who died centuries ago, whereupon the gnomes built a perfect clockwork duplicate infused with his memories, personality, and accumulated wisdom. The duplicate has ruled ever since." },
+    { id: 'king-kazon-stormhammer', term: 'King Kazon Stormhammer', tags: ['faydwer'],
+      def: 'The dwarven king of Kaladim. Rules from his throne room in South Kaladim. Has personally led expeditions to recover sacred dwarven artifacts.' },
+    { id: 'king-naythox-thex', term: 'King Naythox Thex', tags: ['faydwer'],
+      def: "The dark elven ruler of Neriak. Great-grandchild of the first dark elven king, Nevar Thex. His marriage to Queen Cristanos Thex was a political arrangement that has since become an open cold war, with the factions of Neriak divided between their loyalties to each." },
+    { id: 'king-tearis-thex', term: 'King Tearis Thex', tags: ['faydwer'],
+      def: "The High Elf ruler of Felwithe and overlord of all Faydark elves, including the Wood Elves of Kelethin. Father of Firiona Vie. Shares a common dynastic name with King Naythox Thex of Neriak due to their shared distant ancestry before Innoruuk's corruption." },
+    { id: 'knights-of-truth', term: 'Knights of Truth', tags: ['antonica'],
+      def: "The paladin order of Freeport, devoted to Mithaniel Marr. Went on the Crusade of Tears and returned to find their city under Lucan's control. Now operate underground, using spies to undermine the Freeport Militia while publicly maintaining a tense coexistence." },
+    { id: 'koadadal', term: "Koada'Dal", tags: ['faydwer'],
+      def: "The High Elves of Norrath. Created by the goddess Tunare. The name distinguishes them from the Teir'Dal (dark elves) and the Feir'Dal (wood elves), all of whom share a common divine ancestor." },
+
+    // L
+    { id: 'lance-of-mithaniel', term: 'Lance of Mithaniel', tags: ['antonica'],
+      def: "The name taken by the froglok army blessed by Mithaniel Marr that drove the trolls from Grobb, renaming the city Gukta — the Outpost of Marr." },
+    { id: 'lanys-tvyl', term: "Lanys T'Vyl", tags: ['faydwer', 'antonica'],
+      def: "The Daughter of Hate — born of a Neriak priestess fathered by Innoruuk himself during the Festival of the Moon of Blood. Created as an avatar of Innoruuk's hatred to rival Firiona Vie. Survived her own death at Kithicor through divine intervention and was elevated to demigod status. Later fell out with her father and attempted to secure independent godhood before being hunted down by Innoruuk's loyal dark elves." },
+    { id: 'lcea-katta', term: 'Lcea Katta', tags: ['luclin'],
+      def: "Tsaph Katta's closest advisor and bard. Led the Combine Loyalists to Luclin and founded Katta Castellum. Rules the city while continuing to search for a cure for Katta's poisoning." },
+    { id: 'lifeguide', term: 'Lifeguide, The', tags: ['faydwer', 'kunark'],
+      def: "The holy staff gifted to Firiona Vie by Tunare herself. Later corrupted by Danak Dhorentath and the dark elf Vahlai Ka'Izal, who channeled its power to Cazic-Thule. Its clear gem turned a sickly green. Its fate and recovery are central to Firiona's ongoing quest." },
+    { id: 'lodge-of-the-dead', term: 'Lodge of the Dead', tags: ['faydwer'],
+      def: "The necromancer and shadow knight guild of Neriak, loyal to Queen Cristanos Thex. One side of the city's ruling civil war." },
+    { id: 'lord-inquisitor-seru', term: 'Lord Inquisitor Seru', tags: ['luclin'],
+      def: "The former General of the Combine Empire who poisoned Tsaph Katta and drove the Loyalists to Luclin. Founded Sanctus Seru on the moon as his own city-state, dedicated to racial purity and the eradication of the Combine Loyalists." },
+
+    // M
+    { id: 'maelin-starpyre', term: 'Maelin Starpyre', tags: ['planes'],
+      def: "The Grand Librarian of Myrist, the Great Library in the Plane of Knowledge. An extraordinarily long-lived gnome who was one of the first mortals to venture to the Plane of Knowledge. Serves as the mortal guide for adventurers navigating the Planes of Power." },
+    { id: 'master-yael', term: 'Master Yael', tags: ['odus'],
+      def: "The leader of the elemental forces of Brell Serilis that swept through Old Paineel and destroyed it. He stands at the deepest point of the Hole before a locked door that presumably leads to the Plane of Underfoot itself. Capable of instantly killing mortal adventurers." },
+    { id: 'mayong-mistmoore', term: 'Mayong Mistmoore', tags: ['faydwer'],
+      def: "The first and oldest vampire in Norrath, created when Innoruuk attempted to use him as a tool — a plan that backfired when Mistmoore's intelligence and ambition proved uncontrollable. Ruler of Castle Mistmoore on Faydwer. Ancient, sophisticated, and operating on timescales mortals cannot comprehend. Rumored to have had a liaison with Queen Cristanos Thex of Neriak." },
+    { id: 'meldrath', term: 'Meldrath the Malignant', tags: ['faydwer'],
+      def: "A gnomish inventor of extraordinary brilliance who turned to evil. Led the Dark Reflection faction hidden in the Mines of Malfunction beneath Ak'Anon. Worships Bertoxxulous. Once Maelin Starpyre's peer; now remembered as a cautionary tale about the cost of unchecked ambition." },
+    { id: 'miragul', term: 'Miragul', tags: ['antonica'],
+      def: "Once Norrath's most brilliant mortal scholar, Miragul pursued immortality through necromancy at any cost — sacrificing companions, colleagues, and ultimately his own humanity. He now persists as a lich in the frozen caves beneath Everfrost, a permanent warning of what boundless magical ambition achieves." },
+    { id: 'mithaniel-marr', term: 'Mithaniel Marr', tags: ['planes', 'antonica'],
+      def: "The Truthbringer, god of valor and justice. Twin brother of Erollisi Marr. Creator of the Barbarian race alongside his sister. His paladins — the Knights of Truth — are the holy guardians of Freeport. Jointly with Erollisi, called the Crusade of Tears." },
+
+    // N
+    { id: 'neriak', term: 'Neriak', tags: ['faydwer'],
+      def: "The dark elven city buried beneath the mountains of southern Faydwer, a labyrinthine underground metropolis divided into three tiers: Neriak Commons (the outer market), the Foreign Quarter (where non-citizens may enter), and Neriak Third Gate (restricted to dark elves). Governed by the cold war between King Naythox Thex and Queen Cristanos Thex." },
+    { id: 'nexus', term: 'Nexus', tags: ['luclin'],
+      def: "The great central hub of Luclin where the Spires — tall magical obelisks — deposit travelers arriving from Norrath. The Spires on Norrath's surface activate simultaneously to allow mass transit to the moon. The Nexus itself is neutral ground claimed by no faction." },
+
+    // O
+    { id: 'oggok', term: 'Oggok', tags: ['antonica'],
+      def: "The ogre city built into the mountains east of the Feerrott. A brutish, violent society governed by the strongest. Home of the Da Bashers warrior guild and the Greenblood Knights shadow knight order. Despite their reputation, ogres maintain a spiritual tradition through shamanism." },
+    { id: 'overlord', term: 'Overlord (Virate Manaar)', tags: ['odus'],
+      def: "Title held by Virate Manaar, ruler of the military arm of Paineel's triumvirate government. Commands the Fell Blade shadow knight guild from Darkglow Palace." },
+
+    // P
+    { id: 'paineel', term: 'Paineel', tags: ['odus'],
+      def: "The city of the Heretics, founded in the Hole — the great magical excavation left by the Erudite civil war. Built into the cliff walls of the crater, governed by a triumvirate of the Overlord (military), the Heretic High Council (scholarship), and the Harbingers of Fear (religion). In permanent conflict with Erudin across the Toxxulia Forest." },
+    { id: 'phara-dar', term: 'Phara Dar', tags: ['kunark'],
+      def: "Daughter of Jaled'Dar and leader of the Ring of Scale following her father's death above the Field of Bone. Has guided the Ring of Scale's policy of non-interference since then, though with evident reservations about staying uninvolved in mortal affairs." },
+    { id: 'plane-of-fear', term: 'Plane of Fear', tags: ['planes'],
+      def: "The home plane of Cazic-Thule, god of fear. A nightmarish landscape populated with terrors beyond mortal imagination. One of the original planes accessible to mortal adventurers." },
+    { id: 'plane-of-hate', term: 'Plane of Hate', tags: ['planes'],
+      def: "The home plane of Innoruuk, Prince of Hate. A realm of spite, cruelty, and endless suffering. Innoruuk opened a portal to this plane during the Battle of Kithicor to rescue Lanys T'Vyl, flooding Norrath with dark energies that permanently corrupted Kithicor Forest." },
+    { id: 'plane-of-knowledge', term: 'Plane of Knowledge', tags: ['planes'],
+      def: "The extraplanar library and hub created by the gods for mortal use. Home to Maelin Starpyre's Great Library (Myrist) and the portals that connect to all other planes. Accessible to mortals of all alignments — one of the few truly neutral planes." },
+    { id: 'plane-of-time', term: 'Plane of Time', tags: ['planes'],
+      def: "The final plane in the Planes of Power progression, said to exist outside time itself. Quarm, the four-bodied avatar of the elemental gods, guards its inner sanctum. The imprisoned Zebuxoruk — the Forsaken — is held here." },
+
+    // Q
+    { id: 'qeynos', term: 'Qeynos', tags: ['antonica'],
+      def: "The largest city of good-aligned races in Antonica, founded by Antonius Bayle I. A sprawling city with districts including North and South Qeynos, the Qeynos Catacombs (home to the Bloodsaber cult), and the Academy of Arcane Sciences. Currently ruled by Antonius Bayle IV, who is mysteriously fading." },
+    { id: 'queen-cristanos-thex', term: 'Queen Cristanos Thex', tags: ['faydwer'],
+      def: "The dark elven queen of Neriak, wife of King Naythox Thex. Their marriage was political and has since become an open cold war. Her faction — the Lodge of the Dead — controls the necromancer and shadow knight guilds. Rumored to have connections to Mayong Mistmoore." },
+
+    // R
+    { id: 'rallosian-empire', term: 'Rallosian Empire', tags: ['antonica'],
+      def: "The ancient Ogre empire that once swept across Norrath, driven by the war god Rallos Zek. Destroyed when the gods cursed the ogres after the Rallosians invaded and desecrated the Plane of Earth. The curse stripped the ogres of their intelligence, reducing their great civilization to rubble. Remnants of Rallosian ambition persist in modern Ogre culture." },
+    { id: 'rile', term: 'Rile', tags: ['kunark'],
+      def: "The Iksar hero who summoned the Greenmist divine plague that annihilated the Shissar enslavers. Revered as the greatest hero in Iksar history. His name is invoked by the Crusaders of Greenmist, the shadow knight order founded in his memory." },
+    { id: 'ring-of-scale', term: 'Ring of Scale', tags: ['kunark'],
+      def: "The faction of dragons on Kunark, once led by Jaled'Dar and now by his daughter Phara Dar. Engaged in a centuries-long war with the Iksar Sebilisian Empire that ended in mutual destruction. Now committed to non-interference with mortal affairs, though individual Ring of Scale dragons often work behind the scenes." },
+
+    // S
+    { id: 'sanctus-seru', term: 'Sanctus Seru', tags: ['luclin'],
+      def: "The city founded on Luclin by Lord Inquisitor Seru and his followers after the Combine civil war. A rigidly ordered city-state dedicated to racial purity and the elimination of the Combine Loyalists in Katta Castellum. Governed by four Praesertum factions (Eye, Hand, Heart, and Shoulders of Seru)." },
+    { id: 'sebilisian-empire', term: 'Sebilisian Empire', tags: ['kunark'],
+      def: "The ancient Iksar empire that dominated Kunark for centuries. At its height, controlled most of the continent and waged war on the Ring of Scale. Collapsed simultaneously with the death of Emperor Ganak and Jaled'Dar above the Field of Bone. Its capital, Old Sebilis, is now a dungeon ruled by Trakanon." },
+    { id: 'seekers', term: 'Seekers of the Dark Truth', tags: ['odus'],
+      def: "The true name used by the Heretics of Paineel to describe themselves. Founded by the necromancer faction expelled from Erudin during the Erudite civil war. They view their pursuit of forbidden magic not as evil, but as intellectual honesty about the nature of power." },
+    { id: 'shissar', term: 'Shissar', tags: ['kunark', 'luclin'],
+      def: "The serpent-people who enslaved the Iksar for centuries before being annihilated by the divine Greenmist plague. Surviving Shissar who were off-world during the Greenmist sealed themselves in an airless dome on Luclin, where they persist to this day in the Ssraeshza Temple, waiting for the plague's potency to diminish enough to allow their return." },
+    { id: 'sir-lucan-dlere', term: "Sir Lucan D'Lere", tags: ['antonica'],
+      def: "The self-appointed Overlord of Freeport. Originally a knight left in command of Freeport's defenses when the Knights of Truth departed on the Crusade of Tears. Used the power vacuum to establish a personal dictatorship, creating the Freeport Militia as his private army. Rumored to have made a pact for unnatural longevity. Dark elven advisors from Neriak have been seen at the Militia House." },
+    { id: 'solusek-ro', term: 'Solusek Ro', tags: ['planes'],
+      def: "The Tyrant of Fire, god of flame. Responsible for raising the Serpent's Spine Mountains that turned the ancient Elddar Forest — the elven homeland — into the Desert of Ro. Whether this was malice or indifference is debated by theologians. His followers are warlocks and fire mages." },
+    { id: 'storm-guard', term: 'Storm Guard', tags: ['faydwer'],
+      def: "The warrior guild and city guard of Kaladim, led by Furtog Ogrebane. The dwarven military elite, renowned for their discipline and skill with axe and hammer." },
+
+    // T
+    { id: 'takish-hiz', term: 'Takish-Hiz', tags: ['general'],
+      def: "The capital city of the ancient Combine Empire, located in what is now the Desert of Ro. When Solusek Ro raised the Serpent's Spine Mountains and destroyed the Elddar Forest, Takish-Hiz was buried under sand. Its ruins are still partially accessible." },
+    { id: 'teirdal', term: "Teir'Dal", tags: ['faydwer'],
+      def: "The dark elves of Norrath, created by Innoruuk who kidnapped and corrupted the high elven king and queen. Despite centuries of separation from their Koada'Dal cousins, they share a distant common ancestry with both the high elves and the wood elves." },
+    { id: 'trakanon', term: 'Trakanon', tags: ['kunark'],
+      def: "An undead dragon who has claimed Old Sebilis as his lair. One of the ancient Ring of Scale dragons who was cursed and raised as undead. Said to breathe a deadly poison even in death. One of the most feared denizens of Kunark." },
+    { id: 'tsaph-katta', term: 'Tsaph Katta', tags: ['luclin', 'general'],
+      def: "The Imperator of the Combine Empire, poisoned by General Seru before the Loyalists could flee. Currently preserved in magical stasis in Katta Castellum on Luclin while Lcea Katta and the Loyalists search for a cure. His continued existence — however suspended — prevents Seru from claiming final victory over the Combine's legacy." },
+    { id: 'tunare', term: 'Tunare', tags: ['planes', 'faydwer'],
+      def: "The Mother of All, goddess of nature and patron deity of the elves. Creator of the Koada'Dal (high elves) and the Feir'Dal (wood elves). The forest spirit that permeates Faydark's essence. Firiona Vie is her Chosen — the living champion on Norrath." },
+
+    // V
+    { id: 'vah-shir', term: 'Vah Shir', tags: ['luclin'],
+      def: "The cat-people of Luclin, evolved from the Kerrans of Odus over centuries after their city was accidentally launched into orbit by the Erudite civil war's magical explosion. Adapted to Luclin's environment and culture, they now defend their territory in Shar Vahl against the encroaching Grimlings." },
+    { id: 'veeshan', term: 'Veeshan', tags: ['planes', 'velious'],
+      def: "The Wurm Queen, goddess of dragons. Claimed Norrath as her territory by scarring the continent of Velious with her claws in the earliest age. Her children are the dragons; her laws govern dragon society (prohibiting the killing of dragons by other dragons, and the mixing of opposing dragon elements). Velious is considered her domain above all others." },
+    { id: 'venril-sathir', term: 'Venril Sathir', tags: ['kunark'],
+      def: "A great Iksar shadow knight and lich who ruled the Sebilisian Empire and sought immortality through undeath. Now exists as a lich, periodically attempting to resurrect in his original body or reclaim power in Kunark. His servants work to restore him to power, and his influence pervades the Kurn's Tower dungeon." },
+    { id: 'vex-thal', term: 'Vex Thal', tags: ['luclin'],
+      def: "The sacred city of Luclin hidden in the deepest part of the moon, home to the Akheva loyal to Aten Ha Ra. The most powerful raid destination on Luclin and the seat of Aten Ha Ra's absolute authority." },
+
+    // Y
+    { id: 'yelinak', term: 'Yelinak', tags: ['velious'],
+      def: "The ancient dragon lord who leads the Claws of Veeshan on Velious. Believes dragons should remain separate from the affairs of lesser races. Ancient even by dragon standards, Yelinak's decisions have shaped Velious politics for millennia." },
+    { id: 'ykesha', term: 'Ykesha', tags: ['antonica'],
+      def: "The troll warlord who conquered Guk and turned much of the froglok population into undead through a dark pact with Innoruuk. Lower Guk remains corrupted by this curse. Ykesha was eventually driven out, and the trolls of Grobb later lost their own city to the froglok Lance of Mithaniel." },
+
+    // Z
+    { id: 'zavo-zatanov', term: "Zavo'Zatanov", tags: ['luclin'],
+      def: "The Shissar High Summoner imprisoned within the Ssraeshza Temple on Luclin. Ancient beyond mortal reckoning, Zavo'Zatanov has spent the centuries since the Greenmist in deep ritual meditation, working to devise a method of returning to Norrath now that the plague's potency may finally be waning." }
+  ];
+
+  // ── State ─────────────────────────────────────────────────────
+  var _hidden = {};
+  var _activeTag = 'all';
+  var _searchQuery = '';
+
+  // ── Render ────────────────────────────────────────────────────
+  function tagLabel(t) {
+    return { antonica:'Antonica', odus:'Odus', luclin:'Luclin', faydwer:'Faydwer',
+             kunark:'Kunark', velious:'Velious', planes:'Planes', general:'General' }[t] || t;
+  }
+
+  function renderAll() {
+    var gmMode = typeof isGM === 'function' && isGM();
+    if (gmMode) document.body.classList.add('gm-mode');
+    else document.body.classList.remove('gm-mode');
+
+    var q = _searchQuery.toLowerCase().trim();
+    var filtered = GLOSSARY.filter(function (e) {
+      if (_activeTag !== 'all' && e.tags.indexOf(_activeTag) === -1) return false;
+      if (q && e.term.toLowerCase().indexOf(q) === -1 && e.def.toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+
+    // Group by first letter
+    var byLetter = {};
+    filtered.forEach(function (e) {
+      var letter = e.term[0].toUpperCase();
+      if (!byLetter[letter]) byLetter[letter] = [];
+      byLetter[letter].push(e);
+    });
+
+    var letters = Object.keys(byLetter).sort();
+
+    // Update letter nav
+    var allLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    document.getElementById('letterNav').innerHTML = allLetters.map(function (l) {
+      var has = byLetter[l] && byLetter[l].length > 0;
+      return '<a href="#letter-' + l + '" class="' + (has ? 'has-entries' : 'no-entries') + '">' + l + '</a>';
+    }).join('');
+
+    // Visible count
+    var visibleCount = gmMode ? filtered.length : filtered.filter(function (e) { return !_hidden[e.id]; }).length;
+    document.getElementById('entryCount').textContent =
+      visibleCount + ' entr' + (visibleCount === 1 ? 'y' : 'ies') +
+      (gmMode && filtered.length !== visibleCount ? ' (' + (_hidden ? Object.keys(_hidden).filter(function(k){return _hidden[k];}).length : 0) + ' hidden from players)' : '');
+
+    if (filtered.length === 0) {
+      document.getElementById('glossaryList').innerHTML =
+        '<div class="no-results">No entries found.</div>';
+      return;
+    }
+
+    var html = '';
+    letters.forEach(function (letter) {
+      html += '<div class="letter-section" id="letter-' + letter + '">';
+      html += '<div class="letter-heading">' + letter + '</div>';
+      byLetter[letter].forEach(function (e) {
+        var isHidden = !!_hidden[e.id];
+        html += '<div class="glossary-entry' + (isHidden ? ' gm-hidden' : '') + '" id="entry-' + e.id + '">';
+        html += '<div class="entry-header">';
+        html += '<span class="entry-term">' + escHtml(e.term) + '</span>';
+        html += '<span class="entry-tags">';
+        e.tags.forEach(function (t) {
+          html += '<span class="entry-tag tag-' + t + '">' + tagLabel(t) + '</span>';
+        });
+        html += '</span>';
+        html += '</div>';
+        html += '<div class="entry-def">' + escHtml(e.def) + '</div>';
+        if (gmMode) {
+          html += '<button class="entry-gm-toggle" title="' + (isHidden ? 'Show for players' : 'Hide from players') +
+                  '" onclick="toggleHide(\'' + e.id + '\')">' + (isHidden ? '👁' : '🙈') + '</button>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+
+    document.getElementById('glossaryList').innerHTML = html;
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── GM toggle ─────────────────────────────────────────────────
+  window.toggleHide = function (id) {
+    _hidden[id] = !_hidden[id];
+    var entry = document.getElementById('entry-' + id);
+    if (entry) {
+      entry.classList.toggle('gm-hidden', !!_hidden[id]);
+      var btn = entry.querySelector('.entry-gm-toggle');
+      if (btn) {
+        btn.textContent = _hidden[id] ? '👁' : '🙈';
+        btn.title = _hidden[id] ? 'Show for players' : 'Hide from players';
+      }
+    }
+    // Update count display
+    var hiddenCount = Object.keys(_hidden).filter(function(k){return _hidden[k];}).length;
+    var countEl = document.getElementById('entryCount');
+    if (countEl && hiddenCount > 0) {
+      countEl.textContent = countEl.textContent.replace(/ \(\d+ hidden[^)]*\)/, '') +
+        ' (' + hiddenCount + ' hidden from players)';
+    }
+    if (window.firebaseDB) {
+      window.firebaseDB.ref(FIREBASE_PATH + '/' + id).set(_hidden[id] ? true : null).catch(function (err) {
+        console.error('Firebase write error (glossary):', err);
+      });
+    }
+  };
+
+  // ── Tag filter ────────────────────────────────────────────────
+  document.getElementById('tagFilters').addEventListener('click', function (e) {
+    var pill = e.target.closest('.tag-pill');
+    if (!pill) return;
+    _activeTag = pill.dataset.tag;
+    document.querySelectorAll('.tag-pill').forEach(function (p) {
+      p.classList.toggle('active', p.dataset.tag === _activeTag);
+    });
+    renderAll();
+  });
+
+  // ── Search ────────────────────────────────────────────────────
+  document.getElementById('glossarySearch').addEventListener('input', function (e) {
+    _searchQuery = e.target.value;
+    renderAll();
+  });
+
+  // ── Firebase init ─────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.firebaseDB) {
+      window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
+        _hidden = snapshot.val() || {};
+        renderAll();
+      }, function () {
+        renderAll();
+      });
+    } else {
+      renderAll();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

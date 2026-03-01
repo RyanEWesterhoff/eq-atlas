@@ -843,6 +843,8 @@ html, body {
 /* ── GM-Only Nav Items ────────────────────────────────────── */
 .gm-nav-only { display: none !important; }
 .gm-mode .gm-nav-only { display: list-item !important; }
+.gm-mode button.gm-nav-only { display: inline-block !important; }
+.gm-mode tr.gm-nav-only, .gm-mode tr.gm-only { display: table-row !important; }
 
 /* ── GM-Only Content Blocks ───────────────────────────────── */
 
