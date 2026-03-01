@@ -74,7 +74,7 @@
       background: var(--bg-panel);
       border: 1px solid var(--border-gold);
       box-shadow: 0 12px 60px rgba(0,0,0,0.9);
-      max-width: 680px;
+      max-width: 1080px;
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
@@ -98,8 +98,8 @@
     .figure-modal-inner { display: flex; }
 
     .figure-modal-portrait {
-      width: 160px;
-      min-width: 160px;
+      width: 260px;
+      min-width: 260px;
       background: #0a0a0a;
       flex-shrink: 0;
       overflow: hidden;
@@ -107,7 +107,7 @@
     .figure-modal-portrait img {
       width: 100%;
       height: 100%;
-      min-height: 180px;
+      min-height: 320px;
       object-fit: cover;
       object-position: top center;
       display: block;
@@ -116,39 +116,39 @@
     .figure-modal-content {
       flex: 1;
       min-width: 0;
-      padding: 18px 20px 18px 18px;
+      padding: 26px 30px 26px 26px;
       display: flex;
       flex-direction: column;
     }
     .figure-modal-name {
       font-family: 'Cinzel', serif;
-      font-size: 18px;
+      font-size: 24px;
       color: var(--accent-gold);
-      margin-bottom: 3px;
-      padding-right: 30px;
+      margin-bottom: 5px;
+      padding-right: 36px;
       line-height: 1.2;
     }
     .figure-modal-title {
       font-family: 'IM Fell English', serif;
       font-style: italic;
-      font-size: 12.5px;
+      font-size: 15px;
       color: var(--text-secondary);
-      margin-bottom: 5px;
+      margin-bottom: 7px;
     }
     .figure-modal-meta {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-dim);
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      margin-bottom: 12px;
-      padding-bottom: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
       border-bottom: 1px solid var(--border-dim);
     }
     .figure-modal-desc {
-      font-size: 13px;
-      line-height: 1.7;
+      font-size: 15px;
+      line-height: 1.75;
       color: var(--text-primary);
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       flex: 1;
     }
 
@@ -162,26 +162,26 @@
     }
     .fm-field-row { display: flex; flex-direction: column; gap: 3px; }
     .fm-field-label {
-      font-size: 10px;
+      font-size: 11px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
       color: var(--text-dim);
       font-family: 'Cinzel', serif;
     }
     .fm-field-text {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text-secondary);
-      line-height: 1.55;
+      line-height: 1.6;
       white-space: pre-wrap;
     }
-    .fm-field-empty { font-size: 13px; color: var(--text-dim); font-style: italic; }
+    .fm-field-empty { font-size: 14px; color: var(--text-dim); font-style: italic; }
     .fm-input {
       background: rgba(0,0,0,0.35);
       border: 1px solid var(--border-dim);
       color: var(--text-primary);
-      padding: 5px 9px;
+      padding: 6px 10px;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 14px;
       outline: none;
       width: 100%;
       box-sizing: border-box;
@@ -203,10 +203,10 @@
     .fm-save-btn:hover { background: var(--accent-gold); color: var(--bg-dark); }
     .fm-save-btn.saved { border-color: #3daa50; color: #3daa50; pointer-events: none; }
 
-    @media (max-width: 540px) {
+    @media (max-width: 700px) {
       .figure-modal-inner { flex-direction: column; }
       .figure-modal-portrait { width: 100%; min-width: unset; }
-      .figure-modal-portrait img { height: 180px; min-height: unset; }
+      .figure-modal-portrait img { height: 220px; min-height: unset; }
     }
 
     /* Placeholder avatar for characters without images */
