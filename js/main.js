@@ -148,10 +148,6 @@ function renderZoneDetail(zoneId) {
           <span class="meta-value">${zone.continent}</span>
         </div>
         <div class="meta-item">
-          <span class="meta-label">Level Range</span>
-          <span class="meta-value">${zone.levelRange}</span>
-        </div>
-        <div class="meta-item">
           <span class="meta-label">Connected Lands</span>
           <span class="meta-value" style="font-size:13px;">${adjacentList}</span>
         </div>
