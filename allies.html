@@ -42,14 +42,71 @@
       overflow: hidden;
       flex-shrink: 0;
     }
+    .figure-portrait-wrap {
+      align-self: stretch;
+    }
     .figure-portrait-wrap img {
       width: 96px;
-      height: 120px;
+      height: 100%;
+      min-height: 120px;
       object-fit: cover;
       object-position: top center;
       display: block;
       filter: brightness(0.95) contrast(1.05);
+      cursor: zoom-in;
+      transition: filter 0.15s;
     }
+    .figure-portrait-wrap img:hover {
+      filter: brightness(1.15) contrast(1.05);
+    }
+
+    /* ── Portrait lightbox ──────────────────────────────────── */
+    .portrait-lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+    .portrait-lightbox.open { display: flex; }
+    .portrait-lightbox-img {
+      max-width: 88vw;
+      max-height: 88vh;
+      object-fit: contain;
+      border: 1px solid var(--border-gold);
+      box-shadow: 0 8px 48px rgba(0,0,0,0.85);
+      cursor: default;
+      display: block;
+    }
+    .portrait-lightbox-label {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Cinzel', serif;
+      color: var(--accent-gold);
+      font-size: 15px;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+      pointer-events: none;
+    }
+    .portrait-lightbox-close {
+      position: absolute;
+      top: 18px;
+      right: 22px;
+      font-size: 22px;
+      color: var(--text-dim);
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 8px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border-dim);
+    }
+    .portrait-lightbox-close:hover { color: var(--accent-gold); border-color: var(--border-gold); }
 
     /* Placeholder avatar for characters without images */
     .figure-avatar {
@@ -440,8 +497,31 @@
   </footer>
 </div>
 
+<!-- Portrait lightbox -->
+<div class="portrait-lightbox" id="portrait-lightbox" onclick="closePortraitLightbox()">
+  <span class="portrait-lightbox-close" onclick="closePortraitLightbox()">✕</span>
+  <img class="portrait-lightbox-img" id="portrait-lb-img" src="" alt="" onclick="event.stopPropagation()">
+  <div class="portrait-lightbox-label" id="portrait-lb-label"></div>
+</div>
+
 <script src="js/zones-data.js"></script>
 <script src="js/main.js"></script>
 <script src="js/search.js"></script>
+<script>
+  document.querySelectorAll('.figure-portrait-wrap img').forEach(function (img) {
+    img.addEventListener('click', function () {
+      document.getElementById('portrait-lb-img').src   = img.src;
+      document.getElementById('portrait-lb-img').alt   = img.alt;
+      document.getElementById('portrait-lb-label').textContent = img.alt;
+      document.getElementById('portrait-lightbox').classList.add('open');
+    });
+  });
+  function closePortraitLightbox() {
+    document.getElementById('portrait-lightbox').classList.remove('open');
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closePortraitLightbox();
+  });
+</script>
 </body>
 </html>
