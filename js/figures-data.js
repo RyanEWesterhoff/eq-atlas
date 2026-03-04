@@ -1,0 +1,20 @@
+window.FIGURES_DATA = [
+  { id: 'tearis-thex',      section: 'ally',  name: 'King Tearis Thex',          title: 'King of the Koada\'Dal; Ruler of Felwithe',                              meta: 'High Elf · Felwithe, Greater Faydark' },
+  { id: 'firiona-vie',      section: 'ally',  name: 'Firiona Vie',                title: 'Champion of Tunare; Princess of Felwithe',                               meta: 'High Elf · Felwithe / Firiona Vie Outpost, Kunark' },
+  { id: 'antonius-bayle',   section: 'ally',  name: 'Antonius Bayle IV',          title: 'High Keeper of the Sword; Ruler of Qeynos',                              meta: 'Human · Qeynos, Antonica' },
+  { id: 'elarad',           section: 'ally',  name: 'El\'Arad',                   title: 'Lord Primarch of Erudin; High Arcane Authority',                          meta: 'Erudite · Erudin, Odus' },
+  { id: 'mayor-gubbin',     section: 'ally',  name: 'Mayor Gubbin',               title: 'Mayor of Rivervale',                                                     meta: 'Halfling · Rivervale, Antonica' },
+  { id: 'kazon-stormhammer',section: 'ally',  name: 'King Kazon Stormhammer',     title: 'King of Kaladim; Lord of the Dwarves',                                   meta: 'Dwarf · South Kaladim, Faydwer' },
+  { id: 'king-akanon',      section: 'ally',  name: 'King Ak\'Anon',              title: 'Immortal Clockwork Sovereign of the Gnomes',                             meta: 'Clockwork · Ak\'Anon, Steamfont Mountains' },
+  { id: 'halas-council',    section: 'ally',  name: 'Halas Council of Elders',    title: 'Governing Body of the Northmen Nation',                                  meta: 'Barbarian · Halas, Everfrost Peaks' },
+  { id: 'alkabor',          section: 'ally',  name: 'Al\'Kabor',                  title: 'The Most Powerful Wizard in All of Norrath',                             meta: 'Erudite · West Freeport / Dreadlands / Luclin' },
+  { id: 'tsaph-katta',      section: 'ally',  name: 'Tsaph Katta',                title: 'Imperator of the Combine Empire',                                        meta: 'Human · Katta Castellum, Luclin' },
+  { id: 'mayong',           section: 'enemy', name: 'Mayong Mistmoore',           title: 'Lord of Castle Mistmoore; First Vampire of Norrath',                     meta: 'Ancient Elf (Cursed) · Castle Mistmoore, Lesser Faydark' },
+  { id: 'seru',             section: 'enemy', name: 'Lord Inquisitor Seru',       title: 'Lord Inquisitor of the Combine Inquisition; Betrayer of the Empire',     meta: 'Human (Transformed) · Sanctus Seru, Luclin' },
+  { id: 'jurglash',         section: 'enemy', name: 'Jurglash',                   title: 'Warlord; Founder of the Grobb Clan',                                     meta: 'Troll · Innothule Swamp / Grobb, Antonica' },
+  { id: 'naythox-thex',     section: 'enemy', name: 'Naythox Thex',               title: 'King of Neriak; Lord of the Teir\'Dal',                                  meta: 'Dark Elf · Darklight Palace, Neriak, Nektulos Forest' },
+  { id: 'emperor-vekin',    section: 'enemy', name: 'Emperor Vekin',              title: 'First Emperor of the Cabilisian Empire; Founder of Modern Iksar Power',  meta: 'Iksar · Vekin Palace, Cabilis East, Kunark' },
+  { id: 'sir-lucan',        section: 'enemy', name: 'Sir Lucan D\'Lere',          title: 'Commander of the Freeport Militia',                                      meta: 'Human · West Freeport, Antonica' },
+  { id: 'virate-manaar',    section: 'enemy', name: 'Overlord Virate Manaar',     title: 'Overlord of Paineel; Protector of the Seekers',                          meta: 'Erudite · Paineel (The Hole), Odus' },
+  { id: 'lanys-tvyl',       section: 'enemy', name: 'Lanys T\'Vyl',               title: 'Daughter of Innoruuk; Champion of Hate',                                 meta: 'Dark Elf · Plane of Hate / Norrath' }
+];

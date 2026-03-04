@@ -187,7 +187,7 @@ function renderZoneDetail(zoneId) {
       </div>
     </div>
 
-    <div class="content-section">
+    <div class="content-section gm-only">
       <div class="section-header">
         <span>🐉</span>
         <h2>Bestiary</h2>
@@ -209,7 +209,7 @@ function renderZoneDetail(zoneId) {
     </div>
 
     ${zone.notableNPCs && zone.notableNPCs.length > 0 ? `
-    <div class="content-section">
+    <div class="content-section gm-only">
       <div class="section-header">
         <span>👤</span>
         <h2>Notable NPCs</h2>

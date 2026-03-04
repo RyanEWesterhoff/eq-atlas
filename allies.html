@@ -260,6 +260,59 @@
     .section-header.ally-header span { color: #6aaa6a; }
     .section-header.enemy-header { border-left: 3px solid #8a3a3a; }
     .section-header.enemy-header span { color: #c05050; }
+
+    /* ── GM Controls ─────────────────────────────────────── */
+    .figure-card { position: relative; }
+    .gm-drag-handle {
+      position: absolute;
+      top: 4px; left: 4px;
+      color: var(--accent-gold);
+      font-size: 15px;
+      cursor: grab;
+      z-index: 5;
+      opacity: 0.55;
+      line-height: 1;
+      user-select: none;
+      padding: 2px 3px;
+    }
+    .gm-drag-handle:active { cursor: grabbing; }
+    .gm-hide-btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: rgba(0,0,0,0.65);
+      border: 1px solid var(--border-dim);
+      color: var(--text-dim);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 5px;
+      z-index: 5;
+      line-height: 1;
+    }
+    .gm-hide-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .figure-card.gm-hidden { border-style: dashed; opacity: 0.5; }
+    @keyframes figure-pulse {
+      0%   { box-shadow: none; }
+      25%  { box-shadow: 0 0 0 4px rgba(201,168,76,0.4); border-color: var(--accent-gold); }
+      100% { box-shadow: none; border-color: var(--border-dim); }
+    }
+    .figure-highlight { animation: figure-pulse 2.2s ease-out forwards; }
+    .figure-card.drag-over { outline: 2px dashed var(--accent-gold); }
+    .gm-section-toolbar {
+      display: none;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+    .gm-add-figure-btn {
+      background: transparent;
+      border: 1px solid var(--border-gold);
+      color: var(--accent-gold);
+      padding: 5px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.05em;
+    }
+    .gm-add-figure-btn:hover { background: var(--accent-gold); color: var(--bg-dark); }
   </style>
 </head>
 <body>
@@ -350,7 +403,10 @@
             or powerful allies the party may seek aid from during the campaign.
           </p>
 
-          <div class="figure-grid">
+          <div class="gm-section-toolbar" id="ally-toolbar">
+            <button class="gm-add-figure-btn" onclick="openCreateFigure('ally')">+ Add Allied Figure</button>
+          </div>
+          <div class="figure-grid" id="ally-grid">
 
             <!-- King Tearis Thex -->
             <div class="figure-card ally" id="tearis-thex">
@@ -495,7 +551,10 @@
             These figures command armies, cults, and dark powers that shape the campaign's greatest conflicts.
           </p>
 
-          <div class="figure-grid">
+          <div class="gm-section-toolbar" id="enemy-toolbar">
+            <button class="gm-add-figure-btn" onclick="openCreateFigure('enemy')">+ Add Enemy Figure</button>
+          </div>
+          <div class="figure-grid" id="enemy-grid">
 
             <!-- Mayong Mistmoore -->
             <div class="figure-card enemy" id="mayong">
@@ -664,45 +723,233 @@
   </div>
 </div>
 
+<!-- Create Figure Modal -->
+<div class="figure-modal-overlay" id="create-figure-modal" onclick="closeCreateFigure()">
+  <div class="figure-modal-panel" style="max-width:540px" onclick="event.stopPropagation()">
+    <button class="figure-modal-close" onclick="closeCreateFigure()">✕</button>
+    <div style="padding:28px 30px">
+      <div class="figure-modal-name" style="margin-bottom:20px;font-size:20px" id="cf-modal-title">Add New Figure</div>
+      <input type="hidden" id="cf-section" value="ally">
+      <div class="figure-modal-fields" style="display:flex;flex-direction:column;gap:10px">
+        <div class="fm-field-row">
+          <div class="fm-field-label">Name *</div>
+          <input class="fm-input" id="cf-name" type="text" placeholder="Character name">
+        </div>
+        <div class="fm-field-row">
+          <div class="fm-field-label">Title / Role</div>
+          <input class="fm-input" id="cf-title" type="text" placeholder="e.g. High Wizard of Felwithe">
+        </div>
+        <div class="fm-field-row">
+          <div class="fm-field-label">Race &amp; Location</div>
+          <input class="fm-input" id="cf-meta" type="text" placeholder="e.g. High Elf • Felwithe, Faydwer">
+        </div>
+        <div class="fm-field-row">
+          <div class="fm-field-label">Description</div>
+          <textarea class="fm-input fm-textarea" id="cf-desc" placeholder="Character description…" style="min-height:90px"></textarea>
+        </div>
+        <div class="fm-field-row">
+          <div class="fm-field-label">Portrait path</div>
+          <input class="fm-input" id="cf-portrait" type="text" placeholder="images/figures/name.png">
+        </div>
+        <button class="fm-save-btn" id="cf-save-btn" style="align-self:flex-end;margin-top:4px" onclick="saveNewFigure()">Create Figure</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="js/zones-data.js"></script>
 <script src="js/main.js"></script>
 <script src="js/search.js"></script>
 <script>
 (function () {
-  var FIREBASE_PATH = 'eq-atlas/figures';
-  var _figureData   = {};
-  var _currentId    = null;
+  var FB_DETAIL  = 'eq-atlas/figures';
+  var FB_HIDDEN  = 'eq-atlas/figures-hidden';
+  var FB_ORDER   = 'eq-atlas/figures-order';
+  var FB_CUSTOM  = 'eq-atlas/figures-custom';
 
-  // Load Firebase figure data
-  document.addEventListener('DOMContentLoaded', function () {
-    if (window.firebaseDB) {
-      window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snap) {
-        _figureData = snap.val() || {};
-      });
+  var _figureData = {};
+  var _hidden     = {};
+  var _custom     = {};
+  var _currentId  = null;
+  var _dragSrc    = null;
+
+  // ── Hidden state ───────────────────────────────────────────────────────
+  function applyHiddenState(card, isHidden) {
+    var gm = typeof isGM === 'function' && isGM();
+    if (isHidden) {
+      if (gm) { card.classList.add('gm-hidden'); card.style.display = ''; }
+      else     { card.style.display = 'none'; }
+    } else {
+      card.classList.remove('gm-hidden');
+      card.style.display = '';
     }
+    var btn = card.querySelector('.gm-hide-btn');
+    if (btn) { btn.innerHTML = isHidden ? '👁' : '🙈'; btn.title = isHidden ? 'Show to players' : 'Hide from players'; }
+  }
 
-    // Click any card to open detail modal
-    document.querySelectorAll('.figure-card').forEach(function (card) {
-      card.addEventListener('click', function () { openFigureModal(card); });
+  window.toggleHideFigure = function (id) {
+    var newVal = !_hidden[id];
+    _hidden[id] = newVal;
+    var card = document.getElementById(id);
+    if (card) applyHiddenState(card, newVal);
+    if (window.firebaseDB) window.firebaseDB.ref(FB_HIDDEN + '/' + id).set(newVal || null);
+  };
+
+  // ── GM controls injection ──────────────────────────────────────────────
+  function addGMControls(card) {
+    if (card.querySelector('.gm-drag-handle')) return; // already added
+    var handle = document.createElement('div');
+    handle.className = 'gm-drag-handle';
+    handle.innerHTML = '⠿';
+    card.insertBefore(handle, card.firstChild);
+    card.setAttribute('draggable', 'true');
+
+    var hideBtn = document.createElement('button');
+    hideBtn.className = 'gm-hide-btn';
+    hideBtn.innerHTML = _hidden[card.id] ? '👁' : '🙈';
+    hideBtn.title     = _hidden[card.id] ? 'Show to players' : 'Hide from players';
+    hideBtn.onclick   = function (e) { e.stopPropagation(); window.toggleHideFigure(card.id); };
+    card.appendChild(hideBtn);
+  }
+
+  function initGMControls() {
+    if (!(typeof isGM === 'function' && isGM())) return;
+    document.querySelectorAll('.gm-section-toolbar').forEach(function (t) { t.style.display = 'flex'; });
+    document.querySelectorAll('.figure-card').forEach(function (card) { addGMControls(card); });
+    setupDragDrop(document.getElementById('ally-grid'));
+    setupDragDrop(document.getElementById('enemy-grid'));
+  }
+
+  // ── Drag & Drop ────────────────────────────────────────────────────────
+  function setupDragDrop(grid) {
+    if (!grid) return;
+    grid.addEventListener('dragstart', function (e) {
+      var card = e.target.closest('.figure-card');
+      if (!card) return;
+      _dragSrc = card;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(function () { if (_dragSrc) _dragSrc.style.opacity = '0.4'; }, 0);
     });
-  });
+    grid.addEventListener('dragend', function () {
+      if (_dragSrc) _dragSrc.style.opacity = '';
+      grid.querySelectorAll('.figure-card.drag-over').forEach(function (c) { c.classList.remove('drag-over'); });
+      _dragSrc = null;
+      saveOrder();
+    });
+    grid.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      if (!_dragSrc || _dragSrc.parentElement !== grid) return;
+      var card = e.target.closest('.figure-card');
+      if (!card || card === _dragSrc) return;
+      var rect = card.getBoundingClientRect();
+      if (e.clientY < rect.top + rect.height / 2) grid.insertBefore(_dragSrc, card);
+      else grid.insertBefore(_dragSrc, card.nextSibling);
+    });
+    grid.addEventListener('dragenter', function (e) {
+      var card = e.target.closest('.figure-card');
+      if (card && card !== _dragSrc) card.classList.add('drag-over');
+    });
+    grid.addEventListener('dragleave', function (e) {
+      var card = e.target.closest('.figure-card');
+      if (card) card.classList.remove('drag-over');
+    });
+    grid.addEventListener('drop', function (e) { e.preventDefault(); });
+  }
 
+  function saveOrder() {
+    if (!(typeof isGM === 'function' && isGM())) return;
+    var order = { ally: [], enemy: [] };
+    ['ally', 'enemy'].forEach(function (s) {
+      var grid = document.getElementById(s + '-grid');
+      if (grid) grid.querySelectorAll('.figure-card').forEach(function (c) { order[s].push(c.id); });
+    });
+    if (window.firebaseDB) window.firebaseDB.ref(FB_ORDER).set(order);
+  }
+
+  function applyOrder(order) {
+    if (!order) return;
+    ['ally', 'enemy'].forEach(function (s) {
+      var grid = document.getElementById(s + '-grid');
+      if (!grid || !order[s]) return;
+      order[s].forEach(function (id) {
+        var card = document.getElementById(id);
+        if (card && card.parentElement === grid) grid.appendChild(card);
+      });
+    });
+  }
+
+  // ── Custom figures ─────────────────────────────────────────────────────
+  function renderCustomFigure(id, fig) {
+    var grid = document.getElementById(fig.section + '-grid');
+    if (!grid || document.getElementById(id)) return;
+    var card = document.createElement('div');
+    card.className = 'figure-card ' + fig.section;
+    card.id = id;
+    var portraitHtml = fig.portrait
+      ? '<img src="' + fig.portrait + '" alt="' + fig.name + '" loading="lazy">'
+      : '<div class="figure-avatar">👤</div>';
+    card.innerHTML =
+      '<div class="figure-portrait-wrap">' + portraitHtml + '</div>' +
+      '<div class="figure-body">' +
+        '<div class="figure-name">'  + fig.name              + '</div>' +
+        '<div class="figure-title">' + (fig.title || '')     + '</div>' +
+        '<div class="figure-meta">'  + (fig.meta  || '')     + '</div>' +
+        '<div class="figure-desc">'  + (fig.desc  || '')     + '</div>' +
+      '</div>';
+    card.addEventListener('click', function () { openFigureModal(card); });
+    grid.appendChild(card);
+    if (typeof isGM === 'function' && isGM()) { addGMControls(card); setupDragDrop(grid); }
+    applyHiddenState(card, _hidden[id]);
+  }
+
+  // ── Create figure modal ────────────────────────────────────────────────
+  window.openCreateFigure = function (section) {
+    document.getElementById('cf-section').value = section;
+    document.getElementById('cf-modal-title').textContent = section === 'ally' ? 'Add Allied Figure' : 'Add Enemy Figure';
+    ['cf-name','cf-title','cf-meta','cf-desc','cf-portrait'].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('cf-save-btn').textContent = 'Create Figure';
+    document.getElementById('cf-save-btn').classList.remove('saved');
+    document.getElementById('create-figure-modal').classList.add('open');
+  };
+
+  window.closeCreateFigure = function () {
+    document.getElementById('create-figure-modal').classList.remove('open');
+  };
+
+  window.saveNewFigure = function () {
+    var name = document.getElementById('cf-name').value.trim();
+    if (!name) { document.getElementById('cf-name').focus(); return; }
+    var fig = {
+      name:    name,
+      title:   document.getElementById('cf-title').value.trim(),
+      meta:    document.getElementById('cf-meta').value.trim(),
+      desc:    document.getElementById('cf-desc').value.trim(),
+      portrait:document.getElementById('cf-portrait').value.trim(),
+      section: document.getElementById('cf-section').value
+    };
+    var id = 'custom-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+    _custom[id] = fig;
+    if (window.firebaseDB) window.firebaseDB.ref(FB_CUSTOM + '/' + id).set(fig);
+    renderCustomFigure(id, fig);
+    document.getElementById('cf-save-btn').textContent = 'Created ✓';
+    document.getElementById('cf-save-btn').classList.add('saved');
+    setTimeout(closeCreateFigure, 900);
+  };
+
+  // ── Figure detail modal ────────────────────────────────────────────────
   function openFigureModal(card) {
     _currentId = card.id;
     var data   = _figureData[_currentId] || {};
-    var gmMode = typeof isGM === 'function' && isGM();
-
-    // Populate header fields from DOM
-    var imgEl = card.querySelector('.figure-portrait-wrap img');
-    document.getElementById('fm-portrait').src = imgEl ? imgEl.src : '';
-    document.getElementById('fm-portrait').alt = imgEl ? imgEl.alt : '';
+    var gm     = typeof isGM === 'function' && isGM();
+    var imgEl  = card.querySelector('.figure-portrait-wrap img');
+    var fmPort = document.getElementById('fm-portrait');
+    if (imgEl) { fmPort.src = imgEl.src; fmPort.alt = imgEl.alt; fmPort.style.display = ''; }
+    else        { fmPort.src = ''; fmPort.style.display = 'none'; }
     document.getElementById('fm-name').textContent  = card.querySelector('.figure-name').textContent;
     document.getElementById('fm-title').textContent = card.querySelector('.figure-title').textContent;
     document.getElementById('fm-meta').innerHTML    = card.querySelector('.figure-meta').innerHTML;
     document.getElementById('fm-desc').textContent  = card.querySelector('.figure-desc').textContent;
-
-    // Show correct field set
-    if (gmMode) {
+    if (gm) {
       document.getElementById('fm-fields-gm').style.display     = 'flex';
       document.getElementById('fm-fields-player').style.display = 'none';
       document.getElementById('fm-location-input').value     = data.location     || '';
@@ -717,19 +964,13 @@
       setField('fm-relationship-text', data.relationship);
       setField('fm-notes-text',        data.notes);
     }
-
     document.getElementById('figure-modal').classList.add('open');
   }
 
   function setField(id, value) {
     var el = document.getElementById(id);
-    if (value && value.trim()) {
-      el.textContent = value;
-      el.className   = 'fm-field-text';
-    } else {
-      el.textContent = 'Not recorded';
-      el.className   = 'fm-field-empty';
-    }
+    if (value && value.trim()) { el.textContent = value; el.className = 'fm-field-text'; }
+    else                        { el.textContent = 'Not recorded'; el.className = 'fm-field-empty'; }
   }
 
   window.saveFigureData = function () {
@@ -740,10 +981,7 @@
       notes:        document.getElementById('fm-notes-input').value
     };
     _figureData[_currentId] = data;
-    if (window.firebaseDB) {
-      window.firebaseDB.ref(FIREBASE_PATH + '/' + _currentId).set(data)
-        .catch(function (err) { console.error('Firebase write error (figures):', err); });
-    }
+    if (window.firebaseDB) window.firebaseDB.ref(FB_DETAIL + '/' + _currentId).set(data);
     var btn = document.getElementById('fm-save');
     btn.textContent = 'Saved ✓'; btn.classList.add('saved');
     setTimeout(function () { btn.textContent = 'Save'; btn.classList.remove('saved'); }, 2000);
@@ -754,8 +992,49 @@
     _currentId = null;
   };
 
+  // ── Init ───────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.figure-card').forEach(function (card) {
+      card.addEventListener('click', function () { openFigureModal(card); });
+    });
+
+    if (window.firebaseDB) {
+      window.firebaseDB.ref(FB_DETAIL).on('value', function (snap) { _figureData = snap.val() || {}; });
+
+      window.firebaseDB.ref(FB_HIDDEN).on('value', function (snap) {
+        _hidden = snap.val() || {};
+        document.querySelectorAll('.figure-card').forEach(function (card) {
+          applyHiddenState(card, _hidden[card.id]);
+        });
+      });
+
+      window.firebaseDB.ref(FB_ORDER).once('value', function (snap) { applyOrder(snap.val()); });
+
+      window.firebaseDB.ref(FB_CUSTOM).on('value', function (snap) {
+        var customs = snap.val() || {};
+        Object.keys(customs).forEach(function (id) {
+          _custom[id] = customs[id];
+          renderCustomFigure(id, customs[id]);
+        });
+      });
+    }
+
+    initGMControls();
+
+    // Scroll to hash figure on arrival from search
+    if (window.location.hash) {
+      setTimeout(function () {
+        var el = document.querySelector(window.location.hash);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('figure-highlight');
+        setTimeout(function () { el.classList.remove('figure-highlight'); }, 2200);
+      }, 80);
+    }
+  });
+
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeFigureModal();
+    if (e.key === 'Escape') { closeFigureModal(); closeCreateFigure(); }
   });
 })();
 </script>

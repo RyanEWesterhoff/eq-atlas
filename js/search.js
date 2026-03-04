@@ -82,12 +82,10 @@
 
   // ── Search engine ─────────────────────────────────────────
   function doSearch(q) {
-    if (typeof ZONES === 'undefined') return { zones: [], creatures: [], npcs: [] };
-
     var ql = q.toLowerCase();
-    var zones = [], creatures = [], npcs = [];
+    var zones = [], creatures = [], npcs = [], glossary = [], figures = [];
 
-    for (var i = 0; i < ZONES.length; i++) {
+    if (typeof ZONES !== 'undefined') for (var i = 0; i < ZONES.length; i++) {
       var z = ZONES[i];
 
       // Zone — match any text field
@@ -131,10 +129,39 @@
       }
     }
 
+    // Notable figures
+    if (typeof window.FIGURES_DATA !== 'undefined') {
+      for (var fi = 0; fi < window.FIGURES_DATA.length; fi++) {
+        var fig = window.FIGURES_DATA[fi];
+        if ((fig.name + ' ' + fig.title + ' ' + fig.meta).toLowerCase().includes(ql)) {
+          figures.push({ fig: fig, url: ROOT + 'allies.html#' + fig.id });
+        }
+      }
+    }
+
+    // Glossary entries
+    if (typeof window.GLOSSARY_DATA !== 'undefined') {
+      for (var g = 0; g < window.GLOSSARY_DATA.length; g++) {
+        var entry = window.GLOSSARY_DATA[g];
+        if ((entry.term + ' ' + entry.def).toLowerCase().includes(ql)) {
+          glossary.push({ entry: entry, url: ROOT + 'glossary.html#entry-' + entry.id });
+        }
+      }
+    }
+
+    // Suppress NPC results whose name is already covered by a figure entry
+    var figureNames = {};
+    for (var fn = 0; fn < figures.length; fn++) {
+      figureNames[figures[fn].fig.name.toLowerCase()] = true;
+    }
+    npcs = npcs.filter(function (h) { return !figureNames[h.npc.name.toLowerCase()]; });
+
     return {
       zones:     zones.slice(0, 7),
       creatures: creatures.slice(0, 6),
-      npcs:      npcs.slice(0, 6)
+      npcs:      npcs.slice(0, 6),
+      figures:   figures.slice(0, 6),
+      glossary:  glossary.slice(0, 6)
     };
   }
 
@@ -162,7 +189,7 @@
 
   // ── Render results panel ──────────────────────────────────
   function render(hits, panel, q) {
-    var total = hits.zones.length + hits.creatures.length + hits.npcs.length;
+    var total = hits.zones.length + hits.creatures.length + hits.npcs.length + hits.figures.length + hits.glossary.length;
 
     if (total === 0) {
       panel.innerHTML = '<div class="gs-empty">No results for <em>' + esc(q) + '</em></div>';
@@ -211,6 +238,31 @@
       }
     }
 
+    if (hits.figures.length) {
+      html += '<div class="gs-group">Figures</div>';
+      for (var fi = 0; fi < hits.figures.length; fi++) {
+        var hf   = hits.figures[fi].fig;
+        var furl = hits.figures[fi].url;
+        var icon = hf.section === 'ally' ? '🤝' : '⚔️';
+        html += '<a href="' + furl + '" class="gs-item" tabindex="0">' +
+          '<span class="gs-title">' + icon + ' ' + hilite(hf.name, q) + '</span>' +
+          '<span class="gs-sub">' + hilite(hf.title, q) + ' &mdash; ' + hilite(hf.meta, q) + '</span>' +
+          '</a>';
+      }
+    }
+
+    if (hits.glossary.length) {
+      html += '<div class="gs-group">Glossary</div>';
+      for (var m = 0; m < hits.glossary.length; m++) {
+        var ge   = hits.glossary[m].entry;
+        var gurl = hits.glossary[m].url;
+        html += '<a href="' + gurl + '" class="gs-item" tabindex="0">' +
+          '<span class="gs-title">📖 ' + hilite(ge.term, q) + '</span>' +
+          '<span class="gs-sub">' + hilite(snip(ge.def, q, 55), q) + '</span>' +
+          '</a>';
+      }
+    }
+
     html += '<div class="gs-footer"><kbd>&#8593;&#8595;</kbd> navigate &nbsp;&bull;&nbsp; <kbd>Enter</kbd> go &nbsp;&bull;&nbsp; <kbd>Esc</kbd> close</div>';
 
     panel.innerHTML = html;
@@ -222,6 +274,18 @@
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+
+  // Lazy-load glossary and figures data if not already present on this page
+  if (typeof window.GLOSSARY_DATA === 'undefined') {
+    var _gs = document.createElement('script');
+    _gs.src = ROOT + 'js/glossary-data.js';
+    document.head.appendChild(_gs);
+  }
+  if (typeof window.FIGURES_DATA === 'undefined') {
+    var _fs = document.createElement('script');
+    _fs.src = ROOT + 'js/figures-data.js';
+    document.head.appendChild(_fs);
   }
 
 })();

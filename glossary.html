@@ -172,6 +172,12 @@
       font-style: italic;
     }
     body:not(.gm-mode) .glossary-entry.gm-hidden { display: none; }
+    @keyframes entry-pulse {
+      0%   { box-shadow: none; border-color: var(--border-dim); }
+      20%  { box-shadow: 0 0 0 4px rgba(201,168,76,0.35); border-color: var(--accent-gold); }
+      100% { box-shadow: none; border-color: var(--border-dim); }
+    }
+    .entry-highlight { animation: entry-pulse 2.2s ease-out forwards; }
 
     /* ── GM toggle button ────────────────────────────────────── */
     .entry-gm-toggle {
@@ -742,17 +748,34 @@
     renderAll();
   });
 
+  // ── Scroll to hash entry ───────────────────────────────────────────
+  var _scrolledToHash = false;
+  function scrollToHash() {
+    if (_scrolledToHash || !window.location.hash) return;
+    _scrolledToHash = true;
+    setTimeout(function () {
+      var el = document.querySelector(window.location.hash);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('entry-highlight');
+      setTimeout(function () { el.classList.remove('entry-highlight'); }, 2200);
+    }, 80);
+  }
+
   // ── Firebase init ─────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
     if (window.firebaseDB) {
       window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
         _hidden = snapshot.val() || {};
         renderAll();
+        scrollToHash();
       }, function () {
         renderAll();
+        scrollToHash();
       });
     } else {
       renderAll();
+      scrollToHash();
     }
   });
 
