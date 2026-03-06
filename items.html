@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/jpeg" href="images/EQ_favicon.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magic Items — The Atlas</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js" data-protect="true"></script>
+  <script src="js/items-data.js"></script>
+  <style>
+    /* ── Item Search Controls ─────────────────────────────────── */
+    .item-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .item-search {
+      flex: 1 1 220px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      color: var(--text-primary);
+      padding: 7px 12px;
+      font-size: 13px;
+      font-family: 'IM Fell English', serif;
+      min-width: 160px;
+    }
+    .item-search:focus {
+      outline: none;
+      border-color: var(--border-gold);
+    }
+    .item-search::placeholder { color: var(--text-dim); }
+
+    .item-count {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-family: 'IM Fell English', serif;
+    }
+
+    /* ── Filter panel ──────────────────────────────────────────── */
+    .filter-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      padding: 14px 16px;
+      margin-bottom: 18px;
+    }
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .filter-row:last-child { margin-bottom: 0; }
+    .filter-label {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      min-width: 80px;
+    }
+    .filter-pill {
+      padding: 4px 11px;
+      font-size: 11px;
+      letter-spacing: 0.8px;
+      font-family: 'Cinzel', serif;
+      text-transform: uppercase;
+      border: 1px solid var(--border-dim);
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .filter-pill:hover { border-color: var(--border-gold); color: var(--text-secondary); }
+    .filter-pill.active { background: var(--bg-panel); color: var(--text-heading); border-color: var(--border-gold); }
+
+    /* Rarity colors */
+    .filter-pill[data-rarity="Common"].active    { border-color: #9ca3af; color: #9ca3af; }
+    .filter-pill[data-rarity="Uncommon"].active   { border-color: #4ade80; color: #4ade80; }
+    .filter-pill[data-rarity="Rare"].active       { border-color: #60a5fa; color: #60a5fa; }
+    .filter-pill[data-rarity="Very Rare"].active  { border-color: #c084fc; color: #c084fc; }
+    .filter-pill[data-rarity="Legendary"].active  { border-color: #fb923c; color: #fb923c; }
+
+    /* Special toggle pills */
+    .filter-pill[data-special="proc"].active       { border-color: #7c3aed; color: #7c3aed; }
+    .filter-pill[data-special="attune"].active     { border-color: #0ea5e9; color: #0ea5e9; }
+    .filter-pill[data-special="focus"].active      { border-color: #10b981; color: #10b981; }
+    .filter-pill[data-special="clear"]             { border-color: var(--danger-red); color: var(--danger-text); }
+    .filter-pill[data-special="clear"]:hover       { border-color: var(--danger-text); }
+
+    /* ── Item list ─────────────────────────────────────────────── */
+    .item-list { margin-top: 4px; }
+
+    .item-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-left: 3px solid var(--border-dim);
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .item-card:hover { border-color: var(--border-gold); }
+    .item-card.expanded { border-color: var(--border-gold); }
+
+    /* Rarity left-border colors */
+    .item-card[data-rarity="Common"]    { border-left-color: #9ca3af; }
+    .item-card[data-rarity="Uncommon"]  { border-left-color: #4ade80; }
+    .item-card[data-rarity="Rare"]      { border-left-color: #60a5fa; }
+    .item-card[data-rarity="Very Rare"] { border-left-color: #c084fc; }
+    .item-card[data-rarity="Legendary"] { border-left-color: #fb923c; }
+
+    .item-header {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .item-name {
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-heading);
+      flex: 1 1 auto;
+    }
+    .item-rarity {
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .item-rarity[data-rarity="Common"]    { color: #9ca3af; }
+    .item-rarity[data-rarity="Uncommon"]  { color: #4ade80; }
+    .item-rarity[data-rarity="Rare"]      { color: #60a5fa; }
+    .item-rarity[data-rarity="Very Rare"] { color: #c084fc; }
+    .item-rarity[data-rarity="Legendary"] { color: #fb923c; }
+
+    .item-slot {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    /* Badges */
+    .item-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-right: 4px;
+      margin-bottom: 2px;
+      border: 1px solid;
+    }
+    .badge-bonus     { border-color: #b45309; color: #f59e0b; }
+    .badge-ac        { border-color: #1d4ed8; color: #60a5fa; }
+    .badge-attune    { border-color: #0369a1; color: #0ea5e9; }
+    .badge-proc      { border-color: #7c3aed; color: #a78bfa; }
+    .badge-focus     { border-color: #065f46; color: #10b981; }
+    .badge-spell     { border-color: #1e40af; color: #60a5fa; }
+    .badge-ft        { border-color: #4338ca; color: #818cf8; }
+    .badge-resist    { border-color: #065f46; color: #34d399; }
+    .badge-quality   { border-color: var(--border-dim); color: var(--text-secondary); }
+
+    /* Expanded details */
+    .item-details {
+      display: none;
+      padding: 0 14px 12px 14px;
+      border-top: 1px solid var(--border-dim);
+      margin-top: 4px;
+    }
+    .item-card.expanded .item-details { display: block; }
+
+    .item-description {
+      font-size: 14px;
+      color: var(--text-primary);
+      margin: 10px 0 8px;
+      line-height: 1.6;
+    }
+    .item-focus-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .item-tags {
+      margin-top: 8px;
+    }
+    .item-tag {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 11px;
+      background: var(--bg-dark);
+      color: var(--text-dim);
+      border: 1px solid var(--border-dim);
+      margin-right: 4px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .item-tag:hover { border-color: var(--border-gold); color: var(--text-secondary); }
+
+    .no-results {
+      text-align: center;
+      color: var(--text-secondary);
+      padding: 40px 0;
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">
+        The Atlas
+      </a>
+      <div class="header-divider"></div>
+      <div class="header-quote">"Every item tells a story — of the artisan who forged it, and the hero who bore it." — Sage's Proverb</div>
+    </div>
+  </header>
+
+  <nav class="top-nav">
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="zones.html">Lands</a></li>
+      <li class="gm-nav-only"><a href="bestiary.html">Bestiary</a></li>
+      <li class="gm-nav-only"><a href="items.html" class="active">Items</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="deities.html">Deities</a></li><li><a href="allies.html">Figures</a></li><li><a href="sessions.html">Campaign</a></li><li><a href="glossary.html">Glossary</a></li><li><a href="#" onclick="logout();return false;" style="color:var(--text-dim);border-bottom-color:transparent">Sign Out</a></li>
+    </ul>
+  </nav>
+
+  <div class="content-area">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Equipment Slots</h3>
+        <ul id="slot-nav"></ul>
+      </div>
+      <div class="sidebar-section">
+        <h3>Quick Filters</h3>
+        <ul>
+          <li><a href="#" onclick="quickFilter('legendary');return false;"><span class="nav-icon">&#9733;</span> Legendary</a></li>
+          <li><a href="#" onclick="quickFilter('proc');return false;"><span class="nav-icon">&#9889;</span> Has Proc</a></li>
+          <li><a href="#" onclick="quickFilter('focus');return false;"><span class="nav-icon">&#10024;</span> Has Focus</a></li>
+          <li><a href="#" onclick="quickFilter('spellslot');return false;"><span class="nav-icon">&#128302;</span> Spell Slots</a></li>
+          <li><a href="#" onclick="clearAllFilters();return false;"><span class="nav-icon">&#10060;</span> Clear All</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="sep">&#8250;</span>
+        Magic Items
+      </div>
+
+      <h1 class="page-title">
+        <span class="title-icon">&#9876;</span>
+        Magic Items of Norrath
+      </h1>
+
+      <p style="color:var(--text-secondary);margin-bottom:24px;font-size:15px;">
+        A searchable catalog of magic items adapted from EverQuest for 5e play.
+        Filter by rarity, slot, bonus, resistance, and more.
+      </p>
+
+      <div class="item-controls">
+        <input type="text" class="item-search" id="item-search" placeholder="Search by name, description, or tag...">
+        <span class="item-count" id="item-count"></span>
+      </div>
+
+      <div class="filter-panel" id="filter-panel">
+        <div class="filter-row" id="rarity-filters">
+          <span class="filter-label">Rarity</span>
+        </div>
+        <div class="filter-row" id="slot-filters">
+          <span class="filter-label">Slot</span>
+        </div>
+        <div class="filter-row" id="bonus-filters">
+          <span class="filter-label">Bonus</span>
+        </div>
+        <div class="filter-row" id="resist-filters">
+          <span class="filter-label">Resist</span>
+        </div>
+        <div class="filter-row" id="toggle-filters">
+          <span class="filter-label">Special</span>
+        </div>
+      </div>
+
+      <div class="item-list" id="item-list"></div>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>&copy; The Atlas &mdash; EverQuest Campaign Reference</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  // ── Derive filter options from data ──────────────────────
+  var RARITIES = ["Common","Uncommon","Rare","Very Rare","Legendary"];
+  var SLOTS = [];
+  var slotSet = {};
+  items.forEach(function (i) { if (!slotSet[i.slot]) { slotSet[i.slot] = true; SLOTS.push(i.slot); } });
+  SLOTS.sort();
+  var BONUSES = [1, 2, 3];
+  var resistSet = {};
+  items.forEach(function (i) { i.resistance.forEach(function (r) { if (r !== "All") resistSet[r] = true; }); });
+  var RESISTANCES = Object.keys(resistSet).sort();
+
+  // ── State ────────────────────────────────────────────────
+  var search = '';
+  var filterRarity = [];
+  var filterSlot = [];
+  var filterBonus = [];
+  var filterResist = [];
+  var filterProc = false;
+  var filterAttune = false;
+  var filterFocus = false;
+  var expandedId = null;
+
+  // ── Build sidebar slot nav ──────────────────────────────
+  var slotNav = document.getElementById('slot-nav');
+  var slotIcons = {
+    Back:"\uD83E\uDDE5", Blunt:"\uD83D\uDD28", Body:"\uD83D\uDEE1\uFE0F", Ear:"\uD83D\uDC42",
+    Face:"\uD83C\uDFAD", Feet:"\uD83E\uDD7E", Finger:"\uD83D\uDC8D", Hand:"\u270B",
+    "Hand-to-Hand":"\u270A", Head:"\u26D1\uFE0F", Miscellaneous:"\uD83C\uDF10",
+    Neck:"\uD83D\uDCFF", Piercing:"\uD83D\uDDE1\uFE0F", Ranged:"\uD83C\uDFF9",
+    Shield:"\uD83D\uDEE1\uFE0F", Shoulder:"\uD83E\uDDB4", Slashing:"\u2694\uFE0F",
+    Waist:"\uD83E\uDE96", Wrist:"\u231A"
+  };
+  SLOTS.forEach(function (s) {
+    var li = document.createElement('li');
+    var a = document.createElement('a');
+    a.href = '#';
+    a.innerHTML = '<span class="nav-icon">' + (slotIcons[s] || '\u2728') + '</span> ' + s;
+    a.onclick = function (e) {
+      e.preventDefault();
+      filterSlot = [s];
+      syncFilterPills();
+      render();
+    };
+    li.appendChild(a);
+    slotNav.appendChild(li);
+  });
+
+  // ── Build filter pills ──────────────────────────────────
+  function makePill(label, attrs) {
+    var btn = document.createElement('button');
+    btn.className = 'filter-pill';
+    btn.textContent = label;
+    for (var k in attrs) btn.setAttribute(k, attrs[k]);
+    return btn;
+  }
+
+  var rarityRow = document.getElementById('rarity-filters');
+  RARITIES.forEach(function (r) {
+    var pill = makePill(r, {'data-rarity': r});
+    pill.onclick = function () { toggle(filterRarity, r); syncFilterPills(); render(); };
+    rarityRow.appendChild(pill);
+  });
+
+  var slotRow = document.getElementById('slot-filters');
+  SLOTS.forEach(function (s) {
+    var pill = makePill(s, {'data-slot': s});
+    pill.onclick = function () { toggle(filterSlot, s); syncFilterPills(); render(); };
+    slotRow.appendChild(pill);
+  });
+
+  var bonusRow = document.getElementById('bonus-filters');
+  BONUSES.forEach(function (b) {
+    var pill = makePill('+' + b, {'data-bonus': b});
+    pill.onclick = function () { toggle(filterBonus, b); syncFilterPills(); render(); };
+    bonusRow.appendChild(pill);
+  });
+
+  var resistRow = document.getElementById('resist-filters');
+  RESISTANCES.forEach(function (r) {
+    var pill = makePill(r, {'data-resist': r});
+    pill.onclick = function () { toggle(filterResist, r); syncFilterPills(); render(); };
+    resistRow.appendChild(pill);
+  });
+
+  var toggleRow = document.getElementById('toggle-filters');
+  var procPill = makePill('Has Proc', {'data-special': 'proc'});
+  procPill.onclick = function () { filterProc = !filterProc; syncFilterPills(); render(); };
+  toggleRow.appendChild(procPill);
+
+  var attunePill = makePill('Requires Attunement', {'data-special': 'attune'});
+  attunePill.onclick = function () { filterAttune = !filterAttune; syncFilterPills(); render(); };
+  toggleRow.appendChild(attunePill);
+
+  var focusPill = makePill('Has Focus Effect', {'data-special': 'focus'});
+  focusPill.onclick = function () { filterFocus = !filterFocus; syncFilterPills(); render(); };
+  toggleRow.appendChild(focusPill);
+
+  var clearPill = makePill('Clear All', {'data-special': 'clear'});
+  clearPill.onclick = function () { clearAllFilters(); };
+  clearPill.style.display = 'none';
+  toggleRow.appendChild(clearPill);
+
+  // ── Helpers ─────────────────────────────────────────────
+  function toggle(arr, val) {
+    var idx = arr.indexOf(val);
+    if (idx === -1) arr.push(val); else arr.splice(idx, 1);
+  }
+
+  function hasActiveFilters() {
+    return search || filterRarity.length || filterSlot.length || filterBonus.length ||
+           filterResist.length || filterProc || filterAttune || filterFocus;
+  }
+
+  function syncFilterPills() {
+    document.querySelectorAll('.filter-pill[data-rarity]').forEach(function (p) {
+      p.classList.toggle('active', filterRarity.indexOf(p.getAttribute('data-rarity')) !== -1);
+    });
+    document.querySelectorAll('.filter-pill[data-slot]').forEach(function (p) {
+      p.classList.toggle('active', filterSlot.indexOf(p.getAttribute('data-slot')) !== -1);
+    });
+    document.querySelectorAll('.filter-pill[data-bonus]').forEach(function (p) {
+      p.classList.toggle('active', filterBonus.indexOf(Number(p.getAttribute('data-bonus'))) !== -1);
+    });
+    document.querySelectorAll('.filter-pill[data-resist]').forEach(function (p) {
+      p.classList.toggle('active', filterResist.indexOf(p.getAttribute('data-resist')) !== -1);
+    });
+    procPill.classList.toggle('active', filterProc);
+    attunePill.classList.toggle('active', filterAttune);
+    focusPill.classList.toggle('active', filterFocus);
+    clearPill.style.display = hasActiveFilters() ? '' : 'none';
+  }
+
+  window.clearAllFilters = function () {
+    search = '';
+    filterRarity = [];
+    filterSlot = [];
+    filterBonus = [];
+    filterResist = [];
+    filterProc = false;
+    filterAttune = false;
+    filterFocus = false;
+    document.getElementById('item-search').value = '';
+    syncFilterPills();
+    render();
+  };
+
+  window.quickFilter = function (type) {
+    clearAllFilters();
+    if (type === 'legendary') { filterRarity = ['Legendary']; }
+    else if (type === 'proc') { filterProc = true; }
+    else if (type === 'focus') { filterFocus = true; }
+    else if (type === 'spellslot') { search = 'spellcasting'; document.getElementById('item-search').value = 'spellcasting'; }
+    syncFilterPills();
+    render();
+  };
+
+  // ── Filter logic ────────────────────────────────────────
+  function getFiltered() {
+    var q = search.toLowerCase();
+    return items.filter(function (item) {
+      if (q && item.name.toLowerCase().indexOf(q) === -1 &&
+          item.description.toLowerCase().indexOf(q) === -1 &&
+          !item.tags.some(function (t) { return t.indexOf(q) !== -1; })) return false;
+      if (filterRarity.length && filterRarity.indexOf(item.rarity) === -1) return false;
+      if (filterSlot.length && filterSlot.indexOf(item.slot) === -1) return false;
+      if (filterBonus.length && filterBonus.indexOf(item.bonus) === -1) return false;
+      if (filterResist.length && !filterResist.every(function (r) {
+        return item.resistance.indexOf(r) !== -1 || item.resistance.indexOf("All") !== -1;
+      })) return false;
+      if (filterProc && !item.proc) return false;
+      if (filterAttune && item.attunement === "None") return false;
+      if (filterFocus && item.focus.length === 0) return false;
+      return true;
+    });
+  }
+
+  // ── Render ──────────────────────────────────────────────
+  function badge(label, cls) {
+    return '<span class="item-badge ' + cls + '">' + label + '</span>';
+  }
+
+  function render() {
+    var filtered = getFiltered();
+    var countEl = document.getElementById('item-count');
+    countEl.textContent = filtered.length + ' of ' + items.length + ' items';
+
+    var list = document.getElementById('item-list');
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="no-results">No items match your search.</div>';
+      return;
+    }
+
+    var html = '';
+    filtered.forEach(function (item) {
+      var isOpen = expandedId === item.id;
+      html += '<div class="item-card' + (isOpen ? ' expanded' : '') + '" data-rarity="' + item.rarity + '" data-id="' + item.id + '">';
+      html += '<div class="item-header">';
+      html += '<span class="item-name">' + item.name + '</span>';
+      html += '<span class="item-rarity" data-rarity="' + item.rarity + '">' + item.rarity + '</span>';
+      html += '<span class="item-slot">' + item.slot + '</span>';
+      if (item.bonus) html += badge('+' + item.bonus, 'badge-bonus');
+      if (item.ac) html += badge('AC +' + item.ac, 'badge-ac');
+      if (item.attunement !== "None") html += badge('Attune: ' + item.attunement, 'badge-attune');
+      if (item.proc) html += badge('Proc', 'badge-proc');
+      if (item.focus.length > 0) html += badge('Focus', 'badge-focus');
+      if (item.spellSlot) html += badge('+' + item.spellSlot + ' Slot', 'badge-spell');
+      if (item.flowingThought) html += badge('Flowing Thought ' + item.flowingThought, 'badge-ft');
+      item.resistance.forEach(function (r) {
+        html += badge(r === "All" ? "All Resist" : "Resist: " + r, 'badge-resist');
+      });
+      item.qualities.forEach(function (q) {
+        html += badge(q, 'badge-quality');
+      });
+      html += '</div>';
+
+      html += '<div class="item-details">';
+      html += '<p class="item-description">' + item.description + '</p>';
+      if (item.focus.length > 0) {
+        html += '<div class="item-focus-label">Focus Effects: ';
+        item.focus.forEach(function (f) { html += badge(f, 'badge-focus'); });
+        html += '</div>';
+      }
+      html += '<div class="item-tags">';
+      item.tags.forEach(function (t) {
+        html += '<span class="item-tag" data-tag="' + t + '">#' + t + '</span>';
+      });
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+    });
+    list.innerHTML = html;
+
+    // Bind click handlers
+    list.querySelectorAll('.item-card').forEach(function (card) {
+      card.addEventListener('click', function (e) {
+        if (e.target.classList.contains('item-tag')) {
+          e.stopPropagation();
+          search = e.target.getAttribute('data-tag');
+          document.getElementById('item-search').value = search;
+          render();
+          return;
+        }
+        var id = Number(card.getAttribute('data-id'));
+        expandedId = expandedId === id ? null : id;
+        render();
+      });
+    });
+  }
+
+  // ── Search input ────────────────────────────────────────
+  document.getElementById('item-search').addEventListener('input', function (e) {
+    search = e.target.value;
+    render();
+  });
+
+  // Initial render
+  syncFilterPills();
+  render();
+})();
+</script>
+</body>
+</html>
