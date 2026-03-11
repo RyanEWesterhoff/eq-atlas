@@ -219,6 +219,13 @@
       transition: border-color 0.15s, color 0.15s;
     }
     .cal-nav-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .cal-today-btn {
+      background: none; border: 1px solid var(--border-dim); color: var(--text-dim);
+      padding: 0 10px; height: 28px; cursor: pointer; font-size: 10px;
+      font-family: 'Cinzel', serif; letter-spacing: 1px; text-transform: uppercase;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .cal-today-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
     .cal-dow {
       text-align: center; font-family: 'Cinzel', serif; font-size: 10px;
@@ -631,9 +638,14 @@
     var totalCells = Math.ceil((firstDow+daysInMonth)/7)*7;
     var numRows = totalCells/7;
 
+    var now2 = new Date();
+    var isCurrentMonth = (_viewYear === now2.getFullYear() && _viewMonth === now2.getMonth());
     var html = '<div class="cal-header">' +
       '<button class="cal-nav-btn" id="cal-prev">&#8249;</button>' +
-      '<div class="cal-month-label">' + MONTHS[_viewMonth] + ' ' + _viewYear + '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<div class="cal-month-label">' + MONTHS[_viewMonth] + ' ' + _viewYear + '</div>' +
+        (!isCurrentMonth ? '<button class="cal-today-btn" id="cal-today">Today</button>' : '') +
+      '</div>' +
       '<button class="cal-nav-btn" id="cal-next">&#8250;</button>' +
       '</div><div class="cal-grid">';
 
@@ -672,13 +684,15 @@
 
     document.getElementById('cal-prev').onclick = function(e){ e.stopPropagation(); _viewMonth--; if(_viewMonth<0){_viewMonth=11;_viewYear--;} render(); };
     document.getElementById('cal-next').onclick = function(e){ e.stopPropagation(); _viewMonth++; if(_viewMonth>11){_viewMonth=0;_viewYear++;} render(); };
+    var todayBtn = document.getElementById('cal-today');
+    if (todayBtn) todayBtn.onclick = function(e){ e.stopPropagation(); var n=new Date(); _viewYear=n.getFullYear(); _viewMonth=n.getMonth(); render(); };
 
     container.querySelectorAll('.cal-day:not(.cal-empty)').forEach(function(day){
       day.addEventListener('click', function(){ openModal(day.dataset.date); });
     });
 
     container.querySelectorAll('.cal-entry').forEach(function(entry){
-      entry.addEventListener('click', function(e){ e.stopPropagation(); openModal(entry.dataset.date); });
+      entry.addEventListener('click', function(e){ e.stopPropagation(); openEditModal(entry.dataset.date, parseInt(entry.dataset.idx)); });
       if (entry.dataset.notes) {
         entry.addEventListener('mouseenter', function(e){ tipShow(e, entry.dataset.name, entry.dataset.notes); });
         entry.addEventListener('mousemove',  tipMove);
@@ -796,10 +810,92 @@
     setTimeout(function(){ var inp=document.getElementById('cal-name-inp'); if(inp) inp.focus(); }, 60);
   }
 
+  // ── Edit entry modal ─────────────────────────────────────────────────────
+  function openEditModal(dateStr, idx) {
+    var entries = normalize(dateStr);
+    var entry   = entries[idx];
+    if (!entry) return;
+    var initColor = entry.color || PRESETS[0];
+    _selColor = initColor;
+
+    var swatchHtml = PRESETS.map(function(c){
+      return '<div class="cal-swatch' + (c===initColor?' selected':'') + '" style="background:'+c+';" data-color="'+c+'"></div>';
+    }).join('') + '<input type="color" class="cal-color-input" id="cal-cpicker-edit" value="' + initColor + '">';
+
+    var overlay = document.createElement('div');
+    overlay.className = 'cal-overlay';
+    overlay.innerHTML =
+      '<div class="cal-modal">' +
+        '<div class="cal-modal-head">' +
+          '<div class="cal-modal-date">' + fmtLabel(dateStr) + '</div>' +
+          '<button class="cal-modal-close">✕</button>' +
+        '</div>' +
+        '<div class="cal-modal-body">' +
+          '<div class="cal-section-label">Edit Entry</div>' +
+          '<div class="cal-form-row"><div class="cal-form-label">Name</div>' +
+            '<input class="cal-name-input" id="cal-edit-name" type="text" maxlength="24" autocomplete="off" value="' + esc(entry.name||'') + '"></div>' +
+          '<div class="cal-form-row"><div class="cal-form-label">Color</div>' +
+            '<div class="cal-swatches">' + swatchHtml + '</div></div>' +
+          '<div class="cal-form-row"><div class="cal-form-label">Notes</div>' +
+            '<textarea class="cal-notes-input" id="cal-edit-notes" rows="3">' + esc(entry.notes||'') + '</textarea></div>' +
+          '<div class="cal-modal-footer">' +
+            '<button class="cal-btn" id="cal-edit-cancel">Cancel</button>' +
+            '<button class="cal-btn" id="cal-edit-delete" style="color:#c03030;border-color:#8a2020;">Delete</button>' +
+            '<button class="cal-btn cal-btn-primary" id="cal-edit-save">Save</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    function close() { document.body.removeChild(overlay); document.removeEventListener('keydown', onKey); }
+    function onKey(e) { if (e.key==='Escape') close(); }
+    document.addEventListener('keydown', onKey);
+
+    overlay.querySelector('.cal-modal-close').onclick = close;
+    overlay.querySelector('#cal-edit-cancel').onclick = close;
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
+
+    overlay.querySelectorAll('.cal-swatch').forEach(function(sw){
+      sw.onclick = function(){
+        overlay.querySelectorAll('.cal-swatch').forEach(function(s){s.classList.remove('selected');});
+        sw.classList.add('selected');
+        _selColor = sw.dataset.color;
+        document.getElementById('cal-cpicker-edit').value = _selColor;
+      };
+    });
+    document.getElementById('cal-cpicker-edit').oninput = function(){
+      _selColor = this.value;
+      overlay.querySelectorAll('.cal-swatch').forEach(function(s){s.classList.remove('selected');});
+    };
+
+    overlay.querySelector('#cal-edit-delete').onclick = function(){
+      close();
+      deleteEntry(dateStr, idx, function(){ render(); });
+    };
+
+    overlay.querySelector('#cal-edit-save').onclick = function(){
+      var name = (document.getElementById('cal-edit-name').value||'').trim();
+      if (!name) { document.getElementById('cal-edit-name').focus(); return; }
+      var notes = (document.getElementById('cal-edit-notes').value||'').trim();
+      close();
+      updateEntry(dateStr, idx, { name:name, color:_selColor, notes:notes }, function(){ render(); });
+    };
+
+    setTimeout(function(){ var inp=document.getElementById('cal-edit-name'); if(inp){inp.focus();inp.select();} }, 60);
+  }
+
   // ── Firebase helpers ─────────────────────────────────────────────────────
   function saveEntry(dateStr, entry, cb) {
     var arr = normalize(dateStr);
     arr.push(entry);
+    _calData[dateStr] = arr;
+    if (window.firebaseDB) window.firebaseDB.ref(FB_CAL+'/'+dateStr).set(arr).then(cb).catch(cb);
+    else cb();
+  }
+
+  function updateEntry(dateStr, idx, entry, cb) {
+    var arr = normalize(dateStr);
+    arr[idx] = entry;
     _calData[dateStr] = arr;
     if (window.firebaseDB) window.firebaseDB.ref(FB_CAL+'/'+dateStr).set(arr).then(cb).catch(cb);
     else cb();
