@@ -332,7 +332,7 @@ html, body {
   font-family: 'IM Fell English', serif;
   font-style: italic;
   color: var(--text-secondary);
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .zone-meta {
@@ -490,7 +490,7 @@ html, body {
 }
 
 .hero-intro {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.8;
   color: var(--text-primary);
   max-width: 680px;
