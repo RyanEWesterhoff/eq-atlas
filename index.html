@@ -348,6 +348,7 @@
     }
     .cal-copy-mode .cal-day:not(.cal-empty),
     .cal-copy-mode .cal-entry { cursor: copy !important; }
+    .cal-copy-mode { user-select: none; }
   </style>
 </head>
 <body>
@@ -996,6 +997,7 @@
         var day = e.target.closest ? e.target.closest('.cal-day:not(.cal-empty)') : null;
         if (day) {
           e.stopPropagation();
+          e.preventDefault();
           var targetDate = day.dataset.date;
           saveEntry(targetDate, { name:_copyEntry.name, color:_copyEntry.color, notes:_copyEntry.notes, timeStart:_copyEntry.timeStart, timeEnd:_copyEntry.timeEnd }, function(){ render(); });
           if (!e.shiftKey) cancelCopyMode();
