@@ -332,6 +332,22 @@
     }
     .cal-time-input:focus { border-color: var(--accent-gold); }
     .cal-entry-time { font-weight: 400; font-size: 10px; opacity: 0.8; }
+    .cal-copy-ghost {
+      position: fixed; pointer-events: none; z-index: 9999;
+      font-size: 11px; line-height: 15px; padding: 3px 9px;
+      border-radius: 2px; font-weight: 600; white-space: nowrap;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.7); transform: rotate(-2deg);
+      opacity: 0.92;
+    }
+    .cal-copy-hint {
+      position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-panel); border: 1px solid var(--border-gold);
+      padding: 8px 22px; font-size: 11px; color: var(--accent-gold);
+      font-family: 'Cinzel', serif; letter-spacing: 0.05em;
+      z-index: 9998; pointer-events: none; white-space: nowrap;
+    }
+    .cal-copy-mode .cal-day:not(.cal-empty),
+    .cal-copy-mode .cal-entry { cursor: copy !important; }
   </style>
 </head>
 <body>
@@ -606,6 +622,8 @@
   var _viewYear, _viewMonth;
   var _selColor = '#8B2635';
   var _tip;
+  var _copyEntry = null, _copyGhost = null, _copyHint = null;
+  var _copyMoveHandler = null, _copyKeyHandler = null, _copyClickHandler = null;
 
   var MONTHS  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   var DOWS    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -885,6 +903,7 @@
           '<div class="cal-modal-footer">' +
             '<button class="cal-btn" id="cal-edit-cancel">Cancel</button>' +
             '<button class="cal-btn" id="cal-edit-delete" style="color:#c03030;border-color:#8a2020;">Delete</button>' +
+            '<button class="cal-btn" id="cal-edit-copy" style="color:var(--accent-gold);">Copy →</button>' +
             '<button class="cal-btn cal-btn-primary" id="cal-edit-save">Save</button>' +
           '</div>' +
         '</div>' +
@@ -917,6 +936,15 @@
       deleteEntry(dateStr, idx, function(){ render(); });
     };
 
+    overlay.querySelector('#cal-edit-copy').onclick = function(){
+      var name      = (document.getElementById('cal-edit-name').value||'').trim() || entry.name;
+      var notes     = (document.getElementById('cal-edit-notes').value||'').trim();
+      var timeStart = document.getElementById('cal-edit-time-start').value || '';
+      var timeEnd   = document.getElementById('cal-edit-time-end').value   || '';
+      close();
+      startCopyMode({ name:name, color:_selColor, notes:notes, timeStart:timeStart, timeEnd:timeEnd });
+    };
+
     overlay.querySelector('#cal-edit-save').onclick = function(){
       var name = (document.getElementById('cal-edit-name').value||'').trim();
       if (!name) { document.getElementById('cal-edit-name').focus(); return; }
@@ -928,6 +956,65 @@
     };
 
     setTimeout(function(){ var inp=document.getElementById('cal-edit-name'); if(inp){inp.focus();inp.select();} }, 60);
+  }
+
+  // ── Copy mode ────────────────────────────────────────────────────────────
+  function startCopyMode(entry) {
+    _copyEntry = entry;
+
+    // Ghost chip that follows cursor
+    _copyGhost = document.createElement('div');
+    _copyGhost.className = 'cal-copy-ghost';
+    _copyGhost.style.background = entry.color || '#555';
+    _copyGhost.style.color = contrast(entry.color || '#555');
+    var tr = fmtTimeRange(entry.timeStart, entry.timeEnd);
+    _copyGhost.innerHTML = esc(entry.name||'') + (tr ? '<span class="cal-entry-time"> · '+esc(tr)+'</span>' : '');
+    document.body.appendChild(_copyGhost);
+
+    // Hint bar
+    _copyHint = document.createElement('div');
+    _copyHint.className = 'cal-copy-hint';
+    _copyHint.innerHTML = 'Click a day to paste &nbsp;&bull;&nbsp; Hold <kbd style="background:rgba(255,255,255,0.1);padding:1px 4px;border-radius:2px;">Shift</kbd> to paste multiple &nbsp;&bull;&nbsp; <kbd style="background:rgba(255,255,255,0.1);padding:1px 4px;border-radius:2px;">Esc</kbd> to cancel';
+    document.body.appendChild(_copyHint);
+
+    document.body.classList.add('cal-copy-mode');
+
+    _copyMoveHandler = function(e) {
+      _copyGhost.style.left = (e.clientX + 14) + 'px';
+      _copyGhost.style.top  = (e.clientY + 10) + 'px';
+    };
+    document.addEventListener('mousemove', _copyMoveHandler);
+
+    _copyKeyHandler = function(e) { if (e.key === 'Escape') cancelCopyMode(); };
+    document.addEventListener('keydown', _copyKeyHandler);
+
+    // Capture-phase click to intercept before day/chip handlers
+    _copyClickHandler = function(e) {
+      if (!_copyEntry) return;
+      var container = document.getElementById('cal-container');
+      if (container && container.contains(e.target)) {
+        var day = e.target.closest ? e.target.closest('.cal-day:not(.cal-empty)') : null;
+        if (day) {
+          e.stopPropagation();
+          var targetDate = day.dataset.date;
+          saveEntry(targetDate, { name:_copyEntry.name, color:_copyEntry.color, notes:_copyEntry.notes, timeStart:_copyEntry.timeStart, timeEnd:_copyEntry.timeEnd }, function(){ render(); });
+          if (!e.shiftKey) cancelCopyMode();
+        }
+      } else {
+        cancelCopyMode();
+      }
+    };
+    document.addEventListener('click', _copyClickHandler, true);
+  }
+
+  function cancelCopyMode() {
+    if (_copyGhost)       { document.body.removeChild(_copyGhost); _copyGhost = null; }
+    if (_copyHint)        { document.body.removeChild(_copyHint);  _copyHint  = null; }
+    if (_copyMoveHandler) { document.removeEventListener('mousemove', _copyMoveHandler); _copyMoveHandler = null; }
+    if (_copyKeyHandler)  { document.removeEventListener('keydown',   _copyKeyHandler);  _copyKeyHandler  = null; }
+    if (_copyClickHandler){ document.removeEventListener('click', _copyClickHandler, true); _copyClickHandler = null; }
+    document.body.classList.remove('cal-copy-mode');
+    _copyEntry = null;
   }
 
   // ── Firebase helpers ─────────────────────────────────────────────────────
