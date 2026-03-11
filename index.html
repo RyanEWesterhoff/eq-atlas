@@ -349,6 +349,31 @@
     .cal-copy-mode .cal-day:not(.cal-empty),
     .cal-copy-mode .cal-entry { cursor: copy !important; }
     .cal-copy-mode { user-select: none; }
+    /* Session Day tool */
+    .cal-session-btn {
+      background: none; border: 1px solid var(--border-dim); color: var(--text-dim);
+      padding: 0 10px; height: 28px; cursor: pointer; font-size: 10px;
+      font-family: 'Cinzel', serif; letter-spacing: 1px; text-transform: uppercase;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .cal-session-btn:hover { border-color: #7C5CBF; color: #A78BFA; }
+    .cal-session-btn.active { border-color: #7C5CBF; color: #A78BFA; background: rgba(107,70,193,0.18); }
+    .cal-session-mode .cal-day:not(.cal-empty) { cursor: crosshair !important; }
+    .cal-session-mode { user-select: none; }
+    .cal-session-banner {
+      margin: -4px -5px 4px;
+      padding: 3px 6px 3px 5px;
+      background: linear-gradient(135deg, #1E1040 0%, #2A1860 100%);
+      border-bottom: 1px solid rgba(124,92,191,0.55);
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1.2px;
+      text-transform: uppercase; pointer-events: none;
+    }
+    .cal-session-banner-label { color: #A78BFA; font-weight: 700; }
+    .cal-session-banner-time { color: #C4B5FD; font-size: 9px; opacity: 0.9; }
+    .cal-day.cal-session-day { background: rgba(107,70,193,0.06) !important; box-shadow: inset 0 0 0 1px rgba(124,92,191,0.18); }
+    .cal-day.cal-session-day.cal-today { box-shadow: inset 0 0 0 1px rgba(124,92,191,0.35), inset 0 0 0 2px rgba(201,168,76,0.15); }
+    .cal-day.cal-session-day .cal-day-num { color: #A78BFA; }
   </style>
 </head>
 <body>
@@ -619,7 +644,10 @@
 <script>
 (function () {
   var FB_CAL   = 'eq-atlas/calendar';
+  var FB_SESS  = 'eq-atlas/calendar-sessions';
   var _calData = {};
+  var _sessionData = {};
+  var _sessionMode = false;
   var _viewYear, _viewMonth;
   var _selColor = '#8B2635';
   var _tip;
@@ -689,7 +717,10 @@
         '<div class="cal-month-label">' + MONTHS[_viewMonth] + ' ' + _viewYear + '</div>' +
         (!isCurrentMonth ? '<button class="cal-today-btn" id="cal-today">Today</button>' : '') +
       '</div>' +
-      '<button class="cal-nav-btn" id="cal-next">&#8250;</button>' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+        '<button class="cal-session-btn' + (_sessionMode ? ' active' : '') + '" id="cal-session-tool">⚔ Session Day</button>' +
+        '<button class="cal-nav-btn" id="cal-next">&#8250;</button>' +
+      '</div>' +
       '</div><div class="cal-grid">';
 
     DOWS.forEach(function(d){ html += '<div class="cal-dow">' + d + '</div>'; });
@@ -705,8 +736,16 @@
       var key     = dayKey(_viewYear, _viewMonth, dayNum);
       var isToday = key === todayKey;
       var entries = normalize(key);
+      var sessData = _sessionData[key];
 
-      html += '<div class="' + cls + (isToday ? ' cal-today' : '') + '" data-date="' + key + '">';
+      html += '<div class="' + cls + (isToday ? ' cal-today' : '') + (sessData ? ' cal-session-day' : '') + '" data-date="' + key + '">';
+      if (sessData) {
+        var sessTime = sessData.timeStart ? fmtTime(sessData.timeStart) : '';
+        html += '<div class="cal-session-banner">' +
+          '<span class="cal-session-banner-label">⚔ Session</span>' +
+          (sessTime ? '<span class="cal-session-banner-time">' + esc(sessTime) + '</span>' : '') +
+          '</div>';
+      }
       html += '<div class="cal-day-num">' + dayNum + '</div>';
 
       var maxShow = 6, shown = Math.min(entries.length, maxShow);
@@ -728,14 +767,19 @@
     }
     html += '</div>';
     container.innerHTML = html;
+    if (_sessionMode) container.classList.add('cal-session-mode');
 
     document.getElementById('cal-prev').onclick = function(e){ e.stopPropagation(); _viewMonth--; if(_viewMonth<0){_viewMonth=11;_viewYear--;} render(); };
     document.getElementById('cal-next').onclick = function(e){ e.stopPropagation(); _viewMonth++; if(_viewMonth>11){_viewMonth=0;_viewYear++;} render(); };
     var todayBtn = document.getElementById('cal-today');
     if (todayBtn) todayBtn.onclick = function(e){ e.stopPropagation(); var n=new Date(); _viewYear=n.getFullYear(); _viewMonth=n.getMonth(); render(); };
+    document.getElementById('cal-session-tool').onclick = function(e){ e.stopPropagation(); _sessionMode = !_sessionMode; render(); };
 
     container.querySelectorAll('.cal-day:not(.cal-empty)').forEach(function(day){
-      day.addEventListener('click', function(){ openModal(day.dataset.date); });
+      day.addEventListener('click', function(){
+        if (_sessionMode) { openSessionModal(day.dataset.date); }
+        else { openModal(day.dataset.date); }
+      });
     });
 
     container.querySelectorAll('.cal-entry').forEach(function(entry){
@@ -1019,6 +1063,53 @@
     _copyEntry = null;
   }
 
+  // ── Session Day modal ────────────────────────────────────────────────────
+  function openSessionModal(dateStr) {
+    var existing = _sessionData[dateStr] || null;
+    var overlay = document.createElement('div');
+    overlay.className = 'cal-overlay';
+    overlay.innerHTML =
+      '<div class="cal-modal">' +
+        '<div class="cal-modal-head">' +
+          '<div class="cal-modal-date">' + fmtLabel(dateStr) + '</div>' +
+          '<button class="cal-modal-close">✕</button>' +
+        '</div>' +
+        '<div class="cal-modal-body">' +
+          '<div class="cal-section-label" style="margin-bottom:12px;color:#A78BFA;">⚔ Session Day</div>' +
+          '<div class="cal-form-row"><div class="cal-form-label">Start Time</div>' +
+            '<input type="time" class="cal-time-input" id="cal-sess-time" style="max-width:160px;" value="' + esc((existing && existing.timeStart) || '') + '"></div>' +
+          '<div class="cal-modal-footer">' +
+            (existing ? '<button class="cal-btn" id="cal-sess-remove" style="color:#c03030;border-color:#8a2020;">Remove</button>' : '') +
+            '<button class="cal-btn" id="cal-sess-cancel">Cancel</button>' +
+            '<button class="cal-btn cal-btn-primary" id="cal-sess-save">Save</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    function close() { document.body.removeChild(overlay); document.removeEventListener('keydown', onKey); }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+
+    overlay.querySelector('.cal-modal-close').onclick = close;
+    overlay.querySelector('#cal-sess-cancel').onclick = close;
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+
+    var removeBtn = overlay.querySelector('#cal-sess-remove');
+    if (removeBtn) removeBtn.onclick = function(){
+      close();
+      deleteSession(dateStr, function(){ render(); });
+    };
+
+    overlay.querySelector('#cal-sess-save').onclick = function(){
+      var timeStart = document.getElementById('cal-sess-time').value || '';
+      close();
+      saveSession(dateStr, { timeStart: timeStart }, function(){ render(); });
+    };
+
+    setTimeout(function(){ var inp = document.getElementById('cal-sess-time'); if (inp) inp.focus(); }, 60);
+  }
+
   // ── Firebase helpers ─────────────────────────────────────────────────────
   function saveEntry(dateStr, entry, cb) {
     var arr = normalize(dateStr);
@@ -1046,6 +1137,18 @@
     } else cb();
   }
 
+  function saveSession(dateStr, data, cb) {
+    _sessionData[dateStr] = data;
+    if (window.firebaseDB) window.firebaseDB.ref(FB_SESS+'/'+dateStr).set(data).then(cb).catch(cb);
+    else cb();
+  }
+
+  function deleteSession(dateStr, cb) {
+    delete _sessionData[dateStr];
+    if (window.firebaseDB) window.firebaseDB.ref(FB_SESS+'/'+dateStr).remove().then(cb).catch(cb);
+    else cb();
+  }
+
   // ── Init ────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function(){
     var now = new Date();
@@ -1058,6 +1161,10 @@
     if (window.firebaseDB) {
       window.firebaseDB.ref(FB_CAL).on('value', function(snap){
         _calData = snap.val() || {};
+        render();
+      });
+      window.firebaseDB.ref(FB_SESS).on('value', function(snap){
+        _sessionData = snap.val() || {};
         render();
       });
     } else {
