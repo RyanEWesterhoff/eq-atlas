@@ -249,7 +249,7 @@
         <h3>Quick Filters</h3>
         <ul>
           <li><a href="#" onclick="quickFilter('legendary');return false;"><span class="nav-icon">&#9733;</span> Legendary</a></li>
-          <li><a href="#" onclick="quickFilter('proc');return false;"><span class="nav-icon">&#9889;</span> Has Proc</a></li>
+          <li><a href="#" onclick="quickFilter('proc');return false;"><span class="nav-icon">&#9889;</span> Has Enchantment</a></li>
           <li><a href="#" onclick="quickFilter('focus');return false;"><span class="nav-icon">&#10024;</span> Has Focus</a></li>
           <li><a href="#" onclick="quickFilter('spellslot');return false;"><span class="nav-icon">&#128302;</span> Spell Slots</a></li>
           <li><a href="#" onclick="clearAllFilters();return false;"><span class="nav-icon">&#10060;</span> Clear All</a></li>
@@ -393,7 +393,7 @@
   });
 
   var toggleRow = document.getElementById('toggle-filters');
-  var procPill = makePill('Has Proc', {'data-special': 'proc'});
+  var procPill = makePill('Has Enchantment', {'data-special': 'proc'});
   procPill.onclick = function () { filterProc = !filterProc; syncFilterPills(); render(); };
   toggleRow.appendChild(procPill);
 
@@ -511,7 +511,7 @@
       if (item.bonus) html += badge('+' + item.bonus, 'badge-bonus');
       if (item.ac) html += badge('AC +' + item.ac, 'badge-ac');
       if (item.attunement !== "None") html += badge('Attune: ' + item.attunement, 'badge-attune');
-      if (item.proc) html += badge('Proc', 'badge-proc');
+      if (item.proc) html += badge('Enchantment', 'badge-proc');
       if (item.focus.length > 0) html += badge('Focus', 'badge-focus');
       if (item.spellSlot) html += badge('+' + item.spellSlot + ' Slot', 'badge-spell');
       if (item.flowingThought) html += badge('Flowing Thought ' + item.flowingThought, 'badge-ft');

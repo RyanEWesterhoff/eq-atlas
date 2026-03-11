@@ -124,7 +124,7 @@ function renderZoneDetail(zoneId) {
         <span class="npc-desc">${n.role}</span>
       </li>
     `;
-  }).join('') || '<li><span class="npc-desc" style="color:var(--text-dim);font-style:italic;">No notable NPCs recorded.</span></li>';
+  }).join('') || '<li><span class="npc-desc" style="color:var(--text-dim);font-style:italic;">No notable figures recorded.</span></li>';
 
   // Adjacent zones
   const adjacentList = (zone.adjacentZones || []).map(az => {
@@ -212,7 +212,7 @@ function renderZoneDetail(zoneId) {
     <div class="content-section gm-only">
       <div class="section-header">
         <span>👤</span>
-        <h2>Notable NPCs</h2>
+        <h2>Notable Figures</h2>
       </div>
       <div class="section-body">
         <ul class="npc-list">
