@@ -851,7 +851,7 @@
             '<div class="cal-swatches">' + swatchHtml + '</div></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Time (optional)</div>' +
             '<div class="cal-time-row">' +
-              '<div><div class="cal-form-label" style="margin-bottom:3px;">Start</div><input type="time" class="cal-time-input" id="cal-time-start" value="19:00"></div>' +
+              '<div><div class="cal-form-label" style="margin-bottom:3px;">Start</div><input type="time" class="cal-time-input" id="cal-time-start"></div>' +
               '<div><div class="cal-form-label" style="margin-bottom:3px;">End</div><input type="time" class="cal-time-input" id="cal-time-end"></div>' +
             '</div></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Notes</div>' +
@@ -871,6 +871,7 @@
     overlay.querySelector('.cal-modal-close').onclick = close;
     overlay.querySelector('#cal-cancel').onclick = close;
     overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
+    document.getElementById('cal-time-start').addEventListener('focus', function(){ if(!this.value) this.value='19:00'; });
 
     overlay.querySelectorAll('.cal-swatch').forEach(function(sw){
       sw.onclick = function(){
@@ -943,7 +944,7 @@
             '<div class="cal-swatches">' + swatchHtml + '</div></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Time (optional)</div>' +
             '<div class="cal-time-row">' +
-              '<div><div class="cal-form-label" style="margin-bottom:3px;">Start</div><input type="time" class="cal-time-input" id="cal-edit-time-start" value="' + esc(entry.timeStart||'19:00') + '"></div>' +
+              '<div><div class="cal-form-label" style="margin-bottom:3px;">Start</div><input type="time" class="cal-time-input" id="cal-edit-time-start" value="' + esc(entry.timeStart||'') + '"></div>' +
               '<div><div class="cal-form-label" style="margin-bottom:3px;">End</div><input type="time" class="cal-time-input" id="cal-edit-time-end" value="' + esc(entry.timeEnd||'') + '"></div>' +
             '</div></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Notes</div>' +
@@ -965,6 +966,7 @@
     overlay.querySelector('.cal-modal-close').onclick = close;
     overlay.querySelector('#cal-edit-cancel').onclick = close;
     overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
+    document.getElementById('cal-edit-time-start').addEventListener('focus', function(){ if(!this.value) this.value='19:00'; });
 
     overlay.querySelectorAll('.cal-swatch').forEach(function(sw){
       sw.onclick = function(){
@@ -1111,7 +1113,7 @@
         '<div class="cal-modal-body">' +
           '<div class="cal-section-label" style="margin-bottom:12px;color:#A78BFA;">⚔ Session Day</div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Start Time</div>' +
-            '<input type="time" class="cal-time-input" id="cal-sess-time" style="max-width:160px;" value="' + esc((existing && existing.timeStart) || '19:00') + '"></div>' +
+            '<input type="time" class="cal-time-input" id="cal-sess-time" style="max-width:160px;" value="' + esc((existing && existing.timeStart) || '') + '"></div>' +
           '<div class="cal-modal-footer">' +
             (existing ? '<button class="cal-btn" id="cal-sess-remove" style="color:#c03030;border-color:#8a2020;">Remove</button>' : '') +
             '<button class="cal-btn" id="cal-sess-cancel">Cancel</button>' +
@@ -1128,6 +1130,7 @@
     overlay.querySelector('.cal-modal-close').onclick = close;
     overlay.querySelector('#cal-sess-cancel').onclick = close;
     overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    document.getElementById('cal-sess-time').addEventListener('focus', function(){ if(!this.value) this.value='19:00'; });
 
     var removeBtn = overlay.querySelector('#cal-sess-remove');
     if (removeBtn) removeBtn.onclick = function(){
