@@ -322,6 +322,16 @@
     .cal-btn:hover { border-color: var(--border-gold); color: var(--accent-gold); }
     .cal-btn-primary { border-color: var(--border-gold); color: var(--accent-gold); }
     .cal-btn-primary:hover { background: var(--accent-gold); color: var(--bg-dark); }
+    .cal-time-row { display: flex; gap: 10px; }
+    .cal-time-row > div { flex: 1; }
+    .cal-time-input {
+      width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.35);
+      border: 1px solid var(--border-dim); color: var(--text-primary);
+      padding: 5px 8px; font-size: 13px; font-family: inherit; outline: none;
+      color-scheme: dark;
+    }
+    .cal-time-input:focus { border-color: var(--accent-gold); }
+    .cal-entry-time { font-weight: 400; font-size: 10px; opacity: 0.8; }
   </style>
 </head>
 <body>
@@ -620,6 +630,20 @@
     return MONTHS[+p[1]-1] + ' ' + parseInt(p[2]) + ', ' + p[0];
   }
 
+  function fmtTime(t) {
+    if (!t) return '';
+    var parts = t.split(':'), h = parseInt(parts[0]), m = parseInt(parts[1]||0);
+    var ampm = h >= 12 ? 'pm' : 'am';
+    h = h % 12 || 12;
+    return h + (m ? ':' + String(m).padStart(2,'0') : '') + ampm;
+  }
+
+  function fmtTimeRange(start, end) {
+    var s = fmtTime(start), e = fmtTime(end);
+    if (s && e) return s + '–' + e;
+    return s || e || '';
+  }
+
   function normalize(dateStr) {
     var raw = _calData[dateStr];
     if (!raw) return [];
@@ -672,9 +696,13 @@
         var bg = e.color || '#555';
         var tc = contrast(bg);
         var notes = (e.notes || '').trim();
+        var timeRange = fmtTimeRange(e.timeStart, e.timeEnd);
+        var hasTooltip = notes || timeRange;
         html += '<div class="cal-entry" style="background:' + bg + ';color:' + tc + ';" data-date="' + key + '" data-idx="' + ei + '"' +
-          (notes ? ' data-notes="' + esc(notes) + '" data-name="' + esc(e.name||'') + '"' : '') + '>' +
-          esc(e.name || '') + '</div>';
+          (hasTooltip ? ' data-notes="' + esc(notes) + '" data-name="' + esc(e.name||'') + '" data-time="' + esc(timeRange) + '"' : '') + '>' +
+          esc(e.name || '') +
+          (timeRange ? '<span class="cal-entry-time"> · ' + esc(timeRange) + '</span>' : '') +
+          '</div>';
       }
       if (entries.length > maxShow) html += '<div class="cal-overflow">+' + (entries.length-maxShow) + ' more</div>';
       html += '</div>';
@@ -693,8 +721,8 @@
 
     container.querySelectorAll('.cal-entry').forEach(function(entry){
       entry.addEventListener('click', function(e){ e.stopPropagation(); openEditModal(entry.dataset.date, parseInt(entry.dataset.idx)); });
-      if (entry.dataset.notes) {
-        entry.addEventListener('mouseenter', function(e){ tipShow(e, entry.dataset.name, entry.dataset.notes); });
+      if (entry.dataset.notes || entry.dataset.time) {
+        entry.addEventListener('mouseenter', function(e){ tipShow(e, entry.dataset.name, entry.dataset.time, entry.dataset.notes); });
         entry.addEventListener('mousemove',  tipMove);
         entry.addEventListener('mouseleave', tipHide);
       }
@@ -702,8 +730,11 @@
   }
 
   // ── Tooltip ─────────────────────────────────────────────────────────────
-  function tipShow(e, name, notes) {
-    _tip.innerHTML = '<strong style="color:var(--text-heading);display:block;margin-bottom:3px;">' + esc(name) + '</strong>' + esc(notes);
+  function tipShow(e, name, time, notes) {
+    var inner = '<strong style="color:var(--text-heading);display:block;margin-bottom:3px;">' + esc(name) + '</strong>';
+    if (time) inner += '<span style="color:var(--accent-gold);font-size:11px;display:block;margin-bottom:3px;">' + esc(time) + '</span>';
+    if (notes) inner += esc(notes);
+    _tip.innerHTML = inner;
     _tip.style.display = 'block';
     tipMove(e);
   }
@@ -725,9 +756,10 @@
       existHtml = '<div class="cal-section-label" style="border-bottom:1px solid var(--border-dim);margin-bottom:8px;padding-bottom:6px;">Entries</div>' +
         '<div class="cal-entries-list">';
       entries.forEach(function(e, idx){
+        var tr = fmtTimeRange(e.timeStart, e.timeEnd);
         existHtml += '<div class="cal-existing-entry">' +
           '<div class="cal-existing-color" style="background:' + (e.color||'#555') + '"></div>' +
-          '<div class="cal-existing-name">' + esc(e.name||'') + '</div>' +
+          '<div class="cal-existing-name">' + esc(e.name||'') + (tr ? '<span style="font-size:11px;opacity:0.7;margin-left:5px;">' + esc(tr) + '</span>' : '') + '</div>' +
           (e.notes ? '<div class="cal-existing-notes">' + esc(e.notes) + '</div>' : '') +
           '<button class="cal-del-btn" data-date="' + dateStr + '" data-idx="' + idx + '">✕</button>' +
           '</div>';
@@ -754,6 +786,11 @@
             '<input class="cal-name-input" id="cal-name-inp" type="text" placeholder="Your name" maxlength="24" autocomplete="off"></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Color</div>' +
             '<div class="cal-swatches">' + swatchHtml + '</div></div>' +
+          '<div class="cal-form-row"><div class="cal-form-label">Time (optional)</div>' +
+            '<div class="cal-time-row">' +
+              '<div><div class="cal-form-label" style="margin-bottom:3px;">Start</div><input type="time" class="cal-time-input" id="cal-time-start"></div>' +
+              '<div><div class="cal-form-label" style="margin-bottom:3px;">End</div><input type="time" class="cal-time-input" id="cal-time-end"></div>' +
+            '</div></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Notes</div>' +
             '<textarea class="cal-notes-input" id="cal-notes-inp" placeholder="Visible on hover…" rows="3"></textarea></div>' +
           '<div class="cal-modal-footer">' +
@@ -799,8 +836,10 @@
       var name = (document.getElementById('cal-name-inp').value||'').trim();
       if (!name) { document.getElementById('cal-name-inp').focus(); return; }
       var notes = (document.getElementById('cal-notes-inp').value||'').trim();
+      var timeStart = document.getElementById('cal-time-start').value || '';
+      var timeEnd   = document.getElementById('cal-time-end').value   || '';
       close();
-      saveEntry(dateStr, { name:name, color:_selColor, notes:notes }, function(){ render(); });
+      saveEntry(dateStr, { name:name, color:_selColor, notes:notes, timeStart:timeStart, timeEnd:timeEnd }, function(){ render(); });
     };
 
     document.getElementById('cal-name-inp').onkeydown = function(e){
@@ -836,6 +875,11 @@
             '<input class="cal-name-input" id="cal-edit-name" type="text" maxlength="24" autocomplete="off" value="' + esc(entry.name||'') + '"></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Color</div>' +
             '<div class="cal-swatches">' + swatchHtml + '</div></div>' +
+          '<div class="cal-form-row"><div class="cal-form-label">Time (optional)</div>' +
+            '<div class="cal-time-row">' +
+              '<div><div class="cal-form-label" style="margin-bottom:3px;">Start</div><input type="time" class="cal-time-input" id="cal-edit-time-start" value="' + esc(entry.timeStart||'') + '"></div>' +
+              '<div><div class="cal-form-label" style="margin-bottom:3px;">End</div><input type="time" class="cal-time-input" id="cal-edit-time-end" value="' + esc(entry.timeEnd||'') + '"></div>' +
+            '</div></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Notes</div>' +
             '<textarea class="cal-notes-input" id="cal-edit-notes" rows="3">' + esc(entry.notes||'') + '</textarea></div>' +
           '<div class="cal-modal-footer">' +
@@ -876,9 +920,11 @@
     overlay.querySelector('#cal-edit-save').onclick = function(){
       var name = (document.getElementById('cal-edit-name').value||'').trim();
       if (!name) { document.getElementById('cal-edit-name').focus(); return; }
-      var notes = (document.getElementById('cal-edit-notes').value||'').trim();
+      var notes     = (document.getElementById('cal-edit-notes').value||'').trim();
+      var timeStart = document.getElementById('cal-edit-time-start').value || '';
+      var timeEnd   = document.getElementById('cal-edit-time-end').value   || '';
       close();
-      updateEntry(dateStr, idx, { name:name, color:_selColor, notes:notes }, function(){ render(); });
+      updateEntry(dateStr, idx, { name:name, color:_selColor, notes:notes, timeStart:timeStart, timeEnd:timeEnd }, function(){ render(); });
     };
 
     setTimeout(function(){ var inp=document.getElementById('cal-edit-name'); if(inp){inp.focus();inp.select();} }, 60);
