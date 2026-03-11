@@ -851,7 +851,7 @@
             '<div class="cal-swatches">' + swatchHtml + '</div></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Time (optional)</div>' +
             '<div class="cal-time-row">' +
-              '<div><div class="cal-form-label" style="margin-bottom:3px;">Start</div><input type="time" class="cal-time-input" id="cal-time-start"></div>' +
+              '<div><div class="cal-form-label" style="margin-bottom:3px;">Start</div><input type="time" class="cal-time-input" id="cal-time-start" value="19:00"></div>' +
               '<div><div class="cal-form-label" style="margin-bottom:3px;">End</div><input type="time" class="cal-time-input" id="cal-time-end"></div>' +
             '</div></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Notes</div>' +
@@ -890,8 +890,11 @@
         e.stopPropagation();
         var idx  = parseInt(btn.dataset.idx);
         var date = btn.dataset.date;
-        close();
-        deleteEntry(date, idx, function(){ render(); if (normalize(date).length || entries.length > 1) openModal(date); });
+        var name = (entries[idx] && entries[idx].name) ? '"' + entries[idx].name + '"' : 'this entry';
+        confirmDelete('Delete ' + name + '?', function(){
+          close();
+          deleteEntry(date, idx, function(){ render(); if (normalize(date).length || entries.length > 1) openModal(date); });
+        });
       };
     });
 
@@ -940,7 +943,7 @@
             '<div class="cal-swatches">' + swatchHtml + '</div></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Time (optional)</div>' +
             '<div class="cal-time-row">' +
-              '<div><div class="cal-form-label" style="margin-bottom:3px;">Start</div><input type="time" class="cal-time-input" id="cal-edit-time-start" value="' + esc(entry.timeStart||'') + '"></div>' +
+              '<div><div class="cal-form-label" style="margin-bottom:3px;">Start</div><input type="time" class="cal-time-input" id="cal-edit-time-start" value="' + esc(entry.timeStart||'19:00') + '"></div>' +
               '<div><div class="cal-form-label" style="margin-bottom:3px;">End</div><input type="time" class="cal-time-input" id="cal-edit-time-end" value="' + esc(entry.timeEnd||'') + '"></div>' +
             '</div></div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Notes</div>' +
@@ -977,8 +980,11 @@
     };
 
     overlay.querySelector('#cal-edit-delete').onclick = function(){
-      close();
-      deleteEntry(dateStr, idx, function(){ render(); });
+      var name = (document.getElementById('cal-edit-name').value||'').trim() || entry.name || 'this entry';
+      confirmDelete('Delete "' + name + '"?', function(){
+        close();
+        deleteEntry(dateStr, idx, function(){ render(); });
+      });
     };
 
     overlay.querySelector('#cal-edit-copy').onclick = function(){
@@ -1063,6 +1069,34 @@
     _copyEntry = null;
   }
 
+  // ── Confirm delete dialog ────────────────────────────────────────────────
+  function confirmDelete(message, onConfirm) {
+    var overlay = document.createElement('div');
+    overlay.className = 'cal-overlay';
+    overlay.style.zIndex = '3000';
+    overlay.innerHTML =
+      '<div class="cal-modal" style="max-width:320px;">' +
+        '<div class="cal-modal-head">' +
+          '<div class="cal-modal-date" style="color:var(--text-heading);font-size:13px;">Confirm Delete</div>' +
+        '</div>' +
+        '<div class="cal-modal-body">' +
+          '<p style="font-size:13px;color:var(--text-secondary);margin:0 0 4px;">' + message + '</p>' +
+          '<div class="cal-modal-footer">' +
+            '<button class="cal-btn" id="conf-cancel">Cancel</button>' +
+            '<button class="cal-btn" id="conf-ok" style="color:#c03030;border-color:#8a2020;">Delete</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close() { document.body.removeChild(overlay); document.removeEventListener('keydown', onKey); }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+    overlay.querySelector('#conf-cancel').onclick = close;
+    overlay.querySelector('#conf-ok').onclick = function(){ close(); onConfirm(); };
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    setTimeout(function(){ var b = overlay.querySelector('#conf-ok'); if(b) b.focus(); }, 60);
+  }
+
   // ── Session Day modal ────────────────────────────────────────────────────
   function openSessionModal(dateStr) {
     var existing = _sessionData[dateStr] || null;
@@ -1077,7 +1111,7 @@
         '<div class="cal-modal-body">' +
           '<div class="cal-section-label" style="margin-bottom:12px;color:#A78BFA;">⚔ Session Day</div>' +
           '<div class="cal-form-row"><div class="cal-form-label">Start Time</div>' +
-            '<input type="time" class="cal-time-input" id="cal-sess-time" style="max-width:160px;" value="' + esc((existing && existing.timeStart) || '') + '"></div>' +
+            '<input type="time" class="cal-time-input" id="cal-sess-time" style="max-width:160px;" value="' + esc((existing && existing.timeStart) || '19:00') + '"></div>' +
           '<div class="cal-modal-footer">' +
             (existing ? '<button class="cal-btn" id="cal-sess-remove" style="color:#c03030;border-color:#8a2020;">Remove</button>' : '') +
             '<button class="cal-btn" id="cal-sess-cancel">Cancel</button>' +
@@ -1097,8 +1131,10 @@
 
     var removeBtn = overlay.querySelector('#cal-sess-remove');
     if (removeBtn) removeBtn.onclick = function(){
-      close();
-      deleteSession(dateStr, function(){ render(); });
+      confirmDelete('Remove Session Day for ' + fmtLabel(dateStr) + '?', function(){
+        close();
+        deleteSession(dateStr, function(){ render(); });
+      });
     };
 
     overlay.querySelector('#cal-sess-save').onclick = function(){
