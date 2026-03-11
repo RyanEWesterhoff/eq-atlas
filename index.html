@@ -228,7 +228,7 @@
     }
     .cal-dow:last-child { border-right: none; }
     .cal-day {
-      min-height: 96px; border-right: 1px solid var(--border-dim);
+      min-height: 122px; border-right: 1px solid var(--border-dim);
       border-bottom: 1px solid var(--border-dim); padding: 4px 5px;
       cursor: pointer; position: relative; box-sizing: border-box;
       transition: background 0.1s;
@@ -654,7 +654,7 @@
       html += '<div class="' + cls + (isToday ? ' cal-today' : '') + '" data-date="' + key + '">';
       html += '<div class="cal-day-num">' + dayNum + '</div>';
 
-      var maxShow = 5, shown = Math.min(entries.length, maxShow);
+      var maxShow = 6, shown = Math.min(entries.length, maxShow);
       for (var ei = 0; ei < shown; ei++) {
         var e  = entries[ei];
         var bg = e.color || '#555';
