@@ -349,13 +349,15 @@
     .cal-copy-mode .cal-day:not(.cal-empty),
     .cal-copy-mode .cal-entry { cursor: copy !important; }
     .cal-copy-mode { user-select: none; }
-    /* Session Day tool */
+    /* Session Day tool (GM only) */
     .cal-session-btn {
+      display: none;
       background: none; border: 1px solid var(--border-dim); color: var(--text-dim);
       padding: 0 10px; height: 28px; cursor: pointer; font-size: 10px;
       font-family: 'Cinzel', serif; letter-spacing: 1px; text-transform: uppercase;
       transition: border-color 0.15s, color 0.15s, background 0.15s;
     }
+    .gm-mode .cal-session-btn { display: inline-block; }
     .cal-session-btn:hover { border-color: #7C5CBF; color: #A78BFA; }
     .cal-session-btn.active { border-color: #7C5CBF; color: #A78BFA; background: rgba(107,70,193,0.18); }
     .cal-session-mode .cal-day:not(.cal-empty) { cursor: crosshair !important; }
@@ -369,6 +371,28 @@
       font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1.2px;
       text-transform: uppercase; pointer-events: none;
     }
+    .cal-add-btn {
+      pointer-events: auto;
+      background: none; border: none; color: #C4B5FD; cursor: pointer;
+      font-size: 13px; padding: 0 2px; line-height: 1; opacity: 0.7;
+      transition: opacity 0.15s, color 0.15s; position: relative;
+    }
+    .cal-add-btn:hover { opacity: 1; color: #A78BFA; }
+    .cal-add-menu {
+      display: none; position: absolute; right: 0; top: 100%;
+      background: var(--bg-panel); border: 1px solid var(--border-gold);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6); z-index: 500;
+      min-width: 180px; text-transform: none; letter-spacing: 0;
+      font-family: 'Crimson Text', serif; font-size: 13px;
+    }
+    .cal-add-menu.visible { display: block; }
+    .cal-add-menu a {
+      display: block; padding: 8px 14px; color: var(--text-primary);
+      text-decoration: none; white-space: nowrap;
+      border-bottom: 1px solid var(--border-dim);
+    }
+    .cal-add-menu a:last-child { border-bottom: none; }
+    .cal-add-menu a:hover { background: rgba(201,168,76,0.1); color: var(--accent-gold); }
     .cal-session-banner-label { color: #A78BFA; font-weight: 700; }
     .cal-session-banner-time { color: #C4B5FD; font-size: 9px; opacity: 0.9; }
     .cal-day.cal-session-day { background: rgba(107,70,193,0.06) !important; box-shadow: inset 0 0 0 1px rgba(124,92,191,0.18); }
@@ -743,7 +767,10 @@
         var sessTime = sessData.timeStart ? fmtTime(sessData.timeStart) : '';
         html += '<div class="cal-session-banner">' +
           '<span class="cal-session-banner-label">⚔ Session</span>' +
-          (sessTime ? '<span class="cal-session-banner-time">' + esc(sessTime) + '</span>' : '') +
+          '<span style="display:flex;align-items:center;gap:6px;">' +
+            (sessTime ? '<span class="cal-session-banner-time">' + esc(sessTime) + '</span>' : '') +
+            '<button class="cal-add-btn" data-sess-date="' + key + '" title="Add to calendar">📅</button>' +
+          '</span>' +
           '</div>';
       }
       html += '<div class="cal-day-num">' + dayNum + '</div>';
@@ -789,6 +816,36 @@
         entry.addEventListener('mousemove',  tipMove);
         entry.addEventListener('mouseleave', tipHide);
       }
+    });
+
+    // ── Add-to-calendar buttons on session banners ───────────────────────
+    container.querySelectorAll('.cal-add-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        // Close any open menus first
+        document.querySelectorAll('.cal-add-menu.visible').forEach(function(m){ m.remove(); });
+        var dateStr = btn.dataset.sessDate;
+        var sessData = _sessionData[dateStr];
+        var menu = document.createElement('div');
+        menu.className = 'cal-add-menu visible';
+        menu.innerHTML =
+          '<a href="#" data-type="google">Google Calendar</a>' +
+          '<a href="#" data-type="ics">Apple Calendar (.ics)</a>' +
+          '<a href="#" data-type="outlook">Outlook Web</a>';
+        btn.style.position = 'relative';
+        btn.appendChild(menu);
+        menu.querySelectorAll('a').forEach(function(link){
+          link.addEventListener('click', function(ev){
+            ev.preventDefault(); ev.stopPropagation();
+            exportSession(dateStr, sessData, link.dataset.type);
+            menu.remove();
+          });
+        });
+        // Close menu on outside click
+        setTimeout(function(){
+          document.addEventListener('click', function closeMenu(){ menu.remove(); document.removeEventListener('click', closeMenu); });
+        }, 0);
+      });
     });
   }
 
@@ -1097,6 +1154,66 @@
     overlay.querySelector('#conf-ok').onclick = function(){ close(); onConfirm(); };
     overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
     setTimeout(function(){ var b = overlay.querySelector('#conf-ok'); if(b) b.focus(); }, 60);
+  }
+
+  // ── Export session to calendar ───────────────────────────────────────────
+  function exportSession(dateStr, sessData, type) {
+    var parts = dateStr.split('-');
+    var y = parts[0], m = parts[1], d = parts[2];
+    var title = 'EverQuest Atlas — Campaign Session';
+    var timeStart = sessData && sessData.timeStart ? sessData.timeStart : '';
+    // Build start/end times (default 2-hour session)
+    var startDT, endDT, allDay = !timeStart;
+    if (timeStart) {
+      var tp = timeStart.split(':');
+      var sh = parseInt(tp[0]), sm = parseInt(tp[1] || 0);
+      var eh = sh + 2, em = sm;
+      if (eh >= 24) eh = 23;
+      startDT = y + m + d + 'T' + pad2(sh) + pad2(sm) + '00';
+      endDT   = y + m + d + 'T' + pad2(eh) + pad2(em) + '00';
+    }
+    function pad2(n){ return n < 10 ? '0'+n : ''+n; }
+
+    if (type === 'google') {
+      var url = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+        '&text=' + encodeURIComponent(title);
+      if (allDay) {
+        // Google wants next day for all-day end
+        var nd = new Date(parseInt(y), parseInt(m)-1, parseInt(d)+1);
+        url += '&dates=' + y + m + d + '/' + nd.getFullYear() + pad2(nd.getMonth()+1) + pad2(nd.getDate());
+      } else {
+        url += '&dates=' + startDT + '/' + endDT;
+      }
+      window.open(url, '_blank');
+    }
+    else if (type === 'outlook') {
+      var url = 'https://outlook.live.com/calendar/0/action/compose?subject=' + encodeURIComponent(title);
+      if (allDay) {
+        url += '&startdt=' + y + '-' + m + '-' + d + '&enddt=' + y + '-' + m + '-' + d + '&allday=true';
+      } else {
+        url += '&startdt=' + y + '-' + m + '-' + d + 'T' + timeStart + ':00' +
+               '&enddt=' + y + '-' + m + '-' + d + 'T' + pad2(parseInt(timeStart.split(':')[0])+2) + ':' + timeStart.split(':')[1] + ':00';
+      }
+      window.open(url, '_blank');
+    }
+    else if (type === 'ics') {
+      var ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//EQ Atlas//Campaign//EN\r\nBEGIN:VEVENT\r\n';
+      if (allDay) {
+        ics += 'DTSTART;VALUE=DATE:' + y + m + d + '\r\n';
+        ics += 'DTEND;VALUE=DATE:' + y + m + d + '\r\n';
+      } else {
+        ics += 'DTSTART:' + startDT + '\r\n';
+        ics += 'DTEND:' + endDT + '\r\n';
+      }
+      ics += 'SUMMARY:' + title + '\r\n';
+      ics += 'END:VEVENT\r\nEND:VCALENDAR';
+      var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'session-' + dateStr + '.ics';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
   }
 
   // ── Session Day modal ────────────────────────────────────────────────────
