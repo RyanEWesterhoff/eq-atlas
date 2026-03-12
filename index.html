@@ -393,10 +393,30 @@
     }
     .cal-add-menu a:last-child { border-bottom: none; }
     .cal-add-menu a:hover { background: rgba(201,168,76,0.1); color: var(--accent-gold); }
-    .cal-session-banner-label { color: #A78BFA; font-weight: 700; }
+    .cal-session-banner-label { color: #A78BFA; font-weight: 700; display: flex; align-items: center; }
+    .cal-session-banner-label .cal-day-num { font-size: 11px; font-weight: 700; color: #C4B5FD; }
     .cal-session-banner-time { color: #C4B5FD; font-size: 9px; opacity: 0.9; }
-    .cal-day.cal-session-day { background: rgba(107,70,193,0.06) !important; box-shadow: inset 0 0 0 1px rgba(124,92,191,0.18); }
-    .cal-day.cal-session-day.cal-today { box-shadow: inset 0 0 0 1px rgba(124,92,191,0.35), inset 0 0 0 2px rgba(201,168,76,0.15); }
+    .cal-day.cal-session-day {
+      background: linear-gradient(170deg, rgba(107,70,193,0.18) 0%, rgba(46,16,101,0.12) 100%) !important;
+      box-shadow: inset 0 0 0 1.5px rgba(124,92,191,0.4), 0 0 12px rgba(107,70,193,0.15);
+      position: relative;
+      z-index: 1;
+    }
+    .cal-day.cal-session-day::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(167,139,250,0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cal-day.cal-session-day::after {
+      content: '';
+      position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #7C5CBF, transparent);
+      opacity: 0.6;
+    }
+    .cal-day.cal-session-day.cal-today {
+      box-shadow: inset 0 0 0 1.5px rgba(124,92,191,0.5), 0 0 16px rgba(107,70,193,0.25), inset 0 0 0 3px rgba(201,168,76,0.12);
+    }
     .cal-day.cal-session-day .cal-day-num { color: #A78BFA; }
   </style>
 </head>
@@ -516,6 +536,9 @@
       <!-- CAMPAIGN CALENDAR -->
       <h2 class="page-title" style="font-size:20px;margin-bottom:10px;">
         <span class="title-icon">📅</span> Session Calendar
+        <span id="next-session-badge" style="margin-left:auto;font-family:'Cinzel',serif;font-size:16px;letter-spacing:0.8px;color:var(--text-dim);font-weight:400;">
+          Next Session: <span id="next-session-date" style="color:#A78BFA;font-weight:700;font-size:18px;">TBD</span>
+        </span>
       </h2>
       <div id="cal-container" class="cal-wrap"></div>
 
@@ -722,6 +745,26 @@
     return Object.keys(raw).sort(function(a,b){return+a-+b;}).map(function(k){return raw[k];});
   }
 
+  // ── Next session badge ──────────────────────────────────────────────────
+  function updateNextSession() {
+    var el = document.getElementById('next-session-date');
+    if (!el) return;
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var todayStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
+    var keys = Object.keys(_sessionData).filter(function(k){ return k >= todayStr; }).sort();
+    if (!keys.length) { el.textContent = 'TBD'; el.style.color = '#A78BFA'; return; }
+    var next = keys[0];
+    var parts = next.split('-');
+    var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+    var sessInfo = _sessionData[next];
+    var timeStr = sessInfo && sessInfo.timeStart ? ' at ' + fmtTime(sessInfo.timeStart) : '';
+    var label = MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear() + timeStr;
+    if (next === todayStr) label = 'Today' + timeStr + '!';
+    el.textContent = label;
+    el.style.color = next === todayStr ? '#C4B5FD' : '#A78BFA';
+  }
+
   // ── Render ──────────────────────────────────────────────────────────────
   function render() {
     var container = document.getElementById('cal-container');
@@ -766,14 +809,15 @@
       if (sessData) {
         var sessTime = sessData.timeStart ? fmtTime(sessData.timeStart) : '';
         html += '<div class="cal-session-banner">' +
-          '<span class="cal-session-banner-label">⚔ Session</span>' +
+          '<span class="cal-session-banner-label"><span class="cal-day-num" style="display:inline;margin:0 6px 0 0;">' + dayNum + '</span>⚔ Session</span>' +
           '<span style="display:flex;align-items:center;gap:6px;">' +
             (sessTime ? '<span class="cal-session-banner-time">' + esc(sessTime) + '</span>' : '') +
             '<button class="cal-add-btn" data-sess-date="' + key + '" title="Add to calendar">📅</button>' +
           '</span>' +
           '</div>';
+      } else {
+        html += '<div class="cal-day-num">' + dayNum + '</div>';
       }
-      html += '<div class="cal-day-num">' + dayNum + '</div>';
 
       var maxShow = 6, shown = Math.min(entries.length, maxShow);
       for (var ei = 0; ei < shown; ei++) {
@@ -847,6 +891,8 @@
         }, 0);
       });
     });
+
+    updateNextSession();
   }
 
   // ── Tooltip ─────────────────────────────────────────────────────────────
