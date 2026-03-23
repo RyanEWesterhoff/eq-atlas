@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/jpeg" href="../images/EQ_favicon.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wayfarers Brotherhood — The Atlas</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/auth.js" data-protect="true"></script>
+
+  <!-- Faction document styles -->
+  <style>
+    :root {
+      --color-background-primary: #1a1a1a;
+      --color-background-secondary: #242424;
+      --color-background-tertiary: #0f0f0f;
+      --color-text-primary: #f0f0f0;
+      --color-text-secondary: #b0b0b0;
+      --color-text-tertiary: #707070;
+      --color-border-tertiary: rgba(255,255,255,0.1);
+      --color-border-secondary: rgba(255,255,255,0.2);
+      --color-border-primary: rgba(255,255,255,0.35);
+      --color-background-info: #0c2a4a;
+      --color-text-info: #85b7eb;
+      --color-background-danger: #3a0f0f;
+      --color-text-danger: #f09595;
+      --color-background-success: #0a2a1a;
+      --color-text-success: #5dcaa5;
+      --color-background-warning: #2a1a00;
+      --color-text-warning: #fac775;
+      --font-sans: system-ui, sans-serif;
+      --font-serif: Georgia, serif;
+      --font-mono: monospace;
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --border-radius-xl: 16px;
+    }
+
+    .faction-doc { max-width: 800px; margin: 0 auto; padding: 0 0 2rem; font-family: var(--font-sans); color: var(--color-text-primary); }
+    .faction-doc h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+    .faction-doc h2 { font-size: 18px; font-weight: 500; margin: 2rem 0 .75rem; padding-bottom: 6px; border-bottom: .5px solid var(--color-border-tertiary); }
+    .faction-doc h3 { font-size: 16px; font-weight: 500; margin: 1.25rem 0 .5rem; }
+    .faction-doc h4 { font-size: 14px; font-weight: 500; margin: .75rem 0 .3rem; color: var(--color-text-secondary); }
+    .faction-doc p { font-size: 14px; line-height: 1.7; margin-bottom: .75rem; color: var(--color-text-secondary); }
+    .sub { font-size: 13px; color: var(--color-text-tertiary); margin-bottom: 1.5rem; }
+    .fnav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2rem; }
+    .nb { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: .5px solid var(--color-border-secondary); color: var(--color-text-secondary); cursor: pointer; background: transparent; }
+    .nb:hover { background: var(--color-background-secondary); }
+    .nb.on { background: #3d2b08; color: #f5e6d3; border-color: #3d2b08; }
+    .sec { display: none; }
+    .sec.active { display: block; }
+    .card { background: var(--color-background-primary); border: .5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+    .card.amber { border-left: 3px solid #EF9F27; border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0; }
+    .card.teal  { border-left: 3px solid #1D9E75; border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0; }
+    .card.blue  { border-left: 3px solid #378ADD; border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0; }
+    .card.red   { border-left: 3px solid #E24B4A; border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0; }
+    .card.purple{ border-left: 3px solid #7F77DD; border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0; }
+    .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: var(--border-radius-md); margin-right: 4px; margin-bottom: 4px; }
+    .b-amber  { background: #FAEEDA; color: #854F0B; }
+    .b-teal   { background: #E1F5EE; color: #0F6E56; }
+    .b-blue   { background: #E6F1FB; color: #185FA5; }
+    .b-red    { background: #FCEBEB; color: #A32D2D; }
+    .b-gray   { background: #F1EFE8; color: #5F5E5A; }
+    .b-purple { background: #EEEDFE; color: #534AB7; }
+    .b-green  { background: #EAF3DE; color: #3B6D11; }
+    .quote { font-family: var(--font-serif); font-size: 13px; line-height: 1.7; color: var(--color-text-secondary); border-left: 2px solid var(--color-border-secondary); padding-left: 12px; margin: .75rem 0; border-radius: 0; }
+    .row { font-size: 13px; padding: 6px 0; border-bottom: .5px solid var(--color-border-tertiary); line-height: 1.6; color: var(--color-text-secondary); }
+    .row:last-child { border-bottom: none; }
+    .row strong { font-weight: 500; color: var(--color-text-primary); }
+    .rank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: .75rem 0; }
+    .rank-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .75rem; text-align: center; }
+    .rank-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+    .rank-sub  { font-size: 11px; color: var(--color-text-tertiary); }
+    .npc-head  { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .av { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 13px; flex-shrink: 0; }
+    .av-amber  { background: #FAEEDA; color: #854F0B; }
+    .av-teal   { background: #E1F5EE; color: #0F6E56; }
+    .av-blue   { background: #E6F1FB; color: #185FA5; }
+    .av-gray   { background: #F1EFE8; color: #5F5E5A; }
+    .av-red    { background: #FCEBEB; color: #A32D2D; }
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width:560px){ .two-col{ grid-template-columns: 1fr; } }
+    .seal { width: 80px; height: 80px; border-radius: 50%; background: var(--color-background-secondary); border: 2px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; flex-shrink: 0; }
+    .seal-inner { width: 60px; height: 60px; border-radius: 50%; border: 1px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: center; }
+    .seal-text  { font-size: 22px; font-weight: 500; color: var(--color-text-tertiary); }
+
+    .faction-breadcrumb {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 1.5rem;
+    }
+    .faction-breadcrumb a {
+      color: var(--gold, #c9a84c);
+      text-decoration: none;
+    }
+    .faction-breadcrumb a:hover { text-decoration: underline; }
+    .faction-breadcrumb span { margin: 0 6px; color: var(--text-dim); }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="site-logo">The Atlas</a>
+      <div class="header-divider"></div>
+      <div class="header-quote">"We go where others will not." — Brotherhood Code</div>
+    </div>
+  </header>
+
+  <nav class="top-nav">
+    <ul>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../zones.html">Lands</a></li>
+      <li class="gm-nav-only"><a href="../bestiary.html">Bestiary</a></li>
+      <li class="gm-nav-only"><a href="../items.html">Items</a></li>
+      <li><a href="../lore.html">Lore</a></li>
+      <li><a href="../deities.html">Deities</a></li>
+      <li><a href="../allies.html">Figures</a></li>
+      <li><a href="../factions.html" class="active">Factions</a></li>
+      <li><a href="../sessions.html">Campaign</a></li>
+      <li><a href="../glossary.html">Glossary</a></li>
+      <li><a href="#" onclick="logout();return false;" style="color:var(--text-dim);border-bottom-color:transparent">Sign Out</a></li>
+    </ul>
+  </nav>
+
+  <div class="content-area">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Factions</h3>
+        <ul>
+          <li><a href="wayfarers-brotherhood.html" class="active">Wayfarers Brotherhood</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="../factions.html"><span class="nav-icon">&larr;</span> All Factions</a></li>
+          <li><a href="../allies.html"><span class="nav-icon">⚔</span> Notable Figures</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <div class="faction-doc">
+
+        <div class="faction-breadcrumb">
+          <a href="../factions.html">Factions</a><span>/</span>Wayfarers Brotherhood
+        </div>
+
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;flex-wrap:wrap;">
+          <div class="seal"><div class="seal-inner"><div class="seal-text">WB</div></div></div>
+          <div>
+            <h1>The Wayfarers Brotherhood</h1>
+            <p class="sub" style="margin:0;">Faction document &middot; Norrath campaign &middot; Est. year ~11,800</p>
+          </div>
+        </div>
+
+        <div class="fnav">
+          <button class="nb on" onclick="show('overview',this)">Overview</button>
+          <button class="nb" onclick="show('structure',this)">Structure</button>
+          <button class="nb" onclick="show('freeport',this)">Freeport chapter</button>
+          <button class="nb" onclick="show('npcs',this)">Key NPCs</button>
+          <button class="nb" onclick="show('contracts',this)">Contracts</button>
+          <button class="nb" onclick="show('players',this)">Player hooks</button>
+        </div>
+
+        <div id="overview" class="sec active">
+          <h2>Overview</h2>
+          <div class="card amber">
+            <p>The Wayfarers Brotherhood is a Norrath-wide organization of professional adventurers, investigators, and specialists who take contracts that official military forces cannot, will not, or dare not handle themselves. They operate in the space between civilization's reach and the wilderness beyond it — politically neutral, racially inclusive, and answerable only to their own internal code and their paying clients.</p>
+            <p style="margin-bottom:0;">They are not mercenaries in the crude sense. A mercenary sells violence. The Brotherhood sells capability — and capability sometimes means violence, sometimes means scholarship, sometimes means knowing when to walk away.</p>
+          </div>
+
+          <h3>Origins</h3>
+          <p>The Brotherhood was founded sometime around year 11,800 by a loose coalition of veteran adventurers who had survived the Crusade of Tears and found themselves without a war to fight, without a home to return to, and without the temperament for ordinary life. The founders — whose names are recorded in the Brotherhood's founding charter but rarely spoken — recognized that Norrath had a permanent need for capable people willing to go into dangerous places for reasonable pay.</p>
+          <p>The original charter established three principles that remain in force today: neutrality in city politics, acceptance of any race willing to work by the code, and refusal of contracts that require harm to innocents. The third principle has been tested more than the other two.</p>
+
+          <h3>What makes them useful to cities like Freeport</h3>
+          <div class="card teal">
+            <div class="row"><strong>Deniability:</strong> A city that hires the Brotherhood can claim no official involvement in whatever happens next. Lucan uses this constantly.</div>
+            <div class="row"><strong>Unusual capability:</strong> The Brotherhood specifically recruits people who are, as their intake assessment puts it, "difficult to categorize." Spellcasters, former criminals, the magically sensitive, the racially mixed. People the regular army wouldn't take.</div>
+            <div class="row"><strong>No questions asked (within limits):</strong> The Brotherhood does not require clients to explain why they want something investigated. They do require clients to be honest about the danger involved. Contracts that understate risk are voided and the client is blacklisted.</div>
+            <div class="row"><strong>Speed:</strong> A Brotherhood team can be assembled and deployed faster than any military unit. They have no chain of command to navigate beyond the local chapter master.</div>
+          </div>
+
+          <h3>What they will not do</h3>
+          <div class="card red">
+            <div class="row">Assassinate named political targets</div>
+            <div class="row">Take contracts from both sides of an active conflict simultaneously</div>
+            <div class="row">Harm civilians or destroy civilian infrastructure</div>
+            <div class="row">Surrender a Brotherhood member to a client's justice without Brotherhood review</div>
+            <div class="row">Work for the Ring of Scale directly — the only faction explicitly blacklisted in the founding charter, for reasons the Brotherhood does not publicly discuss</div>
+          </div>
+
+          <h3>Reputation across Norrath</h3>
+          <p>The Brotherhood is regarded with a mix of respect and unease by most city governments. They are useful and they know it, which gives them a negotiating leverage that officials find irritating. Among common people they are generally well-regarded — the Brotherhood has a tradition of taking a small number of pro bono contracts each year for communities that cannot pay, which generates goodwill that money cannot buy.</p>
+          <p>Among adventurers, membership is considered a mark of competence. Being turned down by the Brotherhood is not shameful — their standards are high. Being expelled is.</p>
+        </div>
+
+        <div id="structure" class="sec">
+          <h2>Structure and ranks</h2>
+
+          <h3>Ranks</h3>
+          <div class="rank-grid">
+            <div class="rank-card">
+              <div class="rank-name">Wayfarer</div>
+              <div class="rank-sub">Entry rank. Probationary. Takes assigned contracts.</div>
+            </div>
+            <div class="rank-card">
+              <div class="rank-name">Pathfinder</div>
+              <div class="rank-sub">Full member. Can negotiate contracts independently.</div>
+            </div>
+            <div class="rank-card">
+              <div class="rank-name">Trailblazer</div>
+              <div class="rank-sub">Senior member. Leads teams. Sits on contract review.</div>
+            </div>
+            <div class="rank-card">
+              <div class="rank-name">Chapter Master</div>
+              <div class="rank-sub">Runs a regional chapter. Appoints Trailblazers.</div>
+            </div>
+            <div class="rank-card">
+              <div class="rank-name">The Navigators</div>
+              <div class="rank-sub">Council of five. Sets policy. Rarely seen.</div>
+            </div>
+          </div>
+
+          <h3>The party's rank</h3>
+          <div class="card blue">
+            <p>The player characters begin as <strong>Pathfinders</strong> — full members with the right to negotiate contracts but not yet senior enough to be assigned their own teams. This is deliberate. Pathfinder rank means the characters have a history with the Brotherhood (each player can define one prior contract they completed to earn the rank) but are not so senior that being hired by Kell feels beneath them.</p>
+          </div>
+
+          <h3>The code</h3>
+          <div class="quote">"We go where others will not. We do what others cannot. We come back when others do not. We remember what others prefer to forget."</div>
+          <p>The code is recited at formal Brotherhood gatherings and is engraved above the door of every chapter house. Members treat it with varying degrees of reverence — the old hands tend to take it seriously; newer members sometimes find it theatrical. The old hands are usually right.</p>
+
+          <h3>Pay structure</h3>
+          <div class="card">
+            <div class="row"><strong>Standard split:</strong> 70% to the team, 20% to the chapter house (maintenance, supplies, legal costs), 10% to the Brotherhood's central fund (pro bono contracts, member death benefits)</div>
+            <div class="row"><strong>Hazard pay:</strong> Contracts involving undead, planar entities, or magical anomalies carry a 25% hazard premium, negotiated before acceptance</div>
+            <div class="row"><strong>Death benefit:</strong> If a member dies on contract, the Brotherhood pays 200 gp to their named beneficiary and handles remains if recoverable</div>
+            <div class="row"><strong>Dispute resolution:</strong> If a client refuses to pay, the Brotherhood's legal fund pursues collection. Chapter Masters have been known to pursue this personally.</div>
+          </div>
+        </div>
+
+        <div id="freeport" class="sec">
+          <h2>The Freeport chapter</h2>
+
+          <div class="card amber">
+            <p>The Freeport chapter of the Wayfarers Brotherhood operates out of a converted warehouse in the West Commons, three blocks from the main market and two blocks from a Militia checkpoint — a location that was chosen deliberately. Being visible to the Militia keeps relations cordial. Being in the Commons rather than inside the city walls keeps the Brotherhood's independence credible.</p>
+            <p style="margin-bottom:0;">The chapter house is called <strong>The Waystation</strong>. It has a common room, a contract board, six private briefing rooms, a small infirmary, a secured vault for evidence and sensitive materials, and sleeping quarters for up to twenty members. It smells permanently of old maps and someone's pipe tobacco.</p>
+          </div>
+
+          <h3>The chapter's relationship with Lucan</h3>
+          <p>Complicated. The Militia uses the Brotherhood regularly enough that both parties have developed a working arrangement — the Brotherhood takes Militia contracts, the Militia does not interfere with Brotherhood operations within Freeport's walls, and both parties pretend the other is more trustworthy than they actually are.</p>
+          <p>The current chapter master, Orvyn Dast, knows that this arrangement has a ceiling. Lucan tolerates the Brotherhood because they are useful. The moment they become inconvenient, the tolerance ends. Dast has a contingency plan for that day and does not discuss it with anyone except the two people he trusts completely.</p>
+
+          <h3>Current contracts active in Freeport</h3>
+          <div class="card teal">
+            <div class="row"><strong>The Kell contract:</strong> The Militia has engaged the Brotherhood to investigate Befallen and locate a missing researcher. Standard rate plus 25% hazard premium for undead presence. This is the party's current contract.</div>
+            <div class="row"><strong>Missing persons — East Freeport docks:</strong> Eleven dock workers have vanished over three months. The Militia claims it is investigating. It is not. A Brotherhood Pathfinder team has been working this for six weeks with no resolution.</div>
+            <div class="row"><strong>Merchant escort — Commonlands road:</strong> Three merchant houses have pooled resources to hire Brotherhood escorts after two caravans were lost to unknown attackers. Ongoing.</div>
+            <div class="row"><strong>The Halfling problem:</strong> A representative of the halfling fishing community south of Freeport — the same community near the proposed Iksar settlement site — has approached the Brotherhood asking for help. They cannot pay much. Dast accepted anyway.</div>
+          </div>
+
+          <h3>The Waystation — notable locations</h3>
+          <div class="two-col">
+            <div class="card">
+              <h4>The contract board</h4>
+              <p style="margin:0;font-size:13px;">A large corkboard covered in sealed envelopes, pinned requests, and a running list of active assignments. Members can post their own leads. Dast reviews and approves everything before it goes up.</p>
+            </div>
+            <div class="card">
+              <h4>The vault</h4>
+              <p style="margin:0;font-size:13px;">DC 18 lock, magical ward (DC 16 Arcana to identify, DC 14 dispel). Contains evidence from closed contracts, sensitive client documents, and — locked in a secondary box inside — a copy of the founding charter.</p>
+            </div>
+            <div class="card">
+              <h4>The common room</h4>
+              <p style="margin:0;font-size:13px;">Open to members and guests. Cheap food, decent ale, a fireplace, and three tables permanently occupied by members playing cards. Good place to hear rumors.</p>
+            </div>
+            <div class="card">
+              <h4>Dast's office</h4>
+              <p style="margin:0;font-size:13px;">Always unlocked during business hours. Two chairs, a desk buried in paperwork, a map of Antonica on the wall with pins marking active contracts. Dast does not like people touching the map.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="npcs" class="sec">
+          <h2>Key NPCs</h2>
+
+          <div class="card amber">
+            <div class="npc-head">
+              <div class="av av-amber">OD</div>
+              <div>
+                <div style="font-size:15px;font-weight:500;">Orvyn Dast</div>
+                <div style="font-size:12px;color:var(--color-text-tertiary);">Chapter Master &middot; Freeport &middot; The Waystation</div>
+              </div>
+            </div>
+            <span class="badge b-amber">Chapter Master</span><span class="badge b-gray">Cautious</span><span class="badge b-gray">Knows more than he says</span>
+            <p style="margin-top:8px;">A human man in his late fifties, formerly a Trailblazer who took contracts across Antonica and Faydwer for twenty years before his knees made field work impractical. He runs the Freeport chapter with the particular calm of someone who has seen most categories of disaster and knows which ones are survivable.</p>
+            <p>Dast accepted the Militia's contract knowing it had more dimensions than Kell admitted. He sent the party because they are capable, because they are Pathfinder rank rather than senior enough to refuse a politically awkward assignment, and because — if he is being honest with himself — he thinks whatever is happening in the south is going to matter, and he wants Brotherhood eyes on it early.</p>
+            <div class="quote">"I don't hire people I can't trust with bad news. The question isn't whether you'll find something unpleasant down there. The question is what you do with it when you do."</div>
+            <p style="margin-bottom:0;">He has two people he trusts completely: his second-in-command Vel Ashara, and a retired Brotherhood member named Corvus who now operates as an independent information broker in East Freeport. He has not told either of them about his contingency plan for the day Lucan turns on the Brotherhood.</p>
+          </div>
+
+          <div class="card teal">
+            <div class="npc-head">
+              <div class="av av-teal">VA</div>
+              <div>
+                <div style="font-size:15px;font-weight:500;">Vel Ashara</div>
+                <div style="font-size:12px;color:var(--color-text-tertiary);">Trailblazer &middot; Freeport chapter second-in-command</div>
+              </div>
+            </div>
+            <span class="badge b-teal">Trailblazer</span><span class="badge b-gray">Iksar</span><span class="badge b-blue">Rare in Freeport</span>
+            <p style="margin-top:8px;">An Iksar woman who joined the Brotherhood fifteen years ago, long before Vekin's ambassadors began making Iksar presence in Freeport politically charged. She is acutely aware of what her presence in the chapter house communicates and has complicated feelings about the current Scales of War situation — she has no love for Cabilisian imperialism, but she is tired of being looked at as a representative of a people she left voluntarily.</p>
+            <p style="margin-bottom:0;">She manages day-to-day operations of the Waystation, handles member disputes, and is the person who actually knows where everything is. Dast trusts her judgment completely. She is one of three people in Freeport who knows about the Knights of Truth underground network — information she obtained on a contract three years ago and has not shared with anyone, including Dast.</p>
+          </div>
+
+          <div class="card blue">
+            <div class="npc-head">
+              <div class="av av-blue">TB</div>
+              <div>
+                <div style="font-size:15px;font-weight:500;">Torven Brix</div>
+                <div style="font-size:12px;color:var(--color-text-tertiary);">Pathfinder &middot; Freeport chapter &middot; missing persons lead</div>
+              </div>
+            </div>
+            <span class="badge b-blue">Pathfinder</span><span class="badge b-gray">Gnome</span><span class="badge b-amber">Six weeks on a dead end</span>
+            <p style="margin-top:8px;">A gnomish investigator who has been working the East Freeport docks disappearances for six weeks without resolution. He is frustrated, sleep-deprived, and has developed a theory he knows sounds insane: the dock workers are not being killed. Something is taking them intact. He has one witness — a halfling boy who says he saw a man made of shadow carry someone into the water — who no one will believe.</p>
+            <p style="margin-bottom:0;">Torven is a useful resource for the party if they interact with him. He also represents a parallel thread: the dock disappearances are connected to the Bloodsabers operating in Freeport's sewers, which connects to the Empty Throne storyline in Qeynos. He does not know this yet.</p>
+          </div>
+
+          <div class="card purple">
+            <div class="npc-head">
+              <div class="av" style="background:#EEEDFE;color:#534AB7;">RW</div>
+              <div>
+                <div style="font-size:15px;font-weight:500;">Ralla Windmere</div>
+                <div style="font-size:12px;color:var(--color-text-tertiary);">Wayfarer &middot; newest member &middot; on probation</div>
+              </div>
+            </div>
+            <span class="badge b-purple">Wayfarer</span><span class="badge b-gray">Half-elf</span><span class="badge b-gray">Overeager</span>
+            <p style="margin-top:8px;">Three weeks into her probationary period. Former courier for a merchant house that went under when the Commonlands road became unsafe. She applied to the Brotherhood because she needed work and because, she told Dast in her intake interview, she has never been good at being told where she can and cannot go.</p>
+            <p style="margin-bottom:0;">She is assigned to the merchant escort contract and is doing well — better than expected. She will hero-worship the party if they return from Befallen intact, which Vel Ashara will find amusing and Dast will find mildly concerning.</p>
+          </div>
+        </div>
+
+        <div id="contracts" class="sec">
+          <h2>The contract system</h2>
+
+          <h3>How contracts work</h3>
+          <div class="card">
+            <div class="row"><strong>Intake:</strong> Client approaches the chapter house and submits a written brief. Dast or a designated Trailblazer reviews it for scope, risk level, and ethical compliance. Most contracts are approved within a day.</div>
+            <div class="row"><strong>Assignment:</strong> Dast matches the contract to available members by capability and rank. Pathfinders and above can negotiate terms. Wayfarers take what they are assigned.</div>
+            <div class="row"><strong>Briefing:</strong> The team receives a sealed dossier with everything the client has disclosed. What the client has not disclosed is noted explicitly as unknown — the Brotherhood does not pretend to know more than it does.</div>
+            <div class="row"><strong>Completion:</strong> Team delivers a written report on return. Report goes into the vault. Client receives a summary. The full report is Brotherhood property.</div>
+            <div class="row"><strong>Disputes:</strong> If team members disagree with a contract's ethics mid-execution, they can invoke a Code Review — a formal process that pauses the contract and requires a Trailblazer ruling within 48 hours. Used rarely. Taken seriously.</div>
+          </div>
+
+          <h3>Contract tiers</h3>
+          <div class="two-col">
+            <div class="card teal">
+              <h4>Tier I — Routine</h4>
+              <p style="font-size:13px;margin:0;">Escort, investigation, retrieval. Standard pay. Appropriate for Wayfarers and new Pathfinders. The Commonlands escort is Tier I.</p>
+            </div>
+            <div class="card blue">
+              <h4>Tier II — Elevated</h4>
+              <p style="font-size:13px;margin:0;">Significant danger, political sensitivity, or magical involvement. Hazard premium applies. Pathfinder minimum. The Befallen contract is Tier II.</p>
+            </div>
+            <div class="card amber">
+              <h4>Tier III — Critical</h4>
+              <p style="font-size:13px;margin:0;">Existential stakes, planar involvement, or direct confrontation with major factions. Trailblazer minimum. Requires Dast's personal sign-off.</p>
+            </div>
+            <div class="card red">
+              <h4>Tier IV — Classified</h4>
+              <p style="font-size:13px;margin:0;">Known only to the chapter master and The Navigators. Three Tier IV contracts have been issued in the Brotherhood's history. Their nature is not recorded in any accessible document.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="players" class="sec">
+          <h2>Player hooks and character integration</h2>
+
+          <h3>Why are they Pathfinders</h3>
+          <div class="card blue">
+            <p>Each player character has completed at least one prior contract for the Brotherhood that earned them Pathfinder rank. Ask each player to briefly describe theirs — what was the contract, where was it, what happened, and did anything about it stay with them. This prior contract can establish:</p>
+            <div class="row"><strong>A contact:</strong> Someone they met on the previous job who might reappear</div>
+            <div class="row"><strong>A loose end:</strong> Something from the prior contract that was never fully resolved</div>
+            <div class="row"><strong>A reputation:</strong> The Brotherhood knows something specific about this character's capabilities or tendencies</div>
+            <div class="row"><strong>A debt:</strong> Someone helped them on the prior contract. Or someone didn't.</div>
+          </div>
+
+          <h3>What the Brotherhood gives the party</h3>
+          <div class="card teal">
+            <div class="row"><strong>Institutional backing:</strong> When the party identifies themselves as Brotherhood members, most people in the civilized world know what that means. It opens some doors.</div>
+            <div class="row"><strong>The contract board:</strong> Between major story beats, the party can take secondary contracts from the board. These are opportunities for worldbuilding, character development, and reward without derailing the main narrative.</div>
+            <div class="row"><strong>Information network:</strong> The Brotherhood has members across Norrath. Dast can, with time, get answers to questions the party cannot easily research themselves.</div>
+            <div class="row"><strong>A home base:</strong> The Waystation is a safe place in Freeport. Given what Freeport is becoming under Lucan, this matters more than it might initially seem.</div>
+            <div class="row"><strong>Moral framework:</strong> The code gives the party a shared ethical baseline without being prescriptive. When they face a difficult choice, "what does the Brotherhood do here" is a useful question that players can answer for themselves.</div>
+          </div>
+
+          <h3>What could go wrong for the party within the Brotherhood</h3>
+          <div class="card red">
+            <div class="row"><strong>Expulsion:</strong> Violating the code — especially harming innocents or taking a blacklisted contract — triggers a formal review. Three Trailblazers hear the case. Expulsion is permanent and publicized.</div>
+            <div class="row"><strong>Lucan closes the chapter:</strong> If the party's actions make the Brotherhood politically untenable in Freeport, Lucan could simply shut the Waystation down. Dast has a contingency. It involves leaving Freeport.</div>
+            <div class="row"><strong>The Navigators disagrees:</strong> If the party's handling of the Befallen information conflicts with what The Navigators decides is strategically correct, there will be tension. The Navigators has authority Dast does not.</div>
+            <div class="row"><strong>A member turns:</strong> Someone in the Freeport chapter is passing information to the Militia. Dast doesn't know who. The party might find out before he does.</div>
+          </div>
+
+          <h3>Advancement within the Brotherhood</h3>
+          <p>Promotion from Pathfinder to Trailblazer requires completing three Tier II contracts with commendations, a positive vote from two sitting Trailblazers, and Dast's approval. Given the trajectory of this campaign, the party will have earned it long before Dast formally offers it. When he does, the timing will be meaningful.</p>
+        </div>
+
+      </div><!-- /faction-doc -->
+    </main>
+  </div>
+
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nb').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/jpeg" href="images/EQ_favicon.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factions — The Atlas</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js" data-protect="true"></script>
+  <style>
+    .faction-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .faction-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-radius: 8px;
+      padding: 20px;
+      text-decoration: none;
+      display: block;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .faction-card:hover {
+      border-color: var(--border-gold);
+      box-shadow: 0 4px 20px rgba(201,168,76,0.15);
+    }
+    .faction-card-accent {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 3px;
+    }
+    .accent-amber { background: #EF9F27; }
+    .accent-teal  { background: #1D9E75; }
+    .accent-blue  { background: #378ADD; }
+    .accent-red   { background: #E24B4A; }
+    .accent-purple{ background: #7F77DD; }
+
+    .faction-seal {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--bg-deep, #0f0f0f);
+      border: 1px solid var(--border-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    .faction-seal-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+    }
+
+    .faction-card-name {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--text-bright, #f0f0f0);
+      margin-bottom: 4px;
+    }
+    .faction-card-tagline {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+    .faction-card-desc {
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text-muted, #b0b0b0);
+      margin: 0;
+    }
+    .faction-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 12px;
+    }
+    .faction-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--border-dim);
+      color: var(--text-dim);
+    }
+    .faction-card-link {
+      display: inline-block;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--gold, #c9a84c);
+      text-decoration: none;
+    }
+    .faction-card-link:hover { text-decoration: underline; }
+
+    .page-intro {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-muted, #b0b0b0);
+      max-width: 640px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">The Atlas</a>
+      <div class="header-divider"></div>
+      <div class="header-quote">"A man without allegiance is a man without a story." — Orvyn Dast</div>
+    </div>
+  </header>
+
+  <nav class="top-nav">
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="zones.html">Lands</a></li>
+      <li class="gm-nav-only"><a href="bestiary.html">Bestiary</a></li>
+      <li class="gm-nav-only"><a href="items.html">Items</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="deities.html">Deities</a></li>
+      <li><a href="allies.html">Figures</a></li>
+      <li><a href="factions.html" class="active">Factions</a></li>
+      <li><a href="sessions.html">Campaign</a></li>
+      <li><a href="glossary.html">Glossary</a></li>
+      <li><a href="#" onclick="logout();return false;" style="color:var(--text-dim);border-bottom-color:transparent">Sign Out</a></li>
+    </ul>
+  </nav>
+
+  <div class="content-area">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Factions</h3>
+        <ul>
+          <li><a href="factions/wayfarers-brotherhood.html">Wayfarers Brotherhood</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="allies.html"><span class="nav-icon">⚔</span> Notable Figures</a></li>
+          <li><a href="lore.html"><span class="nav-icon">📜</span> World Lore</a></li>
+          <li><a href="deities.html"><span class="nav-icon">✦</span> Deities</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <div class="panel-header">
+        <h1 class="panel-title">Factions of Norrath</h1>
+      </div>
+
+      <p class="page-intro">The great organizations of Norrath — guilds, brotherhoods, orders, and cults — each with their own codes, ambitions, and reach. Understanding who these groups are is often the difference between an ally and an enemy.</p>
+
+      <div class="faction-grid">
+
+        <!-- Wayfarers Brotherhood -->
+        <a class="faction-card" href="factions/wayfarers-brotherhood.html">
+          <div class="faction-card-accent accent-amber"></div>
+          <div class="faction-seal"><div class="faction-seal-text">WB</div></div>
+          <div class="faction-card-name">The Wayfarers Brotherhood</div>
+          <div class="faction-card-tagline">Est. ~11,800 · Norrath-wide · Freeport chapter active</div>
+          <p class="faction-card-desc">A Norrath-wide organization of professional adventurers, investigators, and specialists who take contracts that official forces cannot, will not, or dare not handle. Politically neutral, racially inclusive, and answerable only to their own code and their clients.</p>
+          <div class="faction-card-tags">
+            <span class="faction-tag">Adventurer Guild</span>
+            <span class="faction-tag">Neutral</span>
+            <span class="faction-tag">Contract Work</span>
+            <span class="faction-tag">Party Faction</span>
+          </div>
+          <span class="faction-card-link">View full document &rarr;</span>
+        </a>
+
+        <!-- Placeholder for future factions -->
+
+      </div>
+    </main>
+  </div>
+
+</div>
+</body>
+</html>
