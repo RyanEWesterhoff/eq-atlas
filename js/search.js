@@ -7,8 +7,9 @@
 (function () {
   'use strict';
 
-  // Detect path depth: zone pages live in /zones/ subdirectory
-  const ROOT = window.location.pathname.replace(/\\/g, '/').includes('/zones/') ? '../' : '';
+  // Detect path depth: zone and faction detail pages live one level deep
+  const _path = window.location.pathname.replace(/\\/g, '/');
+  const ROOT = (_path.includes('/zones/') || _path.includes('/factions/')) ? '../' : '';
 
   // ── Inject search bar into nav ────────────────────────────
   function init() {
@@ -83,7 +84,7 @@
   // ── Search engine ─────────────────────────────────────────
   function doSearch(q) {
     var ql = q.toLowerCase();
-    var zones = [], creatures = [], npcs = [], glossary = [], figures = [];
+    var zones = [], creatures = [], npcs = [], glossary = [], figures = [], factions = [], factionNpcs = [];
 
     if (typeof ZONES !== 'undefined') for (var i = 0; i < ZONES.length; i++) {
       var z = ZONES[i];
@@ -129,6 +130,23 @@
       }
     }
 
+    // Factions and their NPCs
+    if (typeof window.FACTIONS_DATA !== 'undefined') {
+      for (var fai = 0; fai < window.FACTIONS_DATA.length; fai++) {
+        var fa = window.FACTIONS_DATA[fai];
+        if ((fa.name + ' ' + fa.tagline + ' ' + fa.excerpt + ' ' + fa.tags).toLowerCase().includes(ql)) {
+          factions.push({ fa: fa, url: ROOT + fa.url });
+        }
+        var faNpcs = fa.npcs || [];
+        for (var fan = 0; fan < faNpcs.length; fan++) {
+          var fanpc = faNpcs[fan];
+          if ((fanpc.name + ' ' + fanpc.role).toLowerCase().includes(ql)) {
+            factionNpcs.push({ npc: fanpc, fa: fa, url: ROOT + fa.url });
+          }
+        }
+      }
+    }
+
     // Notable figures
     if (typeof window.FIGURES_DATA !== 'undefined') {
       for (var fi = 0; fi < window.FIGURES_DATA.length; fi++) {
@@ -155,13 +173,16 @@
       figureNames[figures[fn].fig.name.toLowerCase()] = true;
     }
     npcs = npcs.filter(function (h) { return !figureNames[h.npc.name.toLowerCase()]; });
+    factionNpcs = factionNpcs.filter(function (h) { return !figureNames[h.npc.name.toLowerCase()]; });
 
     return {
-      zones:     zones.slice(0, 7),
-      creatures: creatures.slice(0, 6),
-      npcs:      npcs.slice(0, 6),
-      figures:   figures.slice(0, 6),
-      glossary:  glossary.slice(0, 6)
+      zones:       zones.slice(0, 7),
+      creatures:   creatures.slice(0, 6),
+      npcs:        npcs.slice(0, 6),
+      figures:     figures.slice(0, 6),
+      factions:    factions.slice(0, 5),
+      factionNpcs: factionNpcs.slice(0, 5),
+      glossary:    glossary.slice(0, 6)
     };
   }
 
@@ -189,7 +210,7 @@
 
   // ── Render results panel ──────────────────────────────────
   function render(hits, panel, q) {
-    var total = hits.zones.length + hits.creatures.length + hits.npcs.length + hits.figures.length + hits.glossary.length;
+    var total = hits.zones.length + hits.creatures.length + hits.npcs.length + hits.figures.length + hits.factions.length + hits.factionNpcs.length + hits.glossary.length;
 
     if (total === 0) {
       panel.innerHTML = '<div class="gs-empty">No results for <em>' + esc(q) + '</em></div>';
@@ -251,6 +272,31 @@
       }
     }
 
+    if (hits.factions.length) {
+      html += '<div class="gs-group">Factions</div>';
+      for (var fai = 0; fai < hits.factions.length; fai++) {
+        var hfa  = hits.factions[fai].fa;
+        var faurl = hits.factions[fai].url;
+        html += '<a href="' + faurl + '" class="gs-item" tabindex="0">' +
+          '<span class="gs-title">&#9876; ' + hilite(hfa.name, q) + '</span>' +
+          '<span class="gs-sub">' + hilite(hfa.tagline, q) + '</span>' +
+          '</a>';
+      }
+    }
+
+    if (hits.factionNpcs.length) {
+      html += '<div class="gs-group">Faction Members</div>';
+      for (var fni = 0; fni < hits.factionNpcs.length; fni++) {
+        var hfn   = hits.factionNpcs[fni].npc;
+        var hfna  = hits.factionNpcs[fni].fa;
+        var fnurl = hits.factionNpcs[fni].url;
+        html += '<a href="' + fnurl + '" class="gs-item" tabindex="0">' +
+          '<span class="gs-title">' + hilite(hfn.name, q) + '</span>' +
+          '<span class="gs-sub">' + hilite(snip(hfn.role, q), q) + ' &mdash; ' + hilite(hfna.name, q) + '</span>' +
+          '</a>';
+      }
+    }
+
     if (hits.glossary.length) {
       html += '<div class="gs-group">Glossary</div>';
       for (var m = 0; m < hits.glossary.length; m++) {
@@ -286,6 +332,11 @@
     var _fs = document.createElement('script');
     _fs.src = ROOT + 'js/figures-data.js';
     document.head.appendChild(_fs);
+  }
+  if (typeof window.FACTIONS_DATA === 'undefined') {
+    var _fac = document.createElement('script');
+    _fac.src = ROOT + 'js/factions-data.js';
+    document.head.appendChild(_fac);
   }
 
 })();
