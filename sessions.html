@@ -73,40 +73,36 @@
 
     /* ── Embedded notes iframe ────────────────────────────── */
     .session-notes-frame {
-      width: calc(100% + 40px);
-      margin-left: -20px;
-      margin-right: -20px;
+      width: 100%;
       border: none;
       display: block;
-      min-height: 300px;
+      min-height: 800px;
     }
 
-    /* ── Notes file path input (GM edit mode) ─────────────── */
-    .session-notesfile-row {
+    /* ── Upload button (GM edit mode) ─────────────────────── */
+    .session-upload-row {
       margin-top: 10px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
-    .session-notesfile-label {
-      font-size: 11px;
-      color: var(--text-dim);
-      letter-spacing: 1px;
-      text-transform: uppercase;
+    .session-upload-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      color: var(--accent-gold);
+      padding: 5px 14px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
     }
-    .session-notesfile-input {
-      flex: 1;
-      background: rgba(0,0,0,0.35);
-      border: 1px solid var(--border-dim);
-      color: var(--text-secondary);
-      padding: 4px 8px;
-      font-family: monospace;
+    .session-upload-btn:hover { background: rgba(201,168,76,0.12); }
+    .session-upload-filename {
       font-size: 12px;
-      outline: none;
+      color: var(--text-dim);
+      font-style: italic;
     }
-    .session-notesfile-input:focus { border-color: var(--accent-gold); }
 
     /* ── GM Mode Session Editing ──────────────────────────── */
     .session-entry { position: relative; }
@@ -762,11 +758,10 @@
   }
 
   function sessionEntryHTML(s, gmMode) {
-    var hasNotes = s.notesFile && s.notesFile.trim();
+    var hasNotes = s.notesHtml && s.notesHtml.trim();
     var bodyContent = hasNotes
       ? '<div class="session-location">' + s.location + '</div>' +
-        '<iframe class="session-notes-frame" src="' + esc(s.notesFile.trim()) + '"' +
-          ' onload="try{this.style.height=(this.contentDocument.body.scrollHeight+40)+\'px\';}catch(x){}"></iframe>'
+        '<iframe class="session-notes-frame" id="snf-' + s.id + '"></iframe>'
       : '<div class="session-location">' + s.location + '</div>' +
         '<div class="session-summary">' + autoLinkHTML(s.summary) + '</div>';
 
@@ -786,6 +781,19 @@
       '<div class="session-body">' + bodyContent + '</div>' +
     '</div>';
   }
+
+  window.sessionNotesFileSelected = function (id, input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var holder = document.getElementById('edit-notes-html-' + id);
+      if (holder) holder.setAttribute('data-html', e.target.result);
+      var label = document.getElementById('edit-notes-filename-' + id);
+      if (label) { label.textContent = file.name; label.style.color = 'var(--accent-gold)'; }
+    };
+    reader.readAsText(file);
+  };
 
   window.sessionToggle = function (id, e) {
     // Don't toggle when clicking GM control buttons
@@ -825,6 +833,23 @@
     }
 
     container.innerHTML = html;
+
+    // Set srcdoc on note iframes (avoids attribute encoding issues)
+    for (var ri = 0; ri < sessions.length; ri++) {
+      (function(s) {
+        if (!s.notesHtml) return;
+        var frame = document.getElementById('snf-' + s.id);
+        if (!frame) return;
+        frame.srcdoc = s.notesHtml;
+        frame.onload = function() {
+          function resize() {
+            try { frame.style.height = (frame.contentDocument.body.scrollHeight + 40) + 'px'; } catch(x) {}
+          }
+          resize();
+          setTimeout(resize, 600); // re-run after fonts finish loading
+        };
+      })(sessions[ri]);
+    }
   }
 
   window.sessionEdit = function (id, e) {
@@ -865,12 +890,12 @@
       '<div class="session-location-wrapper">' +
         '<div class="session-location-edit" id="edit-loc-' + id + '" contenteditable="true">' + s.location + '</div>' +
       '</div>' +
-      '<div class="session-notesfile-row">' +
-        '<span class="session-notesfile-label">Notes HTML</span>' +
-        '<input class="session-notesfile-input" id="edit-notes-' + id + '" type="text"' +
-          ' value="' + esc(s.notesFile || '') + '"' +
-          ' placeholder="session-notes/campaign_notes_1.html (leave blank to use text summary below)">' +
+      '<div class="session-upload-row">' +
+        '<button class="session-upload-btn" type="button" onclick="document.getElementById(\'edit-notes-input-' + id + '\').click()">📂 Upload Session Notes HTML</button>' +
+        '<span class="session-upload-filename" id="edit-notes-filename-' + id + '">' + (s.notesHtml ? '(notes loaded)' : 'No file — text summary will be used') + '</span>' +
+        '<input type="file" id="edit-notes-input-' + id + '" accept=".html,.htm" style="display:none" onchange="sessionNotesFileSelected(\'' + id + '\',this)">' +
       '</div>' +
+      '<div id="edit-notes-html-' + id + '" style="display:none" data-html="' + esc(s.notesHtml || '') + '"></div>' +
       '<div class="session-summary-wrapper" style="position:relative;margin-top:10px;">' +
         '<div class="session-summary-edit" id="edit-summary-' + id + '" contenteditable="true">' + s.summary + '</div>' +
       '</div>';
@@ -892,20 +917,20 @@
     for (var i = 0; i < sessions.length; i++) { if (sessions[i].id === id) { idx = i; break; } }
     if (idx === -1) return;
 
-    var numEl     = document.getElementById('edit-num-'     + id);
-    var titleEl   = document.getElementById('edit-title-'   + id);
-    var dateEl    = document.getElementById('edit-date-'    + id);
-    var locEl     = document.getElementById('edit-loc-'     + id);
-    var notesEl   = document.getElementById('edit-notes-'   + id);
-    var summaryEl = document.getElementById('edit-summary-' + id);
+    var numEl      = document.getElementById('edit-num-'      + id);
+    var titleEl    = document.getElementById('edit-title-'    + id);
+    var dateEl     = document.getElementById('edit-date-'     + id);
+    var locEl      = document.getElementById('edit-loc-'      + id);
+    var notesHtmlEl = document.getElementById('edit-notes-html-' + id);
+    var summaryEl  = document.getElementById('edit-summary-'  + id);
     sessions[idx] = {
       id:        id,
-      num:       numEl     ? numEl.value              : sessions[idx].num,
-      title:     titleEl   ? titleEl.value            : sessions[idx].title,
-      date:      dateEl    ? dateEl.value             : sessions[idx].date,
-      location:  locEl     ? locEl.innerHTML          : sessions[idx].location,
-      notesFile: notesEl   ? notesEl.value.trim()     : (sessions[idx].notesFile || ''),
-      summary:   summaryEl ? summaryEl.innerHTML      : sessions[idx].summary
+      num:       numEl       ? numEl.value                            : sessions[idx].num,
+      title:     titleEl     ? titleEl.value                          : sessions[idx].title,
+      date:      dateEl      ? dateEl.value                           : sessions[idx].date,
+      location:  locEl       ? locEl.innerHTML                        : sessions[idx].location,
+      notesHtml: notesHtmlEl ? notesHtmlEl.getAttribute('data-html')  : (sessions[idx].notesHtml || ''),
+      summary:   summaryEl   ? summaryEl.innerHTML                    : sessions[idx].summary
     };
 
     saveSessions(sessions);
@@ -935,7 +960,7 @@
       title:     'New Session',
       date:      today,
       location:  '📍 Location: ',
-      notesFile: '',
+      notesHtml: '',
       summary:   '<p>Session summary goes here.</p>'
     });
     saveSessions(sessions);
