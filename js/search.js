@@ -84,7 +84,7 @@
   // ── Search engine ─────────────────────────────────────────
   function doSearch(q) {
     var ql = q.toLowerCase();
-    var zones = [], creatures = [], npcs = [], glossary = [], figures = [], factions = [], factionNpcs = [];
+    var zones = [], creatures = [], npcs = [], glossary = [], figures = [], factions = [], factionNpcs = [], sessions = [];
 
     if (typeof ZONES !== 'undefined') for (var i = 0; i < ZONES.length; i++) {
       var z = ZONES[i];
@@ -167,6 +167,18 @@
       }
     }
 
+    // Session logs (indexed in localStorage by sessions.html)
+    try {
+      var _si = localStorage.getItem('eq-sessions-search');
+      var _sd = _si ? JSON.parse(_si) : [];
+      for (var si = 0; si < _sd.length; si++) {
+        var sess = _sd[si];
+        if ((sess.num + ' ' + sess.title + ' ' + sess.date + ' ' + sess.text).toLowerCase().includes(ql)) {
+          sessions.push({ sess: sess, url: ROOT + 'sessions.html' });
+        }
+      }
+    } catch (e) {}
+
     // Suppress NPC results whose name is already covered by a figure entry
     var figureNames = {};
     for (var fn = 0; fn < figures.length; fn++) {
@@ -182,6 +194,7 @@
       figures:     figures.slice(0, 6),
       factions:    factions.slice(0, 5),
       factionNpcs: factionNpcs.slice(0, 5),
+      sessions:    sessions.slice(0, 5),
       glossary:    glossary.slice(0, 6)
     };
   }
@@ -210,7 +223,7 @@
 
   // ── Render results panel ──────────────────────────────────
   function render(hits, panel, q) {
-    var total = hits.zones.length + hits.creatures.length + hits.npcs.length + hits.figures.length + hits.factions.length + hits.factionNpcs.length + hits.glossary.length;
+    var total = hits.zones.length + hits.creatures.length + hits.npcs.length + hits.figures.length + hits.factions.length + hits.factionNpcs.length + hits.sessions.length + hits.glossary.length;
 
     if (total === 0) {
       panel.innerHTML = '<div class="gs-empty">No results for <em>' + esc(q) + '</em></div>';
@@ -293,6 +306,18 @@
         html += '<a href="' + fnurl + '" class="gs-item" tabindex="0">' +
           '<span class="gs-title">' + hilite(hfn.name, q) + '</span>' +
           '<span class="gs-sub">' + hilite(snip(hfn.role, q), q) + ' &mdash; ' + hilite(hfna.name, q) + '</span>' +
+          '</a>';
+      }
+    }
+
+    if (hits.sessions.length) {
+      html += '<div class="gs-group">Session Logs</div>';
+      for (var sei = 0; sei < hits.sessions.length; sei++) {
+        var hs   = hits.sessions[sei].sess;
+        var surl = hits.sessions[sei].url;
+        html += '<a href="' + surl + '" class="gs-item" tabindex="0">' +
+          '<span class="gs-title">📖 ' + hilite(hs.num + (hs.title ? ' — ' + hs.title : ''), q) + '</span>' +
+          '<span class="gs-sub">' + (hs.date ? esc(hs.date) + ' &mdash; ' : '') + hilite(snip(hs.text, q, 60), q) + '</span>' +
           '</a>';
       }
     }

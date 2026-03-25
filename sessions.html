@@ -456,8 +456,43 @@
     });
   }
 
+  // ── Helpers ────────────────────────────────────────────────
+  function _stripHtml(html) {
+    var d = document.createElement('div');
+    d.innerHTML = html || '';
+    return (d.textContent || d.innerText || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function _updateSessionSearchIndex(sessions) {
+    try {
+      var idx = sessions.map(function (s) {
+        return {
+          id:    s.id,
+          num:   s.num   || '',
+          title: s.title || '',
+          date:  s.date  || '',
+          text:  (_stripHtml(s.summary || '') + ' ' + _stripHtml(s.notesHtml || '')).slice(0, 3000)
+        };
+      });
+      localStorage.setItem('eq-sessions-search', JSON.stringify(idx));
+    } catch (e) {}
+  }
+
+  // Run autoLinkHTML on just the <body> of a full HTML document
+  function autoLinkNotesHtml(fullHtml) {
+    var m = fullHtml.match(/<body[^>]*>/i);
+    if (!m) return autoLinkHTML(fullHtml);
+    var bodyStart = m.index + m[0].length;
+    var bodyEnd   = fullHtml.toLowerCase().lastIndexOf('</body>');
+    if (bodyEnd === -1) bodyEnd = fullHtml.length;
+    return fullHtml.slice(0, bodyStart) +
+      autoLinkHTML(fullHtml.slice(bodyStart, bodyEnd)) +
+      fullHtml.slice(bodyEnd);
+  }
+
   function saveSessions(sessions) {
     _sessionsCache = sessions;
+    _updateSessionSearchIndex(sessions);
     if (window.firebaseDB) {
       var obj = {};
       sessions.forEach(function (s) { obj[s.id] = s; });
@@ -787,8 +822,9 @@
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function (e) {
+      var linked = autoLinkNotesHtml(e.target.result);
       var holder = document.getElementById('edit-notes-html-' + id);
-      if (holder) holder.setAttribute('data-html', e.target.result);
+      if (holder) holder.setAttribute('data-html', linked);
       var label = document.getElementById('edit-notes-filename-' + id);
       if (label) { label.textContent = file.name; label.style.color = 'var(--accent-gold)'; }
     };
@@ -840,7 +876,11 @@
         if (!s.notesHtml) return;
         var frame = document.getElementById('snf-' + s.id);
         if (!frame) return;
-        frame.srcdoc = s.notesHtml;
+        var _base = '<base href="' + window.location.href.replace(/[^/]*$/, '') + '">';
+        var _html = /<head>/i.test(s.notesHtml)
+          ? s.notesHtml.replace(/<head>/i, '<head>' + _base)
+          : _base + s.notesHtml;
+        frame.srcdoc = _html;
         frame.onload = function() {
           function resize() {
             try { frame.style.height = (frame.contentDocument.body.scrollHeight + 40) + 'px'; } catch(x) {}
@@ -1187,6 +1227,7 @@
         var data = snapshot.val();
         if (data && typeof data === 'object') {
           _sessionsCache = Object.values(data);
+          _updateSessionSearchIndex(_sessionsCache);
         } else {
           // No data yet — seed Firebase with default sessions
           _sessionsCache = DEFAULT_SESSIONS.slice();
