@@ -58,6 +58,56 @@
       color: var(--text-dim);
     }
 
+    /* ── Accordion toggle ─────────────────────────────────── */
+    .session-header { cursor: pointer; user-select: none; }
+    .session-toggle-arrow {
+      margin-left: auto;
+      color: var(--text-dim);
+      font-size: 11px;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .session-entry.open .session-toggle-arrow { transform: rotate(180deg); }
+    .session-body { display: none; padding-top: 10px; }
+    .session-entry.open .session-body { display: block; }
+
+    /* ── Embedded notes iframe ────────────────────────────── */
+    .session-notes-frame {
+      width: calc(100% + 40px);
+      margin-left: -20px;
+      margin-right: -20px;
+      border: none;
+      display: block;
+      min-height: 300px;
+    }
+
+    /* ── Notes file path input (GM edit mode) ─────────────── */
+    .session-notesfile-row {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .session-notesfile-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .session-notesfile-input {
+      flex: 1;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid var(--border-dim);
+      color: var(--text-secondary);
+      padding: 4px 8px;
+      font-family: monospace;
+      font-size: 12px;
+      outline: none;
+    }
+    .session-notesfile-input:focus { border-color: var(--accent-gold); }
+
     /* ── GM Mode Session Editing ──────────────────────────── */
     .session-entry { position: relative; }
     .session-gm-controls {
@@ -712,6 +762,14 @@
   }
 
   function sessionEntryHTML(s, gmMode) {
+    var hasNotes = s.notesFile && s.notesFile.trim();
+    var bodyContent = hasNotes
+      ? '<div class="session-location">' + s.location + '</div>' +
+        '<iframe class="session-notes-frame" src="' + esc(s.notesFile.trim()) + '"' +
+          ' onload="try{this.style.height=(this.contentDocument.body.scrollHeight+40)+\'px\';}catch(x){}"></iframe>'
+      : '<div class="session-location">' + s.location + '</div>' +
+        '<div class="session-summary">' + autoLinkHTML(s.summary) + '</div>';
+
     return '<div class="session-entry" id="se-' + s.id + '" data-session-id="' + s.id + '">' +
       (gmMode
         ? '<div class="session-gm-controls">' +
@@ -719,15 +777,23 @@
             '<button class="session-gm-btn danger" onclick="sessionDelete(\'' + s.id + '\',event)">✕</button>' +
           '</div>'
         : '') +
-      '<div class="session-header">' +
+      '<div class="session-header" onclick="sessionToggle(\'' + s.id + '\',event)">' +
         '<span class="session-num">' + s.num + '</span>' +
         '<span class="session-title">' + s.title + '</span>' +
         '<span class="session-date">' + s.date + '</span>' +
+        '<span class="session-toggle-arrow">▼</span>' +
       '</div>' +
-      '<div class="session-location">' + s.location + '</div>' +
-      '<div class="session-summary">' + autoLinkHTML(s.summary) + '</div>' +
+      '<div class="session-body">' + bodyContent + '</div>' +
     '</div>';
   }
+
+  window.sessionToggle = function (id, e) {
+    // Don't toggle when clicking GM control buttons
+    if (e && e.target && e.target.closest && e.target.closest('.session-gm-controls')) return;
+    var entry = document.getElementById('se-' + id);
+    if (!entry || entry.classList.contains('editing')) return;
+    entry.classList.toggle('open');
+  };
 
   function renderSessions() {
     var container = document.getElementById('sessions-container');
@@ -799,7 +865,13 @@
       '<div class="session-location-wrapper">' +
         '<div class="session-location-edit" id="edit-loc-' + id + '" contenteditable="true">' + s.location + '</div>' +
       '</div>' +
-      '<div class="session-summary-wrapper" style="position:relative;">' +
+      '<div class="session-notesfile-row">' +
+        '<span class="session-notesfile-label">Notes HTML</span>' +
+        '<input class="session-notesfile-input" id="edit-notes-' + id + '" type="text"' +
+          ' value="' + esc(s.notesFile || '') + '"' +
+          ' placeholder="session-notes/campaign_notes_1.html (leave blank to use text summary below)">' +
+      '</div>' +
+      '<div class="session-summary-wrapper" style="position:relative;margin-top:10px;">' +
         '<div class="session-summary-edit" id="edit-summary-' + id + '" contenteditable="true">' + s.summary + '</div>' +
       '</div>';
 
@@ -824,14 +896,16 @@
     var titleEl   = document.getElementById('edit-title-'   + id);
     var dateEl    = document.getElementById('edit-date-'    + id);
     var locEl     = document.getElementById('edit-loc-'     + id);
+    var notesEl   = document.getElementById('edit-notes-'   + id);
     var summaryEl = document.getElementById('edit-summary-' + id);
     sessions[idx] = {
-      id:       id,
-      num:      numEl     ? numEl.value         : sessions[idx].num,
-      title:    titleEl   ? titleEl.value       : sessions[idx].title,
-      date:     dateEl    ? dateEl.value        : sessions[idx].date,
-      location: locEl     ? locEl.innerHTML     : sessions[idx].location,
-      summary:  summaryEl ? summaryEl.innerHTML : sessions[idx].summary
+      id:        id,
+      num:       numEl     ? numEl.value              : sessions[idx].num,
+      title:     titleEl   ? titleEl.value            : sessions[idx].title,
+      date:      dateEl    ? dateEl.value             : sessions[idx].date,
+      location:  locEl     ? locEl.innerHTML          : sessions[idx].location,
+      notesFile: notesEl   ? notesEl.value.trim()     : (sessions[idx].notesFile || ''),
+      summary:   summaryEl ? summaryEl.innerHTML      : sessions[idx].summary
     };
 
     saveSessions(sessions);
@@ -856,12 +930,13 @@
     var nextNum = sessions.length + 1;
     var today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     sessions.unshift({
-      id:       newId,
-      num:      'Session ' + String(nextNum).padStart(3, '0'),
-      title:    'New Session',
-      date:     today,
-      location: '📍 Location: ',
-      summary:  '<p>Session summary goes here.</p>'
+      id:        newId,
+      num:       'Session ' + String(nextNum).padStart(3, '0'),
+      title:     'New Session',
+      date:      today,
+      location:  '📍 Location: ',
+      notesFile: '',
+      summary:   '<p>Session summary goes here.</p>'
     });
     saveSessions(sessions);
     renderSessions();
