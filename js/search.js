@@ -363,5 +363,10 @@
     _fac.src = ROOT + 'js/factions-data.js';
     document.head.appendChild(_fac);
   }
+  if (!document.querySelector('script[src*="hover-cards.js"]')) {
+    var _hc = document.createElement('script');
+    _hc.src = ROOT + 'js/hover-cards.js';
+    document.head.appendChild(_hc);
+  }
 
 })();
