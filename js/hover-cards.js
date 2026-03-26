@@ -5,6 +5,10 @@
 (function () {
   'use strict';
 
+  // Guard against double-load (e.g. injected twice by search.js)
+  if (window._hcLoaded) return;
+  window._hcLoaded = true;
+
   var _path = window.location.pathname.replace(/\\/g, '/');
   var ROOT  = (_path.includes('/zones/') || _path.includes('/factions/')) ? '../' : '';
 
@@ -15,6 +19,8 @@
   var card = null;
   function _ensureCard() {
     if (card) return;
+    // Remove any stale cards left by a previous (double-loaded) instance
+    document.querySelectorAll('.hc-card').forEach(function (el) { el.remove(); });
     card = document.createElement('div');
     card.className = 'hc-card';
     document.body.appendChild(card);
