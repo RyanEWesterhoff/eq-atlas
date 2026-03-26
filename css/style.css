@@ -1269,6 +1269,8 @@ mark.gs-hl {
 .session-notes-doc {
   margin: 12px -20px -20px -20px;
   overflow: hidden;
+  font-size: 16px;
+  line-height: 1.65;
 }
 .session-notes-doc p {
   margin-top: 0;
