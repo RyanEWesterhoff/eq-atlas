@@ -1002,8 +1002,23 @@
     if (e) e.stopPropagation();
     if (!confirm('Delete this session entry? This cannot be undone.')) return;
     var sessions = _sessionsCache.filter(function (s) { return s.id !== id; });
-    saveSessions(sessions);
-    renderSessions();
+    if (window.firebaseDB) {
+      var obj = {};
+      sessions.forEach(function (s) { obj[s.id] = s; });
+      window.firebaseDB.ref(FIREBASE_PATH).set(obj)
+        .then(function () {
+          _sessionsCache = sessions;
+          _updateSessionSearchIndex(sessions);
+          renderSessions();
+        })
+        .catch(function (err) {
+          alert('Delete failed: ' + err.message + '\n\nMake sure GM Mode is active.');
+        });
+    } else {
+      _sessionsCache = sessions;
+      _updateSessionSearchIndex(sessions);
+      renderSessions();
+    }
   };
 
   window.sessionAdd = function () {
