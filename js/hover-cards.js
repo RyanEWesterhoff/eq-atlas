@@ -33,114 +33,109 @@
     });
   }
 
-  // ── Resolve an <a> to known content ──────────────────────
-  function resolve(a) {
-    var href = a.getAttribute('href') || '';
-    // Normalize away leading ../ or ./
-    var h = href.replace(/^(\.\.\/)+/, '').replace(/^\.\//, '');
+  // ── Unified ID → entry index (built once, lazily) ────────
+  // Each entity ID maps to exactly ONE entry regardless of which
+  // data source it came from. GLOSSARY_DATA takes priority so a
+  // hand-written glossary entry can override an auto-generated one.
+  var _idx = null;
+  function _getIdx() {
+    if (_idx) return _idx;
+    _idx = {};
 
-    // Zone page: zones/{id}.html
-    var zm = h.match(/^zones\/([^/?#]+)\.html$/);
-    if (zm && typeof ZONES !== 'undefined') {
+    if (typeof ZONES !== 'undefined') {
       for (var zi = 0; zi < ZONES.length; zi++) {
-        if (ZONES[zi].id === zm[1]) return { type: 'zone', d: ZONES[zi] };
+        var z = ZONES[zi];
+        _idx[z.id] = { type: 'zone', name: z.name, continent: z.continent, region: z.region, def: z.excerpt };
       }
     }
-
-    // Figure: allies.html#{id}
-    var fm = h.match(/^allies\.html#(.+)$/);
-    if (fm && typeof window.FIGURES_DATA !== 'undefined') {
+    if (typeof window.FIGURES_DATA !== 'undefined') {
       for (var fi = 0; fi < window.FIGURES_DATA.length; fi++) {
-        if (window.FIGURES_DATA[fi].id === fm[1]) return { type: 'figure', d: window.FIGURES_DATA[fi] };
+        var f = window.FIGURES_DATA[fi];
+        _idx[f.id] = { type: 'figure', name: f.name, section: f.section, portrait: f.portrait, title: f.title, meta: f.meta, def: f.desc };
       }
     }
-
-    // Glossary: glossary.html#entry-{id}
-    var gm = h.match(/^glossary\.html#entry-(.+)$/);
-    if (gm && typeof window.GLOSSARY_DATA !== 'undefined') {
-      for (var gi = 0; gi < window.GLOSSARY_DATA.length; gi++) {
-        if (window.GLOSSARY_DATA[gi].id === gm[1]) return { type: 'glossary', d: window.GLOSSARY_DATA[gi] };
-      }
-    }
-
-    // Faction detail page: factions/{id}.html
-    var fam = h.match(/^factions\/([^/?#]+)\.html$/);
-    if (fam && typeof window.FACTIONS_DATA !== 'undefined') {
+    if (typeof window.FACTIONS_DATA !== 'undefined') {
       for (var fai = 0; fai < window.FACTIONS_DATA.length; fai++) {
-        if (window.FACTIONS_DATA[fai].id === fam[1]) return { type: 'faction', d: window.FACTIONS_DATA[fai] };
+        var fa = window.FACTIONS_DATA[fai];
+        _idx[fa.id] = { type: 'faction', name: fa.name, tagline: fa.tagline, def: fa.excerpt };
       }
     }
+    // Glossary last — overrides any same-id entry above
+    if (typeof window.GLOSSARY_DATA !== 'undefined') {
+      for (var gi = 0; gi < window.GLOSSARY_DATA.length; gi++) {
+        var g = window.GLOSSARY_DATA[gi];
+        _idx[g.id] = { type: 'glossary', name: g.term, def: g.def };
+      }
+    }
+    return _idx;
+  }
 
-    // Fallback: data-mention-type / data-mention-key set by the auto-linker
-    var mt = a.dataset.mentionType, mk = a.dataset.mentionKey;
-    if (mt === 'zone' && mk && typeof ZONES !== 'undefined') {
-      for (var zi2 = 0; zi2 < ZONES.length; zi2++) {
-        if (ZONES[zi2].id === mk) return { type: 'zone', d: ZONES[zi2] };
-      }
-    }
-    if (mt === 'character' && mk && typeof window.FIGURES_DATA !== 'undefined') {
-      for (var fi2 = 0; fi2 < window.FIGURES_DATA.length; fi2++) {
-        if (window.FIGURES_DATA[fi2].id === mk) return { type: 'figure', d: window.FIGURES_DATA[fi2] };
-      }
-    }
-    if (mt === 'glossary' && mk && typeof window.GLOSSARY_DATA !== 'undefined') {
-      for (var gi2 = 0; gi2 < window.GLOSSARY_DATA.length; gi2++) {
-        if (window.GLOSSARY_DATA[gi2].id === mk) return { type: 'glossary', d: window.GLOSSARY_DATA[gi2] };
-      }
-    }
+  // ── Extract the entity ID from a link ────────────────────
+  function _linkId(a) {
+    var href = a.getAttribute('href') || '';
+    var h = href.replace(/^(\.\.\/)+/, '').replace(/^\.\//, '');
+    var m;
+    if ((m = h.match(/^zones\/([^/?#]+)\.html$/)))         return m[1];
+    if ((m = h.match(/^allies\.html#(.+)$/)))              return m[1];
+    if ((m = h.match(/^glossary\.html#entry-(.+)$/)))      return m[1];
+    if ((m = h.match(/^factions\/([^/?#]+)\.html$/)))      return m[1];
+    // Fallback: set by the auto-linker
+    return a.dataset.mentionKey || null;
+  }
 
-    return null;
+  // ── Resolve an <a> to one entry ───────────────────────────
+  function resolve(a) {
+    var id = _linkId(a);
+    if (!id) return null;
+    return _getIdx()[id] || null;
   }
 
   // ── Build card inner HTML ─────────────────────────────────
-  function buildHTML(r) {
-    var d = r.d;
-    if (r.type === 'zone') {
+  function buildHTML(e) {
+    if (e.type === 'zone') {
       return '<div class="hc-icon">🗺</div>' +
         '<div class="hc-body">' +
-          '<div class="hc-badge">' + esc(d.continent) + (d.region ? ' · ' + esc(d.region) : '') + '</div>' +
-          '<div class="hc-name">' + esc(d.name) + '</div>' +
-          '<div class="hc-desc">' + esc(d.excerpt || '') + '</div>' +
+          '<div class="hc-badge">' + esc(e.continent) + (e.region ? ' · ' + esc(e.region) : '') + '</div>' +
+          '<div class="hc-name">' + esc(e.name) + '</div>' +
+          '<div class="hc-desc">' + esc(e.def || '') + '</div>' +
         '</div>';
     }
-    if (r.type === 'figure') {
-      var isAlly   = d.section === 'ally';
+    if (e.type === 'figure') {
+      var isAlly   = e.section === 'ally';
       var badge    = isAlly ? 'Ally' : 'Enemy';
       var color    = isAlly ? '#6aaa6a' : '#c05050';
       var fallback = isAlly ? '🤝' : '⚔️';
-      var portrait = d.portrait
+      var portrait = e.portrait
         ? '<div class="hc-portrait">' +
-            '<img src="' + ROOT + esc(d.portrait) + '" alt=""' +
+            '<img src="' + ROOT + esc(e.portrait) + '" alt=""' +
             ' onerror="this.parentNode.innerHTML=\'<div class=\\\"hc-portrait-icon\\\">' + fallback + '</div>\'">' +
           '</div>'
         : '<div class="hc-portrait"><div class="hc-portrait-icon">' + fallback + '</div></div>';
       return portrait +
         '<div class="hc-body">' +
           '<div class="hc-badge" style="color:' + color + ';">' + badge + '</div>' +
-          '<div class="hc-name">' + esc(d.name) + '</div>' +
-          '<div class="hc-title">' + esc(d.title) + '</div>' +
-          '<div class="hc-meta">' + esc(d.meta) + '</div>' +
-          (d.desc ? '<div class="hc-desc">' + esc(d.desc) + '</div>' : '') +
+          '<div class="hc-name">' + esc(e.name) + '</div>' +
+          '<div class="hc-title">' + esc(e.title) + '</div>' +
+          '<div class="hc-meta">' + esc(e.meta) + '</div>' +
+          (e.def ? '<div class="hc-desc">' + esc(e.def) + '</div>' : '') +
         '</div>';
     }
-    if (r.type === 'glossary') {
-      return '<div class="hc-icon">📖</div>' +
-        '<div class="hc-body">' +
-          '<div class="hc-badge">Glossary</div>' +
-          '<div class="hc-name">' + esc(d.term) + '</div>' +
-          '<div class="hc-desc">' + esc(d.def) + '</div>' +
-        '</div>';
-    }
-    if (r.type === 'faction') {
+    if (e.type === 'faction') {
       return '<div class="hc-icon">⚔</div>' +
         '<div class="hc-body">' +
           '<div class="hc-badge">Faction</div>' +
-          '<div class="hc-name">' + esc(d.name) + '</div>' +
-          '<div class="hc-title">' + esc(d.tagline) + '</div>' +
-          '<div class="hc-desc">' + esc(d.excerpt) + '</div>' +
+          '<div class="hc-name">' + esc(e.name) + '</div>' +
+          '<div class="hc-title">' + esc(e.tagline) + '</div>' +
+          '<div class="hc-desc">' + esc(e.def) + '</div>' +
         '</div>';
     }
-    return '';
+    // Default: glossary
+    return '<div class="hc-icon">📖</div>' +
+      '<div class="hc-body">' +
+        '<div class="hc-badge">Glossary</div>' +
+        '<div class="hc-name">' + esc(e.name) + '</div>' +
+        '<div class="hc-desc">' + esc(e.def) + '</div>' +
+      '</div>';
   }
 
   // ── Show / position / hide ────────────────────────────────
