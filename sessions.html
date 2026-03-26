@@ -338,7 +338,111 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+
+    /* ── Markdown-sourced session body ───────────────────────── */
+    .session-md-body {
+      padding: 14px 20px 20px;
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.78;
+      color: var(--text-primary);
+    }
+    .session-md-body h1,
+    .session-md-body h2,
+    .session-md-body h3,
+    .session-md-body h4,
+    .session-md-body h5,
+    .session-md-body h6 {
+      font-family: 'Cinzel', serif;
+      color: var(--text-heading);
+      margin: 1.4em 0 0.45em;
+      line-height: 1.25;
+    }
+    .session-md-body h1:first-child,
+    .session-md-body h2:first-child,
+    .session-md-body h3:first-child { margin-top: 0; }
+    .session-md-body h1 {
+      font-size: 21px;
+      color: var(--accent-gold);
+      border-bottom: 1px solid var(--border-gold);
+      padding-bottom: 6px;
+      margin-bottom: 0.6em;
+    }
+    .session-md-body h2 { font-size: 17px; color: var(--accent-gold); }
+    .session-md-body h3 {
+      font-size: 13px;
+      color: var(--text-secondary);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .session-md-body h4 { font-size: 14px; color: var(--text-heading); }
+    .session-md-body p { margin: 0 0 0.9em; }
+    .session-md-body p:last-child { margin-bottom: 0; }
+    .session-md-body ul,
+    .session-md-body ol { margin: 0 0 0.9em 1.6em; }
+    .session-md-body li { margin-bottom: 0.25em; }
+    .session-md-body a {
+      color: var(--link-color);
+      text-decoration: none;
+      border-bottom: 1px dotted currentColor;
+    }
+    .session-md-body a:hover { color: var(--link-hover); }
+    .session-md-body strong { color: var(--text-heading); font-weight: 600; }
+    .session-md-body em { font-style: italic; color: var(--text-secondary); }
+    .session-md-body blockquote {
+      border-left: 3px solid var(--border-gold);
+      margin: 1em 0;
+      padding: 8px 16px;
+      color: var(--text-secondary);
+      font-style: italic;
+      background: rgba(201, 168, 76, 0.04);
+    }
+    .session-md-body blockquote p { margin: 0; }
+    .session-md-body code {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--border-dim);
+      padding: 1px 5px;
+      color: var(--accent-amber);
+    }
+    .session-md-body pre {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--border-dim);
+      padding: 12px 16px;
+      margin: 0 0 0.9em;
+      overflow-x: auto;
+    }
+    .session-md-body pre code { background: none; border: none; padding: 0; font-size: 13px; }
+    .session-md-body hr {
+      border: none;
+      border-top: 1px solid var(--border-gold);
+      margin: 1.4em 0;
+      opacity: 0.6;
+    }
+    .session-md-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 0.9em;
+      font-size: 15px;
+    }
+    .session-md-body th {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent-gold);
+      border-bottom: 1px solid var(--border-gold);
+      padding: 6px 10px;
+      text-align: left;
+    }
+    .session-md-body td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-dim);
+    }
+    .session-md-body tr:last-child td { border-bottom: none; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -811,9 +915,12 @@
 
   function sessionEntryHTML(s, gmMode) {
     var hasNotes = s.notesBody && s.notesBody.trim();
+    var notesClass = s.notesMd
+      ? 'session-notes-doc session-md-body snd-' + s.id
+      : 'session-notes-doc snd-' + s.id;
     var bodyContent = hasNotes
       ? '<div class="session-location">' + s.location + '</div>' +
-        '<div class="session-notes-doc snd-' + s.id + '">' + s.notesBody + '</div>'
+        '<div class="' + notesClass + '">' + s.notesBody + '</div>'
       : '<div class="session-location">' + s.location + '</div>' +
         '<div class="session-summary">' + autoLinkHTML(s.summary) + '</div>';
 
@@ -840,15 +947,11 @@
     var reader = new FileReader();
     reader.onload = function (e) {
       var raw = e.target.result;
-      // Extract and scope CSS from <style> blocks in <head>
-      var rawCSS = '';
-      raw.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, function (_, css) { rawCSS += css; });
-      var scopedCSS = _scopeCSS(rawCSS, id);
-      // Extract <body> content and auto-link it
-      var bodyMatch = raw.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-      var body = bodyMatch ? bodyMatch[1] : raw;
-      var linkedBody = autoLinkHTML(body);
-      _pendingNotes[id] = { body: linkedBody, style: scopedCSS };
+      var html = (typeof marked !== 'undefined')
+        ? marked.parse(raw)
+        : '<pre>' + raw.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</pre>';
+      var linkedBody = autoLinkHTML(html);
+      _pendingNotes[id] = { body: linkedBody, style: '', md: true };
       var label = document.getElementById('edit-notes-filename-' + id);
       if (label) { label.textContent = file.name; label.style.color = 'var(--accent-gold)'; }
     };
@@ -947,9 +1050,9 @@
         '<div class="session-location-edit" id="edit-loc-' + id + '" contenteditable="true">' + s.location + '</div>' +
       '</div>' +
       '<div class="session-upload-row">' +
-        '<button class="session-upload-btn" type="button" onclick="document.getElementById(\'edit-notes-input-' + id + '\').click()">📂 Upload Session Notes HTML</button>' +
+        '<button class="session-upload-btn" type="button" onclick="document.getElementById(\'edit-notes-input-' + id + '\').click()">📂 Upload Session Notes (.md)</button>' +
         '<span class="session-upload-filename" id="edit-notes-filename-' + id + '">' + (s.notesBody ? '(notes loaded — re-upload to replace)' : 'No file — text summary will be used') + '</span>' +
-        '<input type="file" id="edit-notes-input-' + id + '" accept=".html,.htm" style="display:none" onchange="sessionNotesFileSelected(\'' + id + '\',this)">' +
+        '<input type="file" id="edit-notes-input-' + id + '" accept=".md,.markdown,.txt" style="display:none" onchange="sessionNotesFileSelected(\'' + id + '\',this)">' +
       '</div>' +
       '<div class="session-summary-wrapper" style="position:relative;margin-top:10px;">' +
         '<div class="session-summary-edit" id="edit-summary-' + id + '" contenteditable="true">' + s.summary + '</div>' +
@@ -986,6 +1089,7 @@
       location:   locEl     ? locEl.innerHTML   : sessions[idx].location,
       notesBody:  pending   ? pending.body      : (sessions[idx].notesBody  || ''),
       notesStyle: pending   ? pending.style     : (sessions[idx].notesStyle || ''),
+      notesMd:    pending   ? (pending.md || false) : (sessions[idx].notesMd || false),
       summary:    summaryEl ? summaryEl.innerHTML : sessions[idx].summary
     };
     delete _pendingNotes[id];
@@ -1034,6 +1138,7 @@
       location:  '📍 Location: ',
       notesBody:  '',
       notesStyle: '',
+      notesMd:    false,
       summary:   '<p>Session summary goes here.</p>'
     });
     saveSessions(sessions);
