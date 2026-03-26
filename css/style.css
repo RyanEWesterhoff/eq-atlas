@@ -1270,3 +1270,7 @@ mark.gs-hl {
   margin: 12px -20px -20px -20px;
   overflow: hidden;
 }
+.session-notes-doc br {
+  display: block;
+  margin-bottom: 0.5em;
+}
