@@ -1274,3 +1274,6 @@ mark.gs-hl {
   margin-top: 0;
   margin-bottom: 8px;
 }
+.session-notes-doc li p {
+  margin-bottom: 0;
+}
