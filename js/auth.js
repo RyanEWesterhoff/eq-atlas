@@ -73,6 +73,11 @@ async function attemptGMLogin(password) {
   const hash = await sha256(password);
   if (hash === GM_PASS_HASH) {
     sessionStorage.setItem(GM_KEY, GM_TOKEN);
+    try {
+      await firebase.auth().signInWithEmailAndPassword('rewesterhoff@gmail.com', password);
+    } catch (e) {
+      console.warn('Firebase auth failed:', e.message);
+    }
     return true;
   }
   return false;
@@ -80,6 +85,7 @@ async function attemptGMLogin(password) {
 
 function deactivateGM() {
   sessionStorage.removeItem(GM_KEY);
+  try { firebase.auth().signOut(); } catch (e) {}
   location.reload();
 }
 

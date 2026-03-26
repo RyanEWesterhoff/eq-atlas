@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1209;
+    --parchment: #f5ead0;
+    --parchment-dark: #e8d5a3;
+    --aged: #c9a96e;
+    --blood: #7a1e1e;
+    --rust: #8b4513;
+    --shadow: rgba(26,18,9,0.18);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #2a1f0e;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, #3a2a10 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, #1a0f05 0%, transparent 50%);
+    min-height: 100vh;
+    padding: 40px 20px;
+    font-family: 'IM Fell English', serif;
+    color: var(--ink);
+  }
+
+  .page {
+    max-width: 820px;
+    margin: 0 auto;
+    background: var(--parchment);
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.07'/%3E%3C/svg%3E"),
+      linear-gradient(170deg, #f9f0d8 0%, #f0e0b0 40%, #eedaa0 100%);
+    border-radius: 2px;
+    padding: 60px 70px;
+    box-shadow:
+      0 0 0 1px #a8853a,
+      0 0 0 4px #8b6914,
+      8px 8px 40px rgba(0,0,0,0.6),
+      inset 0 0 60px rgba(180,130,40,0.12);
+    position: relative;
+  }
+
+  .page::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 2px;
+    background: linear-gradient(to right, rgba(0,0,0,0.06) 0%, transparent 8%, transparent 92%, rgba(0,0,0,0.04) 100%);
+    pointer-events: none;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--aged);
+    position: relative;
+  }
+
+  .page-header::after {
+    content: '✦ ✦ ✦';
+    position: absolute;
+    bottom: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--parchment);
+    padding: 0 12px;
+    color: var(--aged);
+    font-size: 12px;
+    letter-spacing: 6px;
+  }
+
+  .session-label {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 28px;
+    color: var(--blood);
+    line-height: 1.2;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.4);
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-style: italic;
+    color: var(--rust);
+    font-size: 15px;
+  }
+
+  section {
+    margin-bottom: 36px;
+  }
+
+  h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--blood);
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--parchment-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h2::before {
+    content: attr(data-glyph);
+    font-size: 18px;
+    color: var(--aged);
+  }
+
+  h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--rust);
+    margin: 16px 0 6px;
+  }
+
+  p, li {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #2a1a08;
+  }
+
+  ul {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  ul li::before {
+    content: '◆ ';
+    color: var(--aged);
+    font-size: 10px;
+    vertical-align: middle;
+  }
+
+  ul li {
+    margin-bottom: 5px;
+  }
+
+  .character-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .character-card {
+    background: rgba(180,130,40,0.08);
+    border: 1px solid var(--parchment-dark);
+    border-left: 3px solid var(--aged);
+    padding: 14px 16px;
+    position: relative;
+  }
+
+  .char-name {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--blood);
+    margin-bottom: 2px;
+  }
+
+  .char-player {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--rust);
+    margin-bottom: 8px;
+  }
+
+  .char-desc {
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  .char-tag {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--rust);
+    background: rgba(139,69,19,0.1);
+    border: 1px solid rgba(139,69,19,0.2);
+    padding: 1px 7px;
+    margin-top: 6px;
+  }
+
+  .event-list {
+    counter-reset: events;
+  }
+
+  .event-list li {
+    counter-increment: events;
+    padding-left: 28px;
+    position: relative;
+    margin-bottom: 10px;
+  }
+
+  .event-list li::before {
+    content: counter(events, upper-roman);
+    position: absolute;
+    left: 0;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    color: var(--aged);
+    font-weight: 600;
+    top: 2px;
+  }
+
+  .highlight-box {
+    background: rgba(122,30,30,0.06);
+    border: 1px solid rgba(122,30,30,0.2);
+    border-left: 3px solid var(--blood);
+    padding: 14px 18px;
+    margin: 16px 0;
+  }
+
+  .highlight-box p {
+    font-style: italic;
+    font-size: 14.5px;
+  }
+
+  .unknown {
+    font-style: italic;
+    color: var(--rust);
+    opacity: 0.8;
+  }
+
+  .npc-entry {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+  }
+
+  .npc-name {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--blood);
+    min-width: 160px;
+    padding-top: 2px;
+  }
+
+  .npc-desc {
+    font-size: 14px;
+    line-height: 1.65;
+    border-left: 1px solid var(--parchment-dark);
+    padding-left: 12px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .cliffhanger {
+    text-align: center;
+    padding: 24px;
+    border: 1px solid var(--aged);
+    margin-top: 10px;
+    position: relative;
+  }
+
+  .cliffhanger::before, .cliffhanger::after {
+    content: '⚔';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--aged);
+    font-size: 20px;
+  }
+
+  .cliffhanger::before { left: 14px; }
+  .cliffhanger::after { right: 14px; }
+
+  .cliffhanger p {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    color: var(--blood);
+    font-style: italic;
+  }
+
+  .footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--parchment-dark);
+    text-align: center;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--aged);
+  }
+
+  .speaker-note {
+    font-size: 11px;
+    font-style: italic;
+    color: var(--rust);
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <div class="session-label">Campaign Record — Session I</div>
+    <h1>The Road to Befallen</h1>
+    <div class="subtitle">Wayfarers Guild — Southern Expedition</div>
+  </div>
+
+  <!-- PARTY -->
+  <section>
+    <h2 data-glyph="⚔">The Party</h2>
+    <div class="character-grid">
+
+      <div class="character-card">
+        <div class="char-name">Klaus Ragnar Bergvist Müntefering Tilmann</div>
+        <div class="char-desc">A Halfling, roughly 2'11", with unkempt brown curls and a barely-there twisted mustache. Wears a traveler's cloak dirtied at the hem from keeping pace with taller companions. veteran of the roads. Wields an invisible mage hand with light fingers and lighter morals.</div>
+        <span class="char-tag">Arcane — Investigation / Sleight of Hand</span>
+      </div>
+
+      <div class="character-card">
+        <div class="char-name">Dina Gravesong</div>
+        <div class="char-desc">Forest gnome, pale as marble, black blunt bangs under a lacy black handkerchief. Layers upon layers of black. A large raven skull necklace. Carries her beloved fiddle case — inside, an instrument of beautiful black wood inscribed "Vexa" in silver flourished script. A collector of biological trophies. Chaotic joy in musical form.</div>
+        <span class="char-tag">Bard — Busker / Chaos Weapon</span>
+      </div>
+
+      <div class="character-card">
+        <div class="char-name">Patina</div>
+        <div class="char-desc">An ancient Warforged (~5,000 years old), typically disguised as a nondescript human. True form: exceptionally detailed metalwork, stainless steel with a subtle aged copper patina. Has not experienced genuine joy since a child asked them "what does metal dream of?" roughly 50 years ago — this question prompted the creation of Bloom. A Warforged-in-progress project, looking for the unknown ingredient that elevates Bloom from "mending" to "cure wounds."</div>
+        <span class="char-tag">Warforged — Ancient / Artificer</span>
+      </div>
+
+      <div class="character-card">
+        <div class="char-name">Gwendolyn of the Quiet Folk</div>
+        <div class="char-desc">Tall, willowy, bovine in aspect. Pale blue skin dappled with freckles, lightly curved horns through a cascade of black wavy hair. Silver-grey eyes that take in everything sideways. Twilight Cleric; wears the crescent moon at her belt. Warm and perceptive, tactically flatters, genuinely kind. Doesn't drink.</div>
+        <span class="char-tag">Twilight Cleric — Perception / Insight</span>
+      </div>
+
+      <div class="character-card">
+        <div class="char-name">Bloom</div>
+        <div class="char-player">NPC / Companion</div>
+        <div class="char-desc">Patina's creation. A more rudimentary, shorter Warforged — moves its limbs only as directed, no apparent inner life yet. Danced with Gwendolyn at the Tunnel. Patina describes him as existing in a "state of mending" and seeking something unknown to bring him to sentience. Not organic material. Something else.</div>
+        <span class="char-tag">Warforged Prototype — Patina's Project</span>
+      </div>
+
+      <div class="character-card">
+        <div class="char-name">[Chris's Character — Absent]</div>
+        <div class="char-player">Speaker unknown — Player: Chris</div>
+        <div class="char-desc">Has a large, dangerous cat companion (or possibly IS a large dangerous cat — "where's that tiger of yours that kills everything?"). Was away on a hunt during both documented sessions. Received a telepathic "meow meow meow" from Dina and is to meet the party at or before Befallen. Details sparse.</div>
+        <span class="char-tag">Unknown Class — Absent Session I &amp; II</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- The Roost -->
+  <section>
+    <h2 data-glyph="📜">Session I — The Seafarer's Roost, West Freeport</h2>
+    <ul class="event-list">
+      <li>Party gathered at the Seafarer's Roost dockside tavern — inexplicably the only calm bar on the Freeport waterfront. No one knows why.</li>
+      <li>Met Commander Drebus Kell, mid-level Freeport Militia officer. Broad-shouldered, self-congratulatory, proud of his epaulettes. Both of them. Briefly.</li>
+      <li>Kell's briefing: necromantic activity to the south in troll/ogre territory — not crude shambling, but sophisticated. Some of the dead came back capable and magical. Militia suspects a hidden player.</li>
+      <li>Six weeks prior, Kell hired a Velanthra — a human wizard in her 50s, gray hair, full complement of eyelashes — to investigate Befallen (old elven city Takish-His, buried under the Serpent Spine in the Desert of Ro). She vanished. The militia cannot go themselves without making a political statement.</li>
+      <li>Contract terms: 100 gold on return, 25 hazard pay up front (5 each). The party is not eligible for standard hazard pay because, in Kell's estimation, they are the hazard.</li>
+      <li>Klaus attempted to steal a paper from Kell's pocket. Alarm spell triggered. Kell caught him — but offered the document anyway, since it contained additional guild job context he'd been holding back.</li>
+      <li>Dina attempted to negotiate a per-ear bounty for undead trophy collection. Kell declined. She pivoted to eyelashes. He declined that too. She offered eyelids. He left with half a beer still on the table.</li>
+      <li>A group of four Iskar (lizard folk diplomats — new to Antonica, clearly political figures) entered the tavern as the party was leaving. They ignored the party entirely. The party returned the favor.</li>
+      <li>Party departed south through the Commonlands by hired coach. Journey: roughly one day to the Tunnel.</li>
+    </ul>
+
+    <div class="highlight-box">
+      <p>"I have seen 5,000 springs. There is no novelty in the landscape for me anymore."<br>— Patina, on Gwendolyn's question about wonder in small things</p>
+    </div>
+  </section>
+
+  <!-- TRAVEL INTERLUDE -->
+  <section>
+    <h2 data-glyph="🌙">Interlude — The Coach South</h2>
+    <p style="margin-bottom:10px;">Long travel. Party settled into character. Notable moments:</p>
+    <ul>
+      <li>Patina revealed that 50 years ago, a child asking "what does metal dream about?" was the last time they felt real joy — and the question that prompted Bloom's creation.</li>
+      <li>Gwendolyn pressed Patina on Bloom's missing element. Patina explained: Bloom exists in a state of "mending" — returned to wholeness, but not alive. They seek something unknown to bring him to "cure wounds" — actual life. Not organic material. Origin unknown.</li>
+      <li>Gwendolyn's response: "You're looking for the slant of sunlight through leaves." Patina: "You're thinking about it too literally."</li>
+      <li>Klaus recounted a previous tunnel transit escorting Sir Feldergrass — a timid royal cousin, afraid of the dark, nose hair of legend. No fun. This trip is already better.</li>
+      <li>Dina began workshopping a peacock-call song with audience participation. Working title: "Panties for Death." Klaus is already dreading it.</li>
+      <li>Dina sent telepathic meows to Chris's absent character, directing them to meet the party at Befallen.</li>
+    </ul>
+  </section>
+
+  <!-- The Tunnel -->
+  <section>
+    <h2 data-glyph="🗺">The Tunnel, Serpent Spine</h2>
+
+    <h3>The Tunnel — Location Notes</h3>
+    <p style="margin-bottom:10px;">A marvel of engineering gifted by Qeynos to the Commonlands after a siege by dark elves and trolls cut off trade routes north and south. Bored through the Serpent Spine mountains. Roughly a quarter mile wide, 100 feet tall — far larger than any practical need dictated. Inhabited for centuries. Inside: cliff dwelling-style buildings carved directly into the rock walls with ladders connecting stacked levels, plus wood-frame stalls in the middle creating four rows of activity. Bustling like a busy street. No formal government — tribal block loyalty. Don't go into debt. Don't take credit. Don't talk to anyone named Charlie.</p>
+
+    <ul class="event-list">
+      <li>On arrival, Klaus located an old contact — a massive, perpetually cheerful man called "Dee" (full name unrecorded) running an aguas frescas stall with 3-foot serving cups. Old acquaintance from the Bazaar days. Gave Klaus a contact card stuck to the bottom of his drink.</li>
+      <li>Klaus bought five drinks for the party. Dee appears content but isolated — runs his stall alone, has not left in some time. Klaus promised to drag him out to the desert on the return trip.</li>
+      <li>Dina set her fiddle case down near an alley and opened with Baby Shark. Gwendolyn joined in dancing immediately, full enthusiasm, slightly off-key. Bloom was recruited as a dance partner. He moved his arms when Gwendolyn moved his arms.</li>
+      <li>Attracted approximately 10 children. All well-kept, range of ages. Dina shifted into a treasure-hunt song seeded with local landmarks and hiding spots, inviting the kids to fill in the geography. Coins in the case.</li>
+      <li>A child approached the fiddle case with deliberate, knowing eye contact and dropped a tiny folded note. It read: <strong>FOUND</strong></li>
+      <li>Separately, Dee's contact card from the bottom of Klaus's drink also contained a message — likely <strong>YOU</strong> (context unclear at session end, but the two notes together appear to read "found you").</li>
+      <li>Klaus climbed onto his unseen servant's shoulders for a vantage point and scanned the crowd. Many eyes on the party — some curious, some hostile.</li>
+      <li>Someone moved up behind one of the party members and spoke aloud: <em>"Found you."</em></li>
+    </ul>
+
+    <div class="cliffhanger">
+      <p>"Found you."</p>
+    </div>
+  </section>
+
+  <!-- NPCS -->
+  <section>
+    <h2 data-glyph="👤">Notable NPCs</h2>
+
+    <div class="npc-entry">
+      <div class="npc-name">Commander Dravus Kell</div>
+      <div class="npc-desc">Freeport Militia, mid-ranking. Broad, muscled under a layer of comfortable living. Self-made and proud of it — cleaned out a Teir'dal sleeper cell solo years ago by following threads. Genuinely needs the party; dropped the off-books context when flattered. Now missing one epaulette. Status: employer, unaware of theft.</div>
+    </div>
+
+    <div class="npc-entry">
+      <div class="npc-name">Velanthra</div>
+      <div class="npc-desc">Expert hired by Kell, sent to Befallen six weeks ago. Human woman, 50s, gray hair, looks like a wizard, all eyelashes accounted for at last known sighting. Status: missing. Presumed alive by Kell.</div>
+    </div>
+
+    <div class="npc-entry">
+      <div class="npc-name">"Dee" (full name unknown)</div>
+      <div class="npc-desc">Old Bazaar contact of Klaus. Now runs an aguas frescas stall in the Tunnel. Large, jovial, clearly not okay. Has not left in a long time. Status: available as resource on return journey.</div>
+    </div>
+
+  <!-- WORLD -->
+  <section>
+    <h2 data-glyph="🌍">World Notes — Antonica</h2>
+    <div class="two-col">
+      <div>
+        <h3>Key Locations</h3>
+        <ul>
+          <li><strong>Freeport</strong> — Major coastal city, east coast of Antonica. Metropolitan, militia-run, politically complex. Home base.</li>
+          <li><strong>The Commonlands</strong> — Farmland south of Freeport under its jurisdiction. Temperate, rolling grassland. Choke point: dark elves to the north, trolls to the south.</li>
+          <li><strong>The Tunnel</strong> — Qeynos-built passage through the Serpent Spine. Quarter mile wide, 100ft tall. Settled, lawless, tribally organized. Trade artery.</li>
+          <li><strong>Desert of Ro</strong> — Formerly lush elven continent, scorched by Solusek Ro. Nomadic population, dock trade on the desert edge.</li>
+          <li><strong>Befallen / Takish-Hiz</strong> — Ancient elven crown jewel, buried under the Serpent Spine when Solusek Ro raised the mountains in jealous wrath. Currently: presumed site of sophisticated necromantic activity. Destination.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Factions &amp; Powers</h3>
+        <ul>
+          <li><strong>Freeport Militia</strong> — Police and crooked politician in one. Hold the city by a thread, pull those threads into purse strings when able.</li>
+          <li><strong>Wayfarers Guild</strong> — The party's employer. Gets done what others won't. Morally gray, compass pointed mostly north.</li>
+          <li><strong>Iksar</strong> — Lizard folk, new to the continent. Politically active in Freeport. Native language: Cabalisian. Ambassadors seen in the Roost; rumors range from "misunderstood" to "run the government in disguise."</li>
+          <li><strong>"The Organization"</strong> — A crew with fingers in all the tunnel's pies. Don't discuss. Don't owe them anything.</li>
+          <li><strong>Solusek Ro</strong> — God of Magic, "The Burning Prince." His jealousy of elven magical prowess buried Takish-His and created the Desert of Ro. Ancient history with ongoing consequences.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- THREADS -->
+  <section>
+    <h2 data-glyph="🔮">Open Threads</h2>
+    <ul>
+      <li>Is Velanthra actually still alive?</li>
+      <li>How can the party find the entrance to Befallen?</li>
+      <li>Who spoke "found you" — and do they know where Velanthra is, or are they something else entirely?</li>
+      <li>The Iksar diplomats at the Seafarer's Roost — annoyed, late, political. Coincidence?</li>
+      <li>Kell's alarm-spelled document — what was in it that he eventually handed over voluntarily?</li>
+    </ul>
+  </section>
+
+</div>
+</body>
+</html>
