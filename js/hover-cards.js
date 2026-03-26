@@ -12,8 +12,9 @@
   var _path = window.location.pathname.replace(/\\/g, '/');
   var ROOT  = (_path.includes('/zones/') || _path.includes('/factions/')) ? '../' : '';
 
-  // Disabled on the Lands browser page (zone cards already show context)
-  if (_path.endsWith('/zones.html') || _path === '/zones.html') return;
+  // Disabled on pages that have their own inline hover-card systems
+  if (_path.endsWith('/zones.html')    || _path === '/zones.html')    return;
+  if (_path.endsWith('/sessions.html') || _path === '/sessions.html') return;
 
   // ── Card element ──────────────────────────────────────────
   var card = null;
