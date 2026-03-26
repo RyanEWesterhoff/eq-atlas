@@ -74,7 +74,7 @@ async function attemptGMLogin(password) {
   if (hash === GM_PASS_HASH) {
     sessionStorage.setItem(GM_KEY, GM_TOKEN);
     try {
-      await firebase.auth().signInWithEmailAndPassword('rewesterhoff@gmail.com', password);
+      await firebase.auth().signInWithEmailAndPassword('gm@eq-atlas.local', password);
     } catch (e) {
       console.warn('Firebase auth failed:', e.message);
     }
