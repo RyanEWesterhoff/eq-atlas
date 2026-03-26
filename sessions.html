@@ -956,7 +956,7 @@
     reader.onload = function (e) {
       var raw = e.target.result;
       var html = (typeof marked !== 'undefined')
-        ? marked.parse(raw)
+        ? marked.parse(raw, { breaks: true })
         : '<pre>' + raw.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</pre>';
       var linkedBody = autoLinkHTML(html);
       _pendingNotes[id] = { body: linkedBody, style: '', md: true };
