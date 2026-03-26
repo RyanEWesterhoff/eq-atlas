@@ -32,7 +32,7 @@ window.GLOSSARY_DATA = [
   { id: 'brell-serilis', term: 'Brell Serilis', tags: ['planes'],
     def: 'The Duke of Below, god of the earth and patron of dwarves, gnomes, and halflings. Created underground races and sealed the passage between Norrath and the Plane of Underfoot with the Vault of Living Stone. His elementals are found throughout the Hole after the Heretics accidentally broke the seal.' },
   { id: 'brotherhood-the', term: 'Brotherhood, The', tags: ['odus'],
-    def: 'The inner circle of scholars founded by Miragul in Paineel after his return from exile. Its purpose was to seek out and explore the mysteries of the cosmos through any means necessary, including necromancy.' },
+    def: 'The inner circle of scholars founded by Miragul in Paineel after her return from exile. Its purpose was to seek out and explore the mysteries of the cosmos through any means necessary, including necromancy.' },
 
   // C
   { id: 'cabilis', term: 'Cabilis', tags: ['kunark'],
@@ -192,7 +192,7 @@ window.GLOSSARY_DATA = [
   { id: 'meldrath', term: 'Meldrath the Malignant', tags: ['faydwer'],
     def: "A gnomish inventor of extraordinary brilliance who turned to evil. Led the Dark Reflection faction hidden in the Mines of Malfunction beneath Ak'Anon. Worships Bertoxxulous. Once Maelin Starpyre's peer; now remembered as a cautionary tale about the cost of unchecked ambition." },
   { id: 'miragul', term: 'Miragul', tags: ['antonica'],
-    def: "Once Norrath's most brilliant mortal scholar, Miragul pursued immortality through necromancy at any cost — sacrificing companions, colleagues, and ultimately his own humanity. He now persists as a lich in the frozen caves beneath Everfrost, a permanent warning of what boundless magical ambition achieves." },
+    def: "Once Norrath's most brilliant mortal scholar, Miragul pursued immortality through necromancy at any cost — sacrificing companions, colleagues, and ultimately her own humanity. She now persists as a lich in the frozen caves beneath Everfrost, a permanent warning of what boundless magical ambition achieves." },
   { id: 'mithaniel-marr', term: 'Mithaniel Marr', tags: ['planes', 'antonica'],
     def: "The Truthbringer, god of valor and justice. Twin brother of Erollisi Marr. Creator of the Barbarian race alongside his sister. His paladins — the Knights of Truth — are the holy guardians of Freeport. Jointly with Erollisi, called the Crusade of Tears." },
 
