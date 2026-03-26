@@ -955,8 +955,14 @@
     var reader = new FileReader();
     reader.onload = function (e) {
       var raw = e.target.result;
+      // Convert single newlines to paragraph breaks so each line
+      // becomes its own <p> element (giving proper CSS-controllable spacing).
+      // Double newlines (already paragraph breaks) are left untouched.
+      var processed = (typeof marked !== 'undefined')
+        ? raw.replace(/([^\n])\n([^\n])/g, '$1\n\n$2')
+        : raw;
       var html = (typeof marked !== 'undefined')
-        ? marked.parse(raw, { breaks: true })
+        ? marked.parse(processed)
         : '<pre>' + raw.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</pre>';
       var linkedBody = autoLinkHTML(html);
       _pendingNotes[id] = { body: linkedBody, style: '', md: true };
