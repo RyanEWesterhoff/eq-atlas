@@ -71,13 +71,7 @@
     .session-body { display: none; padding-top: 10px; }
     .session-entry.open .session-body { display: block; }
 
-    /* ── Embedded notes iframe ────────────────────────────── */
-    .session-notes-frame {
-      width: 100%;
-      border: none;
-      display: block;
-      min-height: 800px;
-    }
+    /* (inline session notes styled via .session-notes-doc in style.css) */
 
     /* ── Upload button (GM edit mode) ─────────────────────── */
     .session-upload-row {
@@ -450,6 +444,8 @@
   // In-memory cache updated by Firebase listener
   var _sessionsCache = [];
   var _firebaseReady = false;
+  // Holds notes extracted from a freshly-uploaded file, keyed by session id
+  var _pendingNotes  = {};
 
   function _sortSessions(sessions) {
     return sessions.slice().sort(function (a, b) {
@@ -472,11 +468,31 @@
           num:   s.num   || '',
           title: s.title || '',
           date:  s.date  || '',
-          text:  (_stripHtml(s.summary || '') + ' ' + _stripHtml(s.notesHtml || '')).slice(0, 3000)
+          text:  (_stripHtml(s.summary || '') + ' ' + _stripHtml(s.notesBody || '')).slice(0, 3000)
         };
       });
       localStorage.setItem('eq-sessions-search', JSON.stringify(idx));
     } catch (e) {}
+  }
+
+  // Scope a raw CSS string so every rule is prefixed with .snd-{id}
+  function _scopeCSS(css, scopeId) {
+    var prefix = '.snd-' + scopeId;
+    css = css.replace(/@charset[^;]*;/gi, '').replace(/@import[^;]*;/gi, '');
+    return css.replace(/([^{}]+)\{/g, function (match, selector) {
+      selector = selector.trim();
+      if (selector.charAt(0) === '@') return match; // @media, @keyframes — keep as-is
+      var scoped = selector.split(',').map(function (s) {
+        s = s.trim();
+        if (!s) return '';
+        // Root-level selectors become the wrapper itself
+        s = s.replace(/\b(body|html|:root)\b/g, prefix);
+        if (s === '*') return prefix + ' *';
+        if (s.indexOf(prefix) === 0) return s; // already prefixed
+        return prefix + ' ' + s;
+      }).filter(Boolean).join(', ');
+      return scoped + ' {';
+    });
   }
 
   // Run autoLinkHTML on just the <body> of a full HTML document
@@ -794,10 +810,10 @@
   }
 
   function sessionEntryHTML(s, gmMode) {
-    var hasNotes = s.notesHtml && s.notesHtml.trim();
+    var hasNotes = s.notesBody && s.notesBody.trim();
     var bodyContent = hasNotes
       ? '<div class="session-location">' + s.location + '</div>' +
-        '<iframe class="session-notes-frame" id="snf-' + s.id + '"></iframe>'
+        '<div class="session-notes-doc snd-' + s.id + '">' + s.notesBody + '</div>'
       : '<div class="session-location">' + s.location + '</div>' +
         '<div class="session-summary">' + autoLinkHTML(s.summary) + '</div>';
 
@@ -823,9 +839,16 @@
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function (e) {
-      var linked = autoLinkNotesHtml(e.target.result);
-      var holder = document.getElementById('edit-notes-html-' + id);
-      if (holder) holder.setAttribute('data-html', linked);
+      var raw = e.target.result;
+      // Extract and scope CSS from <style> blocks in <head>
+      var rawCSS = '';
+      raw.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, function (_, css) { rawCSS += css; });
+      var scopedCSS = _scopeCSS(rawCSS, id);
+      // Extract <body> content and auto-link it
+      var bodyMatch = raw.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+      var body = bodyMatch ? bodyMatch[1] : raw;
+      var linkedBody = autoLinkHTML(body);
+      _pendingNotes[id] = { body: linkedBody, style: scopedCSS };
       var label = document.getElementById('edit-notes-filename-' + id);
       if (label) { label.textContent = file.name; label.style.color = 'var(--accent-gold)'; }
     };
@@ -871,25 +894,17 @@
 
     container.innerHTML = html;
 
-    // Set srcdoc on note iframes (avoids attribute encoding issues)
+    // Inject scoped <style> for each session that has embedded notes CSS
     for (var ri = 0; ri < sessions.length; ri++) {
-      (function(s) {
-        if (!s.notesHtml) return;
-        var frame = document.getElementById('snf-' + s.id);
-        if (!frame) return;
-        var _base = '<base href="' + window.location.href.replace(/[^/]*$/, '') + '">';
-        var _html = /<head>/i.test(s.notesHtml)
-          ? s.notesHtml.replace(/<head>/i, '<head>' + _base)
-          : _base + s.notesHtml;
-        frame.srcdoc = _html;
-        frame.onload = function() {
-          function resize() {
-            try { frame.style.height = (frame.contentDocument.body.scrollHeight + 40) + 'px'; } catch(x) {}
-          }
-          resize();
-          setTimeout(resize, 600); // re-run after fonts finish loading
-        };
-      })(sessions[ri]);
+      var _s = sessions[ri];
+      if (!_s.notesStyle) continue;
+      var _styleId = 'snd-style-' + _s.id;
+      if (!document.getElementById(_styleId)) {
+        var _styleEl = document.createElement('style');
+        _styleEl.id = _styleId;
+        _styleEl.textContent = _s.notesStyle;
+        document.head.appendChild(_styleEl);
+      }
     }
   }
 
@@ -933,10 +948,9 @@
       '</div>' +
       '<div class="session-upload-row">' +
         '<button class="session-upload-btn" type="button" onclick="document.getElementById(\'edit-notes-input-' + id + '\').click()">📂 Upload Session Notes HTML</button>' +
-        '<span class="session-upload-filename" id="edit-notes-filename-' + id + '">' + (s.notesHtml ? '(notes loaded)' : 'No file — text summary will be used') + '</span>' +
+        '<span class="session-upload-filename" id="edit-notes-filename-' + id + '">' + (s.notesBody ? '(notes loaded — re-upload to replace)' : 'No file — text summary will be used') + '</span>' +
         '<input type="file" id="edit-notes-input-' + id + '" accept=".html,.htm" style="display:none" onchange="sessionNotesFileSelected(\'' + id + '\',this)">' +
       '</div>' +
-      '<div id="edit-notes-html-' + id + '" style="display:none" data-html="' + esc(s.notesHtml || '') + '"></div>' +
       '<div class="session-summary-wrapper" style="position:relative;margin-top:10px;">' +
         '<div class="session-summary-edit" id="edit-summary-' + id + '" contenteditable="true">' + s.summary + '</div>' +
       '</div>';
@@ -958,21 +972,23 @@
     for (var i = 0; i < sessions.length; i++) { if (sessions[i].id === id) { idx = i; break; } }
     if (idx === -1) return;
 
-    var numEl      = document.getElementById('edit-num-'      + id);
-    var titleEl    = document.getElementById('edit-title-'    + id);
-    var dateEl     = document.getElementById('edit-date-'     + id);
-    var locEl      = document.getElementById('edit-loc-'      + id);
-    var notesHtmlEl = document.getElementById('edit-notes-html-' + id);
-    var summaryEl  = document.getElementById('edit-summary-'  + id);
+    var numEl     = document.getElementById('edit-num-'     + id);
+    var titleEl   = document.getElementById('edit-title-'   + id);
+    var dateEl    = document.getElementById('edit-date-'    + id);
+    var locEl     = document.getElementById('edit-loc-'     + id);
+    var summaryEl = document.getElementById('edit-summary-' + id);
+    var pending   = _pendingNotes[id];
     sessions[idx] = {
-      id:        id,
-      num:       numEl       ? numEl.value                            : sessions[idx].num,
-      title:     titleEl     ? titleEl.value                          : sessions[idx].title,
-      date:      dateEl      ? dateEl.value                           : sessions[idx].date,
-      location:  locEl       ? locEl.innerHTML                        : sessions[idx].location,
-      notesHtml: notesHtmlEl ? notesHtmlEl.getAttribute('data-html')  : (sessions[idx].notesHtml || ''),
-      summary:   summaryEl   ? summaryEl.innerHTML                    : sessions[idx].summary
+      id:         id,
+      num:        numEl     ? numEl.value       : sessions[idx].num,
+      title:      titleEl   ? titleEl.value     : sessions[idx].title,
+      date:       dateEl    ? dateEl.value      : sessions[idx].date,
+      location:   locEl     ? locEl.innerHTML   : sessions[idx].location,
+      notesBody:  pending   ? pending.body      : (sessions[idx].notesBody  || ''),
+      notesStyle: pending   ? pending.style     : (sessions[idx].notesStyle || ''),
+      summary:    summaryEl ? summaryEl.innerHTML : sessions[idx].summary
     };
+    delete _pendingNotes[id];
 
     saveSessions(sessions);
     renderSessions();
@@ -1001,7 +1017,8 @@
       title:     'New Session',
       date:      today,
       location:  '📍 Location: ',
-      notesHtml: '',
+      notesBody:  '',
+      notesStyle: '',
       summary:   '<p>Session summary goes here.</p>'
     });
     saveSessions(sessions);
