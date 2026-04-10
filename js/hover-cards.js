@@ -166,6 +166,7 @@
     if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
     if (left < 8) left = 8;
     if (top + h > window.innerHeight - 8) top = rect.top - h - gap;
+    if (top < 8) top = 8;
 
     card.style.left = left + 'px';
     card.style.top  = top  + 'px';

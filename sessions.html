@@ -800,6 +800,8 @@
     var field = document.getElementById(fieldId);
     if (!field) return;
 
+    var existing = field.parentNode.querySelector('.zone-ac-dropdown');
+    if (existing) existing.remove();
     var dropdown = document.createElement('div');
     dropdown.className = 'zone-ac-dropdown';
     dropdown.style.display = 'none';
@@ -1180,6 +1182,8 @@
     var field = document.getElementById(fieldId);
     if (!field || typeof ZONES === 'undefined') return;
     var wrapper = field.parentNode;
+    var existing = wrapper.querySelector('.zone-ac-dropdown');
+    if (existing) existing.remove();
     var dropdown = document.createElement('div');
     dropdown.className = 'zone-ac-dropdown';
     dropdown.style.display = 'none';

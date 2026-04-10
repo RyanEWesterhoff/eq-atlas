@@ -52,7 +52,7 @@ The gorge takes its sinister name from the Evil Eyes that lurk within its deeper
     name: "East Commonlands",
     region: "Antonica",
     continent: "Antonica",
-    adjacentZones: ["West Freeport", "West Commonlands", "Nektulos Forest", "Kithicor Forest"],
+    adjacentZones: ["Freeport", "West Commonlands", "Nektulos Forest", "Kithicor Forest"],
     tags: ["Outdoor", "Travel Route"],
     excerpt: "A sprawling crossroads outside the gates of Freeport where adventurers of all races and alignments converge to hunt, trade, and begin their journeys into the wider world.",
     background: `The East Commonlands stretch westward from the walls of Freeport in a broad, rolling expanse of mixed terrain — open grassland interrupted by orc encampments, spider-infested thickets, and the charred remains of old campfires. It is one of Norrath's great melting pots, a land where the rigid racial divisions enforced within city walls dissolve into the pragmatic camaraderie of shared danger. A barbarian warrior might stand shoulder-to-shoulder with a dark elf wizard here, united by the common threat of an orc patrol.
@@ -80,7 +80,7 @@ The region's most famous feature is the tunnel connecting its eastern and wester
     name: "Eastern Plains of Karana",
     region: "Antonica",
     continent: "Antonica",
-    adjacentZones: ["Northern Plains of Karana", "Southern Karana", "High Pass Hold"],
+    adjacentZones: ["Northern Plains of Karana", "Southern Karana", "Highpass Hold"],
     tags: ["Outdoor", "Dangerous"],
     excerpt: "A rocky, windswept stretch of the Karana Plains dominated by a massive wooden bridge and patrolled by gnolls, bandits, giants, and terrifying evil eyes.",
     background: `The Eastern Plains of Karana mark the transition from the populated heartland of Antonica into the true wilderness of the continent's interior. A massive wooden bridge — ancient beyond memory and wide enough for a wagon — spans the central river, and it is around this landmark that much of the region's activity revolves. Human settlements cling to the road, and Sir Morgan the wandering knight and his apprentice Squire Wimbley offer what escort service they can to travelers navigating the dangerous terrain.
@@ -110,7 +110,7 @@ Gnoll communities have established themselves throughout the rocky hills and rav
     name: "Everfrost Peaks",
     region: "Antonica",
     continent: "Antonica",
-    adjacentZones: ["Halas", "Blackburrow", "Permafrost Keep"],
+    adjacentZones: ["Halas", "Blackburrow", "Permafrost"],
     tags: ["Outdoor", "Dangerous"],
     excerpt: "The frozen northernmost reaches of Antonica, a land of perpetual blizzard and deep ice where barbarian hunters, frost goblins, and ancient mammoths share the tundra with the undead servants of the lich Miragul.",
     background: `Everfrost Peaks is the ragged edge of the civilized world — a place where snowfall never ceases and the horizon is an unbroken wall of white. The region lies adjacent to Halas, the barbarian city, and serves as both hunting ground and proving ground for that fierce people. Ice-covered plains give way to frozen lakes where mammoths wade and polar bears prowl, and the constant wind makes every sound uncertain and every shadow suspect.
@@ -339,7 +339,7 @@ Yet the forest is not exclusively dark elf domain. A community of halfling druid
     name: "Northern Desert of Ro",
     region: "Antonica",
     continent: "Antonica",
-    adjacentZones: ["East Freeport", "Oasis of Marr"],
+    adjacentZones: ["Freeport", "Oasis of Marr"],
     tags: ["Outdoor", "Travel Route"],
     excerpt: "The scorching northern gateway to the Desert of Ro, a trafficked corridor of sun-bleached dunes and scrubland where dervish whirlwinds, desert madmen, and roaming sand giants threaten all who pass.",
     background: `The Northern Desert of Ro is the point at which Freeport's urban sprawl gives way to genuine wilderness. Stepping through the gate from East Freeport, travelers find themselves immediately in open desert — cracked earth, wind-sculpted dunes, and a sky so bright and flat that the horizon seems to vibrate. This region serves as both a hunting destination and a major travel corridor, particularly for dark-aligned races moving between Freeport and the southern swamps.
@@ -423,7 +423,7 @@ The western region has earned the nickname "orc highway" among veterans — a de
     name: "Ocean of Tears",
     region: "Antonica",
     continent: "Antonica",
-    adjacentZones: ["East Freeport", "Butcherblock Mountains", "Sister Isle"],
+    adjacentZones: ["Freeport", "Butcherblock Mountains"],
     tags: ["Outdoor", "Underwater", "Travel Route", "Dangerous"],
     excerpt: "A vast and merciless sea dotted with teardrop islands connecting Antonica to Faydwer, where pirates, seafury cyclops, and sirens prey on those brave or foolish enough to sail its waters.",
     background: `The Ocean of Tears earns its name from the scattered islands that dot its surface — each one shaped like a teardrop, as though the sea itself wept them into existence. This expanse is the great maritime expanse between the continents of Antonica and Faydwer, and the boats that ply its surface are among the most important transit services in Norrath. The journey between Freeport and Butcherblock Mountains takes travelers through this region, and the islands they pass serve as both waypoints and hunting grounds.
@@ -452,7 +452,7 @@ The ocean's apparent emptiness is deceptive. Below the surface, aqua goblins mai
     name: "Qeynos Hills",
     region: "Antonica",
     continent: "Antonica",
-    adjacentZones: ["North Qeynos", "Western Plains of Karana", "Blackburrow"],
+    adjacentZones: ["Qeynos", "Western Plains of Karana", "Blackburrow"],
     tags: ["Outdoor"],
     excerpt: "Rolling hills outside the gates of Qeynos where young adventurers cut their teeth on beetles and rats before discovering that not everything in these seemingly gentle hills is as benign as it appears.",
     background: `The Qeynos Hills roll away from the city's northern gate in comfortable curves of green grass and scattered woodland — a pastoral scene that has reassured and then promptly deceived generations of new adventurers. The hills are indeed gentler than the western plains or the Everfrost tundra, but they are not safe. Gnolls pour from Blackburrow's entrance in a near-constant stream, making the cave mouth the region's busiest and most dangerous hunting area. Grizzly bears and rabid wolves stalk the higher ridgelines with genuine menace.
@@ -1162,7 +1162,7 @@ Lady Vox was banished from the Claws of Veeshan — the dragon council — for h
     name: "Qeynos Aqueducts",
     region: "Antonica",
     continent: "Antonica",
-    adjacentZones: ["South Qeynos", "North Qeynos"],
+    adjacentZones: ["Qeynos"],
     tags: ["Underground", "Undead", "Sewers"],
     excerpt: "The vast ancient water supply tunnels beneath Qeynos have become a refuge for criminals, cultists, and the followers of the Plague Bringer Bertoxxulous, who operate an entire hidden city below the streets.",
     background: `Beneath the respectable streets of Qeynos, the ancient aqueduct system that once supplied the city with fresh water has become something else entirely. Sealed off generations ago when the city's water infrastructure was rebuilt, the tunnels were quickly colonized by those who preferred their activities to remain unseen. Today the Qeynos Aqueducts house an entire shadow society: followers of Bertoxxulous the Plague Bringer maintain a hidden temple with merchants, trainers, and a bank serving evil-aligned characters who would be arrested on sight above ground.
@@ -2641,7 +2641,7 @@ The region is a place of uneasy coexistence. The Othmir, a tribe of otter-folk, 
     name: "Eastern Wastes",
     region: "Velious",
     continent: "Velious",
-    adjacentZones: ["Crystal Caverns", "Great Divide", "Sleeper's Tomb"],
+    adjacentZones: ["Crystal Caverns", "The Great Divide", "Sleeper's Tomb"],
     tags: ["Outdoor", "Frozen", "Tundra"],
     excerpt: "A vast frozen tundra where Coldain dwarves, Frost Giants, and Ry'Gorr orcs wage a bitter, endless war across an unforgiving landscape of ice and snow.",
     background: `The Eastern Wastes sprawl across much of the northeastern reaches of Velious, a seemingly boundless expanse of frozen ground where the wind never truly stops and the cold has a weight to it that presses down on the spirit. Three factions have carved out territories across this desolation and none of them are at peace. The Coldain dwarves maintain fortified huts and outposts, grim-faced survivors who have been fighting for their homeland since the Frost Giants drove them from their ancestral city of Froststone. The Frost Giants, massive and brutal, hold a great fortress in the north, their captains commanding armies that harry the dwarves without mercy. And in Ry'Gorr Keep, the orc clans add a third front to the perpetual conflict, raiding both sides with savage efficiency.
@@ -2700,7 +2700,7 @@ The Tizmak, a fierce race of cave-dwelling warriors, dominate the northwestern c
     name: "Iceclad Ocean",
     region: "Velious",
     continent: "Velious",
-    adjacentZones: ["Tower of Frozen Shadow", "Great Divide", "Eastern Wastes"],
+    adjacentZones: ["Tower of Frozen Shadow", "The Great Divide", "Eastern Wastes"],
     tags: ["Outdoor", "Frozen", "Coastal"],
     excerpt: "The frozen gateway to the continent of Velious, a shattered ocean of ice floes and jagged island chains where gnome pirates, frost giant scouts, and the deadly turtle Lodizal share treacherous waters.",
     background: `The Iceclad Ocean is the first sight most travelers have of Velious — a vast expanse of frozen sea broken into shifting ice floes and the rocky archipelago known as the Icy Fingers. Wizards and druids can anchor their transport magic here, and it is through this region that virtually every expedition to the continent of Velious must first pass. The Tower of Frozen Shadow looms over one portion of the coastline, a testament to the dark history that has taken root even on this frigid frontier. Gnome pirates have established a rough outpost among the islands, trading in the kind of commerce that official ports prefer not to acknowledge.
@@ -2809,7 +2809,7 @@ Beneath the Keep's halls lies the ancient Pit, a sprawling network of caverns th
     name: "Kael Drakkal",
     region: "Velious",
     continent: "Velious",
-    adjacentZones: ["Great Divide", "Wakening Land", "Eastern Wastes"],
+    adjacentZones: ["The Great Divide", "Wakening Land", "Eastern Wastes"],
     tags: ["City", "Frozen", "Giant"],
     excerpt: "The frozen colossus-city of the Velious giants, ruled by the fearsome King Tormax, where two giant clans pursue ambitions of dominance over all of Velious.",
     background: `Kael Drakkal was founded by giants who fled the divine retribution visited upon their kind after Rallos Zek's disastrous invasion of the Plane of Earth. They came to Velious in exile and built something vast and cold and violent in its image, a city scaled for bodies that dwarf even the greatest human warriors. Two distinct giant peoples inhabit it: the Kromzek, civilized in their fashion, who control commerce and politics and serve as King Tormax's court; and the Kromrif, nomadic and savage, who serve as the city's martial backbone and raiding arm. The two factions coexist under Tormax's iron authority, their different natures harnessed toward a single ambition — total control of Velious.
@@ -2863,7 +2863,7 @@ The Claws of Veeshan — the dragon faction that controls Skyshrine — are not 
     name: "Thurgadin",
     region: "Velious",
     continent: "Velious",
-    adjacentZones: ["Great Divide", "Crystal Caverns", "Icewell Keep"],
+    adjacentZones: ["The Great Divide", "Crystal Caverns", "Icewell Keep"],
     tags: ["City", "Frozen"],
     excerpt: "The great fortress-city of the Coldain dwarves, carved deep into the living rock of Velious, a bastion of dwarven civilization in exile and the heart of their resistance against the giants.",
     background: `Thurgadin was not built so much as carved from desperation. After the Frost Giants drove the Coldain from their ancestral home in Froststone, the dwarves retreated into the mountains and excavated a new capital with the same stubborn determination that defines their people — shaped like a mine because that is what they know, designed like a fortress because that is what necessity demanded. The maze-like tunnel network that results confounds outsiders endlessly, but the Coldain navigate it with the ease of long familiarity. Every corridor, every junction, every choke point was placed with defensive purpose.
@@ -3062,7 +3062,7 @@ Tserrina has not taken her imprisonment well. She works in her laboratory on the
     name: "Velketor's Labyrinth",
     region: "Velious",
     continent: "Velious",
-    adjacentZones: ["Great Divide", "Crystal Caverns"],
+    adjacentZones: ["The Great Divide", "Crystal Caverns"],
     tags: ["Underground", "Frozen"],
     excerpt: "The ancient home and laboratory of the exiled Giant sorcerer Velketor, a crystalline maze of kobold warriors, intelligent spiders, and magical traps designed to destroy anything that enters without invitation.",
     background: `Velketor was a Giant of the sorcerer tradition — a practitioner of the arcane arts in a culture that more commonly values physical power — and his exile from the Giant society of Kael Drakkal produced a being with both the resources to build something extraordinary and the grudge to make it as hostile as possible. The Labyrinth is his answer to banishment: a crystalline fortress-maze carved into the ice, populated with creatures he has bound to his service and bristling with trap mechanisms that reflect both his magical capability and his contempt for those who would intrude.
