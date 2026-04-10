@@ -1391,18 +1391,20 @@
   document.addEventListener('DOMContentLoaded', function () {
     initMentionHoverCard();
     if (window.firebaseDB) {
-      window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
-        var data = snapshot.val();
-        if (data && typeof data === 'object') {
-          _sessionsCache = Object.values(data);
-          _updateSessionSearchIndex(_sessionsCache);
-        } else {
-          // No data yet — seed Firebase with default sessions
-          _sessionsCache = DEFAULT_SESSIONS.slice();
-          saveSessions(_sessionsCache);
-        }
-        _firebaseReady = true;
-        renderSessions();
+      window.onFirebaseReady(function () {
+        window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
+          var data = snapshot.val();
+          if (data && typeof data === 'object') {
+            _sessionsCache = Object.values(data);
+            _updateSessionSearchIndex(_sessionsCache);
+          } else {
+            // No data yet — seed Firebase with default sessions
+            _sessionsCache = DEFAULT_SESSIONS.slice();
+            saveSessions(_sessionsCache);
+          }
+          _firebaseReady = true;
+          renderSessions();
+        });
       });
     } else {
       // Firebase not configured — show placeholder

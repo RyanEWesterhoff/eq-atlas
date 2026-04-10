@@ -679,9 +679,11 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     if (window.firebaseDB) {
-      window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
-        _state = snapshot.val() || {};
-        renderHomeEvents();
+      window.onFirebaseReady(function () {
+        window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
+          _state = snapshot.val() || {};
+          renderHomeEvents();
+        });
       });
     } else {
       renderHomeEvents();
@@ -1362,13 +1364,15 @@
     document.body.appendChild(_tip);
 
     if (window.firebaseDB) {
-      window.firebaseDB.ref(FB_CAL).on('value', function(snap){
-        _calData = snap.val() || {};
-        render();
-      });
-      window.firebaseDB.ref(FB_SESS).on('value', function(snap){
-        _sessionData = snap.val() || {};
-        render();
+      window.onFirebaseReady(function () {
+        window.firebaseDB.ref(FB_CAL).on('value', function(snap){
+          _calData = snap.val() || {};
+          render();
+        });
+        window.firebaseDB.ref(FB_SESS).on('value', function(snap){
+          _sessionData = snap.val() || {};
+          render();
+        });
       });
     } else {
       render();

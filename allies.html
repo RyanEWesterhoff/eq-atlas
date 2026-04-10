@@ -1001,22 +1001,24 @@
     });
 
     if (window.firebaseDB) {
-      window.firebaseDB.ref(FB_DETAIL).on('value', function (snap) { _figureData = snap.val() || {}; });
+      window.onFirebaseReady(function () {
+        window.firebaseDB.ref(FB_DETAIL).on('value', function (snap) { _figureData = snap.val() || {}; });
 
-      window.firebaseDB.ref(FB_HIDDEN).on('value', function (snap) {
-        _hidden = snap.val() || {};
-        document.querySelectorAll('.figure-card').forEach(function (card) {
-          applyHiddenState(card, _hidden[card.id]);
+        window.firebaseDB.ref(FB_HIDDEN).on('value', function (snap) {
+          _hidden = snap.val() || {};
+          document.querySelectorAll('.figure-card').forEach(function (card) {
+            applyHiddenState(card, _hidden[card.id]);
+          });
         });
-      });
 
-      window.firebaseDB.ref(FB_ORDER).once('value', function (snap) { applyOrder(snap.val()); });
+        window.firebaseDB.ref(FB_ORDER).once('value', function (snap) { applyOrder(snap.val()); });
 
-      window.firebaseDB.ref(FB_CUSTOM).on('value', function (snap) {
-        var customs = snap.val() || {};
-        Object.keys(customs).forEach(function (id) {
-          _custom[id] = customs[id];
-          renderCustomFigure(id, customs[id]);
+        window.firebaseDB.ref(FB_CUSTOM).on('value', function (snap) {
+          var customs = snap.val() || {};
+          Object.keys(customs).forEach(function (id) {
+            _custom[id] = customs[id];
+            renderCustomFigure(id, customs[id]);
+          });
         });
       });
     }

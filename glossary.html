@@ -768,13 +768,15 @@
   // ── Firebase init ─────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
     if (window.firebaseDB) {
-      window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
-        _hidden = snapshot.val() || {};
-        renderAll();
-        scrollToHash();
-      }, function () {
-        renderAll();
-        scrollToHash();
+      window.onFirebaseReady(function () {
+        window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
+          _hidden = snapshot.val() || {};
+          renderAll();
+          scrollToHash();
+        }, function () {
+          renderAll();
+          scrollToHash();
+        });
       });
     } else {
       renderAll();

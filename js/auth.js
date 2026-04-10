@@ -198,11 +198,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Start Firebase hidden state listener — updates all browsers in real-time
   if (window.firebaseDB) {
-    window.firebaseDB.ref(FIREBASE_HIDDEN_PATH).on('value', function (snapshot) {
-      const data = snapshot.val() || { zones: [], npcs: [] };
-      _gmHiddenCache = { zones: data.zones || [], npcs: data.npcs || [] };
-      try { sessionStorage.setItem(GM_HIDDEN_CACHE_KEY, JSON.stringify(_gmHiddenCache)); } catch (e) {}
-      _applyHiddenState();
+    window.onFirebaseReady(function () {
+      window.firebaseDB.ref(FIREBASE_HIDDEN_PATH).on('value', function (snapshot) {
+        const data = snapshot.val() || { zones: [], npcs: [] };
+        _gmHiddenCache = { zones: data.zones || [], npcs: data.npcs || [] };
+        try { sessionStorage.setItem(GM_HIDDEN_CACHE_KEY, JSON.stringify(_gmHiddenCache)); } catch (e) {}
+        _applyHiddenState();
+      });
     });
   }
 

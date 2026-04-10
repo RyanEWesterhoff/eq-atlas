@@ -465,10 +465,12 @@
   // ── Firebase init ────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
     if (window.firebaseDB) {
-      window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
-        var data = snapshot.val() || {};
-        _state = data;
-        renderEvents();
+      window.onFirebaseReady(function () {
+        window.firebaseDB.ref(FIREBASE_PATH).on('value', function (snapshot) {
+          var data = snapshot.val() || {};
+          _state = data;
+          renderEvents();
+        });
       });
     } else {
       renderEvents();

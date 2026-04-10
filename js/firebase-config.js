@@ -23,3 +23,29 @@ firebase.initializeApp({
 });
 
 window.firebaseDB = firebase.database();
+
+// Queue for listeners that need auth before starting
+var _fbQueue = [];
+var _fbAuthReady = false;
+
+window.onFirebaseReady = function (fn) {
+  if (_fbAuthReady) { fn(); } else { _fbQueue.push(fn); }
+};
+
+function _flushFbQueue() {
+  _fbAuthReady = true;
+  _fbQueue.forEach(function (fn) { try { fn(); } catch (e) { console.warn(e); } });
+  _fbQueue = [];
+}
+
+// Sign in anonymously so reads satisfy "auth != null" database rules
+firebase.auth().onAuthStateChanged(function (user) {
+  if (user) {
+    _flushFbQueue();
+  } else {
+    firebase.auth().signInAnonymously().catch(function (err) {
+      console.warn('Anonymous auth failed, proceeding anyway:', err.message);
+      _flushFbQueue();
+    });
+  }
+});
