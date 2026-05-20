@@ -84,7 +84,7 @@
   // ── Search engine ─────────────────────────────────────────
   function doSearch(q) {
     var ql = q.toLowerCase();
-    var zones = [], creatures = [], npcs = [], glossary = [], figures = [], factions = [], factionNpcs = [], sessions = [];
+    var zones = [], creatures = [], npcs = [], glossary = [], figures = [], factions = [], factionNpcs = [], sessions = [], stories = [];
 
     if (typeof ZONES !== 'undefined') for (var i = 0; i < ZONES.length; i++) {
       var z = ZONES[i];
@@ -179,6 +179,18 @@
       }
     } catch (e) {}
 
+    // Opening stories (indexed in localStorage by stories.html)
+    try {
+      var _sti = localStorage.getItem('eq-stories-search');
+      var _std = _sti ? JSON.parse(_sti) : [];
+      for (var sti = 0; sti < _std.length; sti++) {
+        var story = _std[sti];
+        if ((story.num + ' ' + story.title + ' ' + story.date + ' ' + story.text).toLowerCase().includes(ql)) {
+          stories.push({ story: story, url: ROOT + 'stories.html' });
+        }
+      }
+    } catch (e) {}
+
     // Suppress NPC results whose name is already covered by a figure entry
     var figureNames = {};
     for (var fn = 0; fn < figures.length; fn++) {
@@ -195,6 +207,7 @@
       factions:    factions.slice(0, 5),
       factionNpcs: factionNpcs.slice(0, 5),
       sessions:    sessions.slice(0, 5),
+      stories:     stories.slice(0, 5),
       glossary:    glossary.slice(0, 6)
     };
   }
@@ -223,7 +236,7 @@
 
   // ── Render results panel ──────────────────────────────────
   function render(hits, panel, q) {
-    var total = hits.zones.length + hits.creatures.length + hits.npcs.length + hits.figures.length + hits.factions.length + hits.factionNpcs.length + hits.sessions.length + hits.glossary.length;
+    var total = hits.zones.length + hits.creatures.length + hits.npcs.length + hits.figures.length + hits.factions.length + hits.factionNpcs.length + hits.sessions.length + hits.stories.length + hits.glossary.length;
 
     if (total === 0) {
       panel.innerHTML = '<div class="gs-empty">No results for <em>' + esc(q) + '</em></div>';
@@ -318,6 +331,18 @@
         html += '<a href="' + surl + '" class="gs-item" tabindex="0">' +
           '<span class="gs-title">📖 ' + hilite(hs.num + (hs.title ? ' — ' + hs.title : ''), q) + '</span>' +
           '<span class="gs-sub">' + (hs.date ? esc(hs.date) + ' &mdash; ' : '') + hilite(snip(hs.text, q, 60), q) + '</span>' +
+          '</a>';
+      }
+    }
+
+    if (hits.stories.length) {
+      html += '<div class="gs-group">Opening Stories</div>';
+      for (var sti = 0; sti < hits.stories.length; sti++) {
+        var hst   = hits.stories[sti].story;
+        var sturl = hits.stories[sti].url;
+        html += '<a href="' + sturl + '" class="gs-item" tabindex="0">' +
+          '<span class="gs-title">🪶 ' + hilite(hst.num + (hst.title ? ' — ' + hst.title : ''), q) + '</span>' +
+          '<span class="gs-sub">' + (hst.date ? esc(hst.date) + ' &mdash; ' : '') + hilite(snip(hst.text, q, 60), q) + '</span>' +
           '</a>';
       }
     }
