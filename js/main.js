@@ -289,17 +289,3 @@ function setupFilters(gridSelector) {
   applyFilter();
 }
 
-// ── Homepage stats ─────────────────────────────────────────
-function renderHomepageStats() {
-  if (typeof ZONES === 'undefined') return;
-  const zoneCountEl = document.getElementById('stat-zones');
-  if (zoneCountEl) zoneCountEl.textContent = ZONES.length;
-
-  const continents = new Set(ZONES.map(z => z.continent));
-  const contEl = document.getElementById('stat-continents');
-  if (contEl) contEl.textContent = continents.size;
-
-  const allCreatures = ZONES.flatMap(z => z.bestiary || []);
-  const creatureEl = document.getElementById('stat-creatures');
-  if (creatureEl) creatureEl.textContent = allCreatures.length + '+';
-}
