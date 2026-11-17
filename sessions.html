@@ -118,6 +118,7 @@
       transition: all 0.15s;
     }
     .session-gm-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .session-gm-btn:disabled { opacity: 0.35; cursor: default; border-color: var(--border-dim); color: var(--text-secondary); }
     .session-gm-btn.danger:hover { border-color: #c03030; color: #c03030; }
     .session-entry.editing { border-left-color: var(--accent-gold); border-color: var(--border-gold); }
 
@@ -560,8 +561,13 @@
   // Holds notes extracted from a freshly-uploaded file, keyed by session id
   var _pendingNotes  = {};
 
+  // Sessions with an explicit `order` (set by the GM via move up/down) sort by it;
+  // unordered sessions (legacy or brand new) go first, by session number descending.
   function _sortSessions(sessions) {
     return sessions.slice().sort(function (a, b) {
+      var ao = typeof a.order === 'number', bo = typeof b.order === 'number';
+      if (ao && bo) return a.order - b.order;
+      if (ao !== bo) return ao ? 1 : -1;
       return (b.num || '').localeCompare(a.num || '');
     });
   }
@@ -924,7 +930,7 @@
     field.focus();
   }
 
-  function sessionEntryHTML(s, gmMode) {
+  function sessionEntryHTML(s, gmMode, isFirst, isLast) {
     var hasNotes = s.notesBody && s.notesBody.trim();
     var notesClass = s.notesMd
       ? 'session-notes-doc session-md-body snd-' + s.id
@@ -938,6 +944,8 @@
     return '<div class="session-entry" id="se-' + s.id + '" data-session-id="' + s.id + '">' +
       (gmMode
         ? '<div class="session-gm-controls">' +
+            '<button class="session-gm-btn" title="Move up"' + (isFirst ? ' disabled' : '') + ' onclick="sessionMove(\'' + s.id + '\',-1,event)">▲</button>' +
+            '<button class="session-gm-btn" title="Move down"' + (isLast ? ' disabled' : '') + ' onclick="sessionMove(\'' + s.id + '\',1,event)">▼</button>' +
             '<button class="session-gm-btn" onclick="sessionEdit(\'' + s.id + '\',event)">✏ Edit</button>' +
             '<button class="session-gm-btn danger" onclick="sessionDelete(\'' + s.id + '\',event)">✕</button>' +
           '</div>'
@@ -1017,7 +1025,7 @@
       html += '<p style="color:var(--text-dim);font-style:italic;padding:20px 0;">No sessions recorded yet.</p>';
     } else {
       for (var i = 0; i < sessions.length; i++) {
-        html += sessionEntryHTML(sessions[i], gmMode);
+        html += sessionEntryHTML(sessions[i], gmMode, i === 0, i === sessions.length - 1);
       }
     }
 
@@ -1114,6 +1122,7 @@
     var locEl     = document.getElementById('edit-loc-'     + id);
     var summaryEl = document.getElementById('edit-summary-' + id);
     var pending   = _pendingNotes[id];
+    var prev      = sessions[idx];
     sessions[idx] = {
       id:         id,
       num:        numEl     ? numEl.value       : sessions[idx].num,
@@ -1125,6 +1134,7 @@
       notesMd:    pending   ? (pending.md || false) : (sessions[idx].notesMd || false),
       summary:    summaryEl ? summaryEl.innerHTML : sessions[idx].summary
     };
+    if (typeof prev.order === 'number') sessions[idx].order = prev.order;
     delete _pendingNotes[id];
 
     saveSessions(sessions);
@@ -1158,6 +1168,22 @@
     }
   };
 
+  window.sessionMove = function (id, dir, e) {
+    if (e) e.stopPropagation();
+    var sessions = _sortSessions(_sessionsCache);
+    var idx = -1;
+    for (var i = 0; i < sessions.length; i++) { if (sessions[i].id === id) { idx = i; break; } }
+    var target = idx + dir;
+    if (idx === -1 || target < 0 || target >= sessions.length) return;
+    var tmp = sessions[idx];
+    sessions[idx] = sessions[target];
+    sessions[target] = tmp;
+    // Copy each entry so the cached objects aren't mutated before the write
+    sessions = sessions.map(function (s, i) { return Object.assign({}, s, { order: i }); });
+    saveSessions(sessions);
+    renderSessions();
+  };
+
   window.sessionAdd = function () {
     var sessions = _sessionsCache.slice();
     var newId = 'session-' + Date.now();
@@ -1174,6 +1200,10 @@
       notesMd:    false,
       summary:   '<p>Session summary goes here.</p>'
     });
+    // Keep the new session at the top once a custom order exists
+    var orders = sessions.map(function (s) { return s.order; })
+      .filter(function (o) { return typeof o === 'number'; });
+    if (orders.length) sessions[0].order = Math.min.apply(null, orders) - 1;
     saveSessions(sessions);
     renderSessions();
     sessionEdit(newId);
